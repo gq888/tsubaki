@@ -1,7 +1,12 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">BlackJack</router-link>
+      <router-link to="/fish">Fish</router-link>
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      <router-link to="/blackjack">BlackJack</router-link>
     </div>
     <router-view />
   </div>

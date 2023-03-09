@@ -1,6 +1,15 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
+<div class="btns">
+
+  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>    
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
+</div>
   <div class="row center">
     <img class="avatar" src="../assets/0.png">
     <span class="scrore">{{score1}}</span>
@@ -8,14 +17,9 @@
   <div class="row">
     <div>
       <ul class="cardsul">
-        <li v-for="item in arr1" :key='item.id' class="card"><img :src="'./static/' + item.id + '.jpg'"></li>
-      </ul>
-    </div>
-  </div>
-  <div class="row" style="margin-top: 10px;">
-    <div>
-      <ul class="cardsul reverse">
-        <li v-for="item in arr2" :key='item.id' class="card"><img :src="'./static/' + item.id + '.jpg'"></li>
+        <li v-for="item in arr" :key='item' class="card">
+          <img :class="{shanshuo: ssArr.indexOf(item) >= 0}" :src="'./static/' + item + '.jpg'">
+        </li>
       </ul>
     </div>
   </div>
@@ -25,12 +29,12 @@
   </div>
 <div class="btns">
 
-  <input type="button" value="HIT" @click="hit(cardsChg,arr2)" :disabled="!hitflag"/>
+  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>    
   &nbsp;
   &nbsp;
   &nbsp;
   &nbsp;
-  <input type="button" value="PASS" @click="pass" :disabled="!hitflag" />
+  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
     <transition>
     <div class="lose" v-if="loseflag">
@@ -41,17 +45,13 @@
       <h1>U WIN!</h1>
       <input type="button" value="GO ON" @click="goon"/>
     </div>
-    <div class="draw lose" v-if="drawflag">
-      <h1>DRAW GAME</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
     </transition>
   </div>
 </template>
 
 <script>
-import sum from './sum.js'
-export default sum
+import fish from './fish.js'
+export default fish
 </script>
 
 <style scoped>

@@ -1,0 +1,150 @@
+
+h1, h2 {
+  font-weight: normal;
+}
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+li {
+  display: inline-block;
+  margin: 0 10px;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+}
+li {
+  list-style: none;
+}
+.Sum {
+  position: relative;
+  width: 90%;
+  /* height: 800px; */
+  color: #dfcdc3;
+  margin: 100px auto;
+  background-color: #5f6769;
+}
+
+.row {
+  /* height: 300px; */
+  background-color: #3c4245;
+}
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+h1 {
+  padding-top: 30px;
+  margin: 30px  auto;
+  width: 100%;
+}
+span {
+  margin-top: 10px;
+  /* float: left; */
+  font-size: 40px;
+  margin-left: 20px;
+}
+input {
+  margin: 20px auto;
+  font-size: 50px;
+  color: #dfcdc3;
+  padding: 0 10px;
+  width: 250px;
+  height: 50px;
+}
+
+.cardsul {
+  padding-left: 50px;
+  display: flex;
+  
+  flex-wrap: wrap;
+}
+.cardsul.reverse {
+  flex-wrap: wrap-reverse;
+}
+.card {
+  /* float: left; */
+  margin: 10px 10px ;
+  margin-top: 30px;
+  width: 100px;
+  height: 150px;
+  line-height: 150px;
+  font-size: 50px;
+  background-color: #719192;
+}
+.card img {
+  widht: 100%;
+  height: 100%;
+}
+.scrore {
+  /* float: right; */
+  margin: 10px 10px;
+  width: 100px;
+  /* height: 150px; */
+  line-height: 70px;
+  font-size: 50px;
+  font-weight: 700;
+  color: #dfcdc3;
+}
+.lose {
+  position: absolute;
+  top:0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.lose h1 {
+  /* position: absolute;
+  top: 200px; */
+  font-size: 100px;
+
+}
+
+/* .draw h1 {
+  position: absolute;
+  top: 100px;
+  font-size: 200px;
+}
+.lose input {
+  position: absolute;
+  bottom: 100px;
+  margin-left: -60px;
+
+} */
+.avatar {
+  width: 50px;
+}
+  .v-enter,
+  .v-leave-to {
+    opacity: 0;
+  }
+  .v-enter-active,
+  .v-leave-active {
+    transition: all 1s ease;
+  }
+  
+  .shanshuo
+  {
+    animation:mydeamon 0.5s infinite;
+    -webkit-animation:mydeamon 0.5 infinite; /* Safari and Chrome */
+  }
+  
+  @keyframes mydeamon
+  {
+    0% {
+      opacity: 1;
+    }
+    
+    100% {
+      opacity: 0.5;
+    }
+  }
