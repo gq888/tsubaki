@@ -1,28 +1,32 @@
 <template>
   <div class="Sum">
-    <h1>{{ title }}</h1>
-    <div >
-      <div class="row">
-        <br/>
-        <div>
-          <ul class="cardsul">
-            <li v-for="item in arr1" :key='item.id' class="card">{{ item.id }}</li>
-          </ul>
-        </div>
-        <span class="scrore">{{score1}}</span>
-      </div>
-    </div>
+  <h1>{{ title }}</h1>
+  <div class="row center">
+    <img class="avatar" src="../assets/0.png">
+    <span class="scrore">{{score1}}</span>
+  </div>
   <div class="row">
     <div>
       <ul class="cardsul">
-        <li v-for="item in arr2" :key='item.id' class="card">{{ item.id }}</li>
+        <li v-for="item in arr1" :key='item.id' class="card"><img :src="'./static/' + item.id + '.jpg'"></li>
       </ul>
     </div>
+  </div>
+  <div class="row">
+    <div>
+      <ul class="cardsul">
+        <li v-for="item in arr2" :key='item.id' class="card"><img :src="'./static/' + item.id + '.jpg'"></li>
+      </ul>
+    </div>
+  </div>
+  <div class="row center">
+    <img class="avatar" src="../assets/1.png">
     <span class="scrore">{{score2}}</span>
   </div>
 <div class="btns">
 
   <input type="button" value="HIT" @click="hit(cardsChg,arr2)" v-if="hitflag"/>
+  &nbsp;
   <input type="button" value="PASS" @click="pass" v-if="hitflag" />
 </div>
     <transition>
@@ -47,7 +51,7 @@ export default {
   name: 'Sum',
   data () {
     return {
-      title: '迷之规则的BalckJack',
+      title: 'BalckJack',
       arrCard: [],
       sum: 0,
       score: 0,
@@ -75,10 +79,13 @@ export default {
   // 初始化
   methods: {
     init (cards) {
-      this.arr1 = []
-      this.arr2 = []
-      this.getCards(this.cardsOrg)
-      this.getCards(cards)
+      this.arr1.splice(0)
+      this.arr2.splice(0)
+      // this.getCards(this.cardsOrg)
+      // this.getCards(cards)
+      for (let i = 0; i < 54; i++) {
+        cards.push(i);
+      }
       this.shuffleCards(cards)
       console.log(cards)
       this.hit(cards, this.arr1)
@@ -99,9 +106,9 @@ export default {
     shuffleCards (cards) {
       let rand, tmp
       for (let i = 0; i < 1000; i++) {
-        rand = this.getRandomInt(1, 51)
-        tmp = cards[0]
-        cards[0] = cards[rand]
+        rand = Math.floor(Math.random() * 53)
+        tmp = cards[53]
+        cards[53] = cards[rand]
         cards[rand] = tmp
       }
       return cards
@@ -113,9 +120,11 @@ export default {
     // 摸牌
     hit (cards, arr) {
       var currentCard = cards.shift()
-      var value = (this.cardsOrg.indexOf(currentCard) + 1) % 13
+      // var value = (this.cardsOrg.indexOf(currentCard) + 1) % 13
+      var value = currentCard >> 2
+      // console.log(value)
       arr.push(
-        {id: currentCard, value: value > 10 || value === 0 ? value = 10 : value})
+        {id: currentCard, value: ++value > 10 ? 10 : value})
     },
     // 计算点数
     getScore (ary, score) {
@@ -208,17 +217,21 @@ li {
 }
 .Sum {
   position: relative;
-  width: 1200px;
-  height: 800px;
+  width: 90%;
+  /* height: 800px; */
   color: #dfcdc3;
   margin: 100px auto;
   background-color: #5f6769;
 }
 
 .row {
-  height: 300px;
-
+  /* height: 300px; */
   background-color: #3c4245;
+}
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 h1 {
   padding-top: 30px;
@@ -227,7 +240,7 @@ h1 {
 }
 span {
   margin-top: 10px;
-  float: left;
+  /* float: left; */
   font-size: 40px;
   margin-left: 20px;
 }
@@ -236,13 +249,18 @@ input {
   font-size: 50px;
   color: #dfcdc3;
   padding: 0 10px;
+  width: 250px;
+  height: 50px;
 }
 
 .cardsul {
   padding-left: 50px;
+  display: flex;
+  
+  flex-wrap: wrap;
 }
 .card {
-  float: left;
+  /* float: left; */
   margin: 10px 10px ;
   margin-top: 30px;
   width: 100px;
@@ -252,12 +270,16 @@ input {
   background-color: #719192;
   border-radius: 10px;
 }
+.card img {
+  widht: 100%;
+  height: 100%;
+}
 .scrore {
-  float: right;
+  /* float: right; */
   margin: 10px 10px;
   width: 100px;
-  height: 150px;
-  line-height: 150px;
+  /* height: 150px; */
+  line-height: 70px;
   font-size: 50px;
   font-weight: 700;
   color: #dfcdc3;
@@ -269,16 +291,20 @@ input {
   width: 100%;
   height: 100%;
   background-color: rgba(0,0,0,.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 .lose h1 {
-  position: absolute;
-  top: 200px;
-  font-size: 200px;
+  /* position: absolute;
+  top: 200px; */
+  font-size: 100px;
 
 }
 
-.draw h1 {
+/* .draw h1 {
   position: absolute;
   top: 100px;
   font-size: 200px;
@@ -288,6 +314,9 @@ input {
   bottom: 100px;
   margin-left: -60px;
 
+} */
+.avatar {
+  width: 50px;
 }
   .v-enter,
   .v-leave-to {
