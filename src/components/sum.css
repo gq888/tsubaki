@@ -59,7 +59,7 @@ input {
 .cardsul {
   padding-left: 50px;
   display: flex;
-  
+  position: relative;
   flex-wrap: wrap;
 }
 .cardsul.reverse {
@@ -88,6 +88,12 @@ input {
   font-size: 50px;
   font-weight: 700;
   color: #dfcdc3;
+}
+.diff {
+  text-align: left;
+  width: 60px;
+  font-size: 20px;
+  margin: 0;
 }
 .lose {
   position: absolute;
@@ -134,11 +140,11 @@ input {
   
   .shanshuo
   {
-    animation:mydeamon 0.5s infinite;
-    -webkit-animation:mydeamon 0.5 infinite; /* Safari and Chrome */
+    animation:shanshuo 0.5s infinite;
+    -webkit-animation:shanshuo 0.5 infinite; /* Safari and Chrome */
   }
   
-  @keyframes mydeamon
+  @keyframes shanshuo
   {
     0% {
       opacity: 1;
@@ -146,5 +152,85 @@ input {
     
     100% {
       opacity: 0.5;
+    }
+  }
+  
+  .flyout1 {
+    animation:flyout1 0.5s;
+    -webkit-animation:flyout1 0.5;
+  } 
+  
+  @keyframes flyout1
+  {
+    0% {
+      zoom: 0.1;
+      left: 50%;
+      top: 0;
+    }
+    
+    100% {
+      zoom: 1;
+      left: auto;
+      top: auto;
+    }
+  }
+  
+  .flyout2 {
+    animation:flyout2 0.5s;
+    -webkit-animation:flyout2 0.5;
+  } 
+  
+  @keyframes flyout2
+  {
+    0% {
+      zoom: 0.1;
+      left: 50%;
+      bottom: 0;
+    }
+    
+    100% {
+      zoom: 1;
+      left: auto;
+      bottom: auto;
+    }
+  }
+  
+  .flyin1 {
+    animation:flyin1 0.5s;
+    -webkit-animation:flyin1 0.5;
+  } 
+  
+  @keyframes flyin1
+  {
+    100% {
+      zoom: 0.1;
+      left: 50%;
+      top: 0;
+    }
+    
+    0% {
+      zoom: 1;
+      left: auto;
+      top: auto;
+    }
+  }
+  
+  .flyin2 {
+    animation:flyin2 0.5s;
+    -webkit-animation:flyin2 0.5;
+  } 
+  
+  @keyframes flyin2
+  {
+    100% {
+      zoom: 0.1;
+      left: 50%;
+      bottom: 0;
+    }
+    
+    0% {
+      zoom: 1;
+      left: auto;
+      bottom: auto;
     }
   }

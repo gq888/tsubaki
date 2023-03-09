@@ -2,7 +2,7 @@ export default {
   name: 'Sum',
   data () {
     return {
-      title: 'BalckJack',
+      title: 'BlackJack',
       arrCard: [],
       sum: 0,
       score: 0,

@@ -3,11 +3,16 @@ export default {
   data () {
     return {
       title: 'Fish',
-      score: 0,
+      diff1: 0,
+      diff2: 0,
       step: 0,
       cards1: [],
       cards2: [],
       ssArr: [],
+      flyin1: [],
+      flyin2: [],
+      flyout1: [],
+      flyout2: [],
       cardsIndex: '',
       arr: [],
       loseflag: false,
@@ -49,38 +54,50 @@ export default {
         this.step ++;
       })
     },
-    // 摸牌
-    hit (cards, arr) {
-      return new Promise((resolve) => {
-        var currentCard = cards.shift()
-        var value = currentCard >> 2
-        if (value == 13) {
-          arr.push(currentCard)
-          this.ssArr.push(currentCard)
-          return setTimeout(() => {
-            this.ssArr.splice(0)
-            arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(0, currentCard == 53 ? 5 : 3))
-            resolve()
-          }, 1000)
-        }
-        var index = (value == 10) ? 0 : arr.findIndex(item => (item >> 2) == value)
-        arr.push(currentCard)
-        if (index < 0) {
-          return resolve()
-        } else {
-          this.ssArr.push(currentCard, arr[index])
-          setTimeout(() => {
-            this.ssArr.splice(0)
-            cards.push(...arr.splice(index))
-            resolve()
-          }, 1000)
-        }
+    time (handle, time) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve()
+          handle()
+        }, time)
       })
+    },
+    async push (arr, item) {
+      arr.push(item)
+      // var type = (this.step % 2) == 0 ? 'flyout1' : 'flyout2'
+      // this[type].push(item)
+      // await this.time(() => {
+      //   this[type].splice(0)
+      // }, 500)
+    },
+    // 摸牌
+    async hit (cards, arr) {
+      var currentCard = cards.shift()
+      var value = currentCard >> 2
+      if (value == 13) {
+        this.push(arr, currentCard)
+        this.ssArr.push(currentCard)
+        return await this.time(() => {
+          this.ssArr.splice(0)
+          arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(0, currentCard == 53 ? 5 : 3))
+        }, 1000)
+      }
+      var index = (value == 10) ? 0 : arr.findIndex(item => (item >> 2) == value)
+      this.push(arr, currentCard)
+      if (index < 0) {
+        return
+      }
+      this.ssArr.push(currentCard, arr[index])
+      await this.time(() => {
+        this.ssArr.splice(0)
+        cards.push(...arr.splice(index))
+      }, 1000)
     },
     pass () {
       this.lockflag = false
       if (!this.winflag && !this.loseflag) {
         this.stepFn().then(() => {
+          console.log(this.arr, this.cards1,this.cards2)
           setTimeout(this.pass, 1000)
         })
       }
@@ -107,15 +124,25 @@ export default {
     }
   },
   watch: {
-    score2 () {
-      if (this.score2 === 0) {
+    score2 (val, old) {
+      if (val === 0) {
         this.loseflag = true
+      } else {
+        this.diff2 = val - old
+        this.time(() => {
+          this.diff2 = 0
+        }, 800)
       }
     },
-    score1 () {
-      if (this.score1 === 0) {
+    score1 (val, old) {
+      if (val === 0) {
         this.winflag = true
         // clearInterval(this.timer)
+      } else {
+        this.diff1 = val - old
+        this.time(() => {
+          this.diff1 = 0
+        }, 800)
       }
     }
   }
