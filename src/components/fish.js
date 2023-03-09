@@ -59,7 +59,7 @@ export default {
           this.ssArr.push(currentCard)
           return setTimeout(() => {
             this.ssArr.splice(0)
-            arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(currentCard == 53 ? -5 : -3))
+            arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(0, currentCard == 53 ? 5 : 3))
             resolve()
           }, 1000)
         }
@@ -109,12 +109,12 @@ export default {
   watch: {
     score2 () {
       if (this.score2 === 0) {
-        this.winflag = true
+        this.loseflag = true
       }
     },
     score1 () {
       if (this.score1 === 0) {
-        this.loseflag = true
+        this.winflag = true
         // clearInterval(this.timer)
       }
     }
