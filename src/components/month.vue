@@ -11,8 +11,8 @@
 </div>
   <div class="row">
     <div>
-      <ul class="cardsul">
-        <li v-for="(item, i) in arr" :key='i' class="cards">
+      <ul class="cardsul" style="max-width: 740px;">
+        <li v-for="(item, i) in arr" :key='i' class="cards" :style="{marginTop: i != 0 &&step == i ? 0 : '30px'}">
           <img v-for="(card, j) in item" :key='card' :style="{top: j * 30 + 'px'}"
            :src="'./static/' + (cards2[i] > j || step == i && (step == 0 && j == 3 || j == 4) ? card : 'bg') + '.jpg'" class="card abso">
         </li>
@@ -33,7 +33,7 @@
       <h1 class="small">YOUR LUCKY CLASSES:</h1>
       <div class1="row" style="margin-top: 10px;">
         <div>
-          <ul class="cardsul">
+          <ul class="cardsul" style="padding-left: 0">
             <div v-for="(item, i) in cards2" :key='i'>
               <img v-if="item >= 4" :src="'./static/' + (i * 4 + 1) + '.jpg'" class="card">
             </div>
