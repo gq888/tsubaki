@@ -49,11 +49,8 @@ span {
 }
 input {
   margin: 20px auto;
-  font-size: 50px;
-  color: #dfcdc3;
+  color: #3c4245;
   padding: 0 10px;
-  width: 250px;
-  height: 50px;
 }
 
 .cardsul {
@@ -64,6 +61,15 @@ input {
 }
 .cardsul.reverse {
   flex-wrap: wrap-reverse;
+}
+.cards {
+  position: relative;
+  width: 100px;
+  height: 300px;
+}
+.abso {
+  position: absolute;
+  left: 0;
 }
 .card {
   /* float: left; */
@@ -112,6 +118,13 @@ input {
   /* position: absolute;
   top: 200px; */
   font-size: 100px;
+
+}
+
+.lose h1.small {
+  /* position: absolute;
+  top: 200px; */
+  font-size: 50px;
 
 }
 

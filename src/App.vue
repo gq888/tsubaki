@@ -3,14 +3,13 @@
     <div id="nav">
       GAMES:
       &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      <router-link to="/fish">Fish</router-link>
-      &nbsp;
+      <router-link to="/month">Month</router-link>
       &nbsp;
       /
       &nbsp;
+      <router-link to="/fish">Fish</router-link>
+      &nbsp;
+      /
       &nbsp;
       <router-link to="/blackjack">BlackJack</router-link>
     </div>

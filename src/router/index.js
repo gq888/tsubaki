@@ -2,13 +2,18 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import Sum from "@/components/sum.vue";
 import Fish from "@/components/fish.vue";
+import Month from "@/components/month.vue";
 
 Vue.use(VueRouter);
 
 const routes = [
   {
     path: "/",
-    redirect: "/fish"
+    redirect: "/month"
+  },
+  {
+    path: "/month",
+    component: Month
   },
   {
     path: "/fish",
