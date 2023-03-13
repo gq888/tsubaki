@@ -105,10 +105,6 @@ export default {
       await timeout(() => {}, 1000)
       this.clickCard(temp[2], this.arr.indexOf(temp[2]))
       this.hitflag = true
-      if (this.step >= 3) {
-        await timeout(() => {}, 1000)
-        this.winflag = true
-      }
     },
     clickCard (card, i) {
       if (i == 0) {
@@ -119,6 +115,9 @@ export default {
         this.arr.splice(0, 1, temp)
         this.sign = 0;
         this.$set(this.cards2, this.step++, temp)
+        if (this.step >= 3) {
+          this.winflag = true
+        }
       } else {
         let temp = this.arr[0];
         this.$set(this.arr, 0, this.arr[i])
