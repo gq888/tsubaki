@@ -12,6 +12,9 @@
       /
       &nbsp;
       <router-link to="/blackjack">BlackJack</router-link>
+      /
+      &nbsp;
+      <router-link to="/point24">Point24</router-link>
     </div>
     <router-view />
   </div>

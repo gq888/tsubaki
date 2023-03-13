@@ -18,6 +18,14 @@ li {
 li {
   list-style: none;
 }
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
 .Sum {
   position: relative;
   width: 90%;
@@ -35,6 +43,26 @@ li {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.mt-30 {
+  margin-top: 30px;
+}
+.m-0 {
+  margin: 0;
+}
+.flex-start {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+.align-center {
+  align-items: center;
+}
+.vertical {
+  transform: rotate(90deg);
 }
 h1 {
   padding-top: 30px;
@@ -94,6 +122,19 @@ input {
   font-size: 50px;
   font-weight: 700;
   color: #dfcdc3;
+}
+.sign {
+  margin: 5px 0 0 5px;
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  border-radius: 5px;
+  color: #dfcdc3;
+  border: 1px solid #dfcdc3;
+}
+.choose {
+  color: #719192;
+  background-color: #dfcdc3;
 }
 .diff {
   text-align: left;

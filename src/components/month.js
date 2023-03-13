@@ -1,3 +1,4 @@
+import { shuffleCards } from '../utils/help.js'
 export default {
   name: 'Month',
   data () {
@@ -24,37 +25,17 @@ export default {
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
       }
-      this.shuffleCards(cards)
+      shuffleCards(cards, this.number)
       for (let i = 0; i < 12; i++) {
         this.cards2.push(0);
         this.arr.push(cards.splice(0, 4))
       }
-    },
-    // 洗牌
-    shuffleCards (cards) {
-      let rand, tmp
-      let last = this.number - 1
-      for (let i = 0; i < 1000; i++) {
-        rand = Math.floor(Math.random() * last)
-        tmp = cards[last]
-        cards[last] = cards[rand]
-        cards[rand] = tmp
-      }
-      return cards
     },
     async stepFn () {
       this.hitflag = false
       await this.hit().then(() => {
         console.log(1)
         this.hitflag = true
-      })
-    },
-    time (handle, time) {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve()
-          handle()
-        }, time)
       })
     },
     async push (arr, item) {

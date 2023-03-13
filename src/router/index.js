@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import Sum from "@/components/sum.vue";
 import Fish from "@/components/fish.vue";
+import point24 from "@/components/point24.vue";
 import Month from "@/components/month.vue";
 
 Vue.use(VueRouter);
@@ -18,6 +19,10 @@ const routes = [
   {
     path: "/fish",
     component: Fish
+  },
+  {
+    path: "/point24",
+    component: point24
   },
   {
     path: "/blackjack",
