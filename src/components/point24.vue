@@ -8,10 +8,8 @@
           <!-- <span class="vertical m-0">(</span> -->
           <point24card :card="arr[0]"></point24card>
           <div class="flex-row" v-show="step < 3">
-            <span class="sign center" :class="{choose: sign == 1}" @click="clickSign(1)">+</span>
-            <span class="sign center" :class="{choose: sign == 2}" @click="clickSign(2)">-</span>
-            <span class="sign center" :class="{choose: sign == 3}" @click="clickSign(3)">X</span>
-            <span class="sign center" :class="{choose: sign == 4}" @click="clickSign(4)">/</span>
+            <span v-for="i in 4" :key="i" class="sign center"
+              :class="{choose: sign == i}" @click="clickSign(i)">{{signs[i]}}</span>
           </div>
           <div v-if="sign != 0" class="align-center">
             <div class="card"><img :src="'./static/bg.jpg'"></div>
@@ -22,8 +20,8 @@
         </div>
         <div v-for="(item, i) in arr" :key='i' class="align-center flex-wrap center">
           <div v-if="i != 0" class="center">
+            <span class="sign center" @click="clickCard(item, i)">{{signs[sign]}}</span>
             <point24card :card="item" @click.native="clickCard(item, i)"></point24card>
-            <span class="sign center" @click="clickCard(item, i)">UP</span>
           </div>
         </div>
       </ul>
@@ -50,7 +48,7 @@
 </div>
     <transition>
     <div class="lose" v-if="loseflag" style="background-color: rgba(0,0,0,0.5);">
-      <h1>U LOSE</h1>
+      <h1>U LOSE</h1><h1>NO EXP = 24</h1>
       <input type="button" value="RESTART" @click="goon"/>
       <input type="button" value="UNDO" @click="undo" :disabled="step <= 0"/>
     </div>

@@ -1,60 +1,50 @@
 import { shuffleCards, timeout } from '../utils/help.js'
 import point24card from './point24card.vue'
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
-var opts = [1, 2, 3, 3, 4, 4]
+var opts = [1, 3, 2, 2, 4, 4]
 
-function  process(nums, len, aim)
-{
-   for ( var  i  =   0 ; i  <  len; i ++ ) { 
-     for ( var  j  =  i + 1 ; j  <  len; j ++ ) {
-       var  numij  =  [nums[i],nums[j]];
-      nums[j]  =  nums[len  -   1 ];
-       for ( var  k  =   0 ; k  <   6 ; k ++ ){                
-        // nums[i]  =   ' ( '   +  numij[k % 2 ]  +  opts[k]  +  numij[( ! (k % 2 ) * 1 )]  +   ' ) ' ;                
+function  process(nums, len, aim) {
+    for ( var  i  =   0 ; i  <  len; i ++ ) {
+      for ( var  j  =  i + 1 ; j  <  len; j ++ ) {
+        var  numij  =  [nums[i],nums[j]];
+        nums[j]  =  nums[len  -   1 ];
+        for ( var  k  =   0 ; k  <   6 ; k ++ ){
+        // nums[i]  =   ' ( '   +  numij[k % 2 ]  +  opts[k]  +  numij[( ! (k % 2 ) * 1 )]  +   ' ) ' ;
         nums[i] = [numij[k % 2 ], opts[k], numij[( ! (k % 2 ) * 1 )]]
         if (process(nums, len - 1 , aim)) {
-          return   true ;
-        }                
+          return true ;
+        }
       }
       nums[i]  =  numij[ 0 ];
       nums[j]  =  numij[ 1 ];
-    } 
+    }
   }
    // return  (len  ==   1 )  &&  (Math.abs(( new  Function( " return "   +  nums[ 0 ])())  -  aim)  <   0.0000001 ); 
    return len == 1 && Math.abs(calc(nums[0]) - aim) < 0.0000001
 }
 
+let fns = [
+  () => {},
+  (a, b) => a + b,
+  (a, b) => a - b,
+  (a, b) => a * b,
+  (a, b) => a / b,
+]
+
 function calc(a) {
   if(Number.isFinite(a)) {
     return (a >> 2) + 1
   } else {
-    let res, [num1, sign, num2] = a
+    let [num1, sign, num2] = a
     num1 = calc(num1)
     num2 = calc(num2)
-    if (sign == 1) {
-      res = num1 + num2
-    } else if (sign == 2) {
-      res = num1 - num2
-    } else if (sign == 3) {
-      res = num1 * num2
-    } else if (sign == 4) {
-      res = num1 / num2
-    }
-    return res
+    return fns[sign](num1, num2)
   }
 }
 
 function first(i) {console.log(i)
   return Number.isFinite(i) ? i : first(i[0])
 }
-
-// function  getexp(aim, nums){
-//    if (process(nums, nums.length, aim)){
-//      return  nums[ 0 ].substring( 1 ,nums[ 0 ].length - 1 );
-//   } else {
-//      return   " No expression =  "   +  aim; 
-//   }
-// }
 
 export default {
   name: 'point24',
@@ -68,6 +58,7 @@ export default {
       sign: 0,
       cards1: [],
       cards2: [0, 0, 0],
+      signs: ['UP', '+', '-', 'X', '/'],
       arr: [],
       loseflag: false,
       winflag: false,
