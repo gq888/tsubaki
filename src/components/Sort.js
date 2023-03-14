@@ -8,11 +8,10 @@ export default {
   data () {
     return {
       title: 'Sort',
-      sign: -1,
       cards1: [],
       cards2: [],
       arr: [],
-      types: ['♠', '♥', '♦', '♣'],
+      types: ['♥', '♠', '♦', '♣'],
       point: ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'],
       loseflag: false,
       winflag: false,
@@ -33,55 +32,21 @@ export default {
         cards.push(i);
       }
       shuffleCards(cards, this.number)
-      cards.splice(cards.indexOf(51), 1, -1)
-      cards.splice(cards.indexOf(50), 1, -2)
-      cards.splice(cards.indexOf(49), 1, -3)
-      cards.splice(cards.indexOf(48), 1, -4)
+      this.$set(cards, cards.indexOf(51), -1)
+      this.$set(cards, cards.indexOf(50), -2)
+      this.$set(cards, cards.indexOf(49), -3)
+      this.$set(cards, cards.indexOf(48), -4)
       cards.splice(0, 0, 51)
       cards.splice(14, 0, 50)
       cards.splice(28, 0, 49)
       cards.splice(42, 0, 48)
+      this.autoCalc()
     },
     async stepFn () {
-      if (this.step >= this.number) {
-        return;
-      }
       this.hitflag = false
-      let next, next_i, max = -1
-      if (this.sign != -1 && this.sign << 2 != this.next[0] << 2) {
-        let card = this.sign >> 2
-        for(let i = 0; i < 4; i++) {
-          let temp = card * 4 + i;
-          if (temp == this.sign) {
-            continue
-          }
-          if (this.done(temp)) {
-            continue
-          }
-          let index = this.cards1.indexOf(temp)
-          if (this.check(index) && this.map[index]['z-index'] > max) {
-            next = temp
-            next_i = index
-            max = this.map[index]['z-index']
-          }
-        }
-      } else {
-        for (let temp of this.next) {
-          if (temp == this.sign) {
-            continue
-          }
-          if (this.done(temp)) {
-            continue
-          }
-          let index = this.cards1.indexOf(temp)
-          if (this.check(index) && this.map[index]['z-index'] > max) {
-            next = temp
-            next_i = index
-            max = this.map[index]['z-index']
-          }
-        }
-      }
-      this.clickCard(next, next_i)
+      this.clickSign(this.next[1])
+      await wait(1000)
+      this.clickCard(this.next[0])
       this.hitflag = true
     },
     check (i) {
@@ -91,22 +56,34 @@ export default {
       return this.cards2.indexOf(card) >= 0
     },
     clickCard (card, i) {
-      if (!this.check(i)) {
-        return;
+      if (!Number.isFinite(i)) {
+        i = this.cards1.indexOf(card)
       }
-      if (this.sign == card) {
-        this.sign = -1
-      } else if (this.sign >> 2 != card >> 2) {
-        this.sign = card
-      } else {
-        this.cards2.push(this.sign, card)
-        this.sign = -1
+      let index = this.cards1.indexOf(card + 4)
+      if (index >= 0) {
+        if (this.cards1[index + 1] < 0) {
+          this.cards2.push([card, this.cards1[index + 1]])
+          this.$set(this.cards1, i, this.cards1[index + 1])
+          this.$set(this.cards1, index + 1, card)
+        }
       }
+      //   this.cards2.push(this.sign, card)
+    },
+    clickSign (i) {
+      let card = this.cards1[i - 1]
+      if (card < 4) {
+        return
+      }
+      let temp = ((card >> 2) - 1) * 4 + (card % 4)
+      let index = this.cards1.indexOf(temp)
+      document.documentElement.scrollTop = window.document.body.scrollTop = (index % 14) * 150
     },
     undo () {
-      this.sign = -1
-      this.cards2.pop()
-      this.cards2.pop()
+      let undo = this.cards2.pop()
+      let i0 = this.cards1.indexOf(undo[0])
+      let i1 = this.cards1.indexOf(undo[1])
+      this.$set(this.cards1, i1, undo[0])
+      this.$set(this.cards1, i0, undo[1])
       this.loseflag = false
       this.lockflag = true
     },
@@ -119,7 +96,6 @@ export default {
       }
     },
     goon () {
-      this.sign = -1
       this.hitflag = true
       this.lockflag = true
       this.cards1.splice(0)
@@ -127,6 +103,43 @@ export default {
       this.loseflag = false
       this.winflag = false
       this.init()
+    },
+    autoCalc () {
+      let over = true
+      this.next = [-1]
+      for (let i = -4; i < 0; i++) {
+        let index = this.cards1.indexOf(i)
+        let card = this.cards1[index - 1]
+        if (card >= 4) {
+          over = false
+          if (card - 4 > this.next[0]) {
+            this.next = [card - 4, index]
+          }
+        }
+      }
+      if (over) {
+        let i
+        for (i = 0; i < this.number + 4; i++) {
+          if (this.cards1[i] >> 2 != i % 14) {
+            break
+          }
+        }
+        if (i >= this.number + 4) {
+          this.winflag = true
+        } else {
+          this.loseflag = true
+        }
+      }
+    }
+  },
+  watch: {
+    step () {
+      this.autoCalc()
+    },
+  },
+  computed: {
+    step () {
+      return this.cards2.length
     },
   },
 }
