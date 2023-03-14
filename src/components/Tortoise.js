@@ -156,6 +156,7 @@ export default {
       this.cards2.pop()
       this.cards2.pop()
       this.loseflag = false
+      this.lockflag = true
     },
     async pass () {
       this.lockflag = false
