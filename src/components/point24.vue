@@ -9,7 +9,7 @@
           <point24card :card="arr[0]"></point24card>
           <div class="flex-row" v-show="step < 3">
             <span v-for="i in 4" :key="i" class="sign center"
-              :class="{choose: sign == i}" @click="clickSign(i)">{{signs[i]}}</span>
+              :class="{choose: sign == i}" @click="hitflag && lockflag && clickSign(i)">{{signs[i]}}</span>
           </div>
           <div v-if="sign != 0" class="align-center">
             <div class="card"><img :src="'./static/bg.jpg'"></div>
@@ -20,8 +20,8 @@
         </div>
         <div v-for="(item, i) in arr" :key='i' class="align-center flex-wrap center">
           <div v-if="i != 0" class="center">
-            <span class="sign center" @click="clickCard(item, i)">{{signs[sign]}}</span>
-            <point24card :card="item" @click.native="clickCard(item, i)"></point24card>
+            <span class="sign center" @click="hitflag && lockflag && clickCard(item, i)">{{signs[sign]}}</span>
+            <point24card :card="item" @click.native="hitflag && lockflag && clickCard(item, i)"></point24card>
           </div>
         </div>
       </ul>

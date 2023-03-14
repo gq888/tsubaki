@@ -4,6 +4,7 @@ import Sum from "@/components/sum.vue";
 import Fish from "@/components/fish.vue";
 import point24 from "@/components/point24.vue";
 import Month from "@/components/month.vue";
+import Tortoise from "@/components/Tortoise.vue";
 
 Vue.use(VueRouter);
 
@@ -27,7 +28,11 @@ const routes = [
   {
     path: "/blackjack",
     component: Sum
-  }
+  },
+  {
+    path: "/Tortoise",
+    component: Tortoise
+  },
 ];
 
 const router = new VueRouter({

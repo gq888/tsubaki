@@ -12,9 +12,14 @@
       /
       &nbsp;
       <router-link to="/blackjack">BlackJack</router-link>
+      &nbsp;
       /
       &nbsp;
       <router-link to="/point24">Point24</router-link>
+      &nbsp;
+      /
+      &nbsp;
+      <router-link to="/Tortoise">Tortoise</router-link>
     </div>
     <router-view />
   </div>

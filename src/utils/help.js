@@ -18,3 +18,7 @@ export function timeout (handle, time) {
     }, time)
   })
 }
+
+export function wait(time){
+  return new Promise(r => setTimeout(r, time))
+}
