@@ -48,7 +48,8 @@
 </div>
     <transition>
     <div class="lose" v-if="loseflag" style="background-color: rgba(0,0,0,0.5);">
-      <h1>U LOSE</h1><h1>NO EXP = 24</h1>
+      <h1>U LOSE</h1>
+      <h1 class="small">NO EXP = 24</h1>
       <input type="button" value="RESTART" @click="goon"/>
       <input type="button" value="UNDO" @click="undo" :disabled="step <= 0"/>
     </div>
