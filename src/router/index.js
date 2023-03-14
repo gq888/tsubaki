@@ -5,6 +5,7 @@ import Fish from "@/components/fish.vue";
 import point24 from "@/components/point24.vue";
 import Month from "@/components/month.vue";
 import Tortoise from "@/components/Tortoise.vue";
+import Sort from "@/components/Sort.vue";
 
 Vue.use(VueRouter);
 
@@ -32,6 +33,10 @@ const routes = [
   {
     path: "/Tortoise",
     component: Tortoise
+  },
+  {
+    path: "/Sort",
+    component: Sort
   },
 ];
 

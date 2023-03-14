@@ -96,37 +96,30 @@ export default {
       }
       this.hitflag = false
       let next, next_i, max = -1
+      let fn = (temp) => {
+        if (temp == this.sign) {
+          return
+        }
+        if (this.done(temp)) {
+          return
+        }
+        let index = this.cards1.indexOf(temp)
+        if (this.check(index) && this.map[index]['z-index'] > max) {
+          next = temp
+          next_i = index
+          max = this.map[index]['z-index']
+        }
+      }
       if (this.sign != -1 && this.sign << 2 != this.next[0] << 2) {
         let card = this.sign >> 2
         for(let i = 0; i < 4; i++) {
           let temp = card * 4 + i;
-          if (temp == this.sign) {
-            continue
-          }
-          if (this.done(temp)) {
-            continue
-          }
-          let index = this.cards1.indexOf(temp)
-          if (this.check(index) && this.map[index]['z-index'] > max) {
-            next = temp
-            next_i = index
-            max = this.map[index]['z-index']
-          }
+          fn(temp)
         }
-      } else {
+      }
+      if (max < 0) {
         for (let temp of this.next) {
-          if (temp == this.sign) {
-            continue
-          }
-          if (this.done(temp)) {
-            continue
-          }
-          let index = this.cards1.indexOf(temp)
-          if (this.check(index) && this.map[index]['z-index'] > max) {
-            next = temp
-            next_i = index
-            max = this.map[index]['z-index']
-          }
+          fn(temp)
         }
       }
       this.clickCard(next, next_i)
@@ -182,7 +175,7 @@ export default {
         this.winflag = true
         return
       }
-      let temp = [], i, max = -1, m = -1
+      let temp = [], i, max = -1, m = -1, d = false
       for (i = this.number - 1; i >= 0; i--) {
         if (!this.done(i)) {
           let card = this.cards1.indexOf(i)
@@ -192,21 +185,28 @@ export default {
               max = this.map[card]['z-index']
             }
           }
+        } else {
+          d = true
         }
         if (i % 4 == 0) {
-          if (temp.length > 1 && max > m) {
-            this.next = temp
-            m = max
+          if (temp.length > 1){
+            if (d) {
+              this.next = temp
+              return
+            }
+            if (max > m) {
+              this.next = temp
+              m = max
+            }
           }
-            // console.log(max, temp, m, this.next)
           max = -1
           temp = []
+          d = false
         }
       }
       if (m < 0) {
         this.loseflag = true
       }
-      console.log(this.next)
     }
   },
   watch: {

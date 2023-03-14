@@ -20,6 +20,10 @@
       /
       &nbsp;
       <router-link to="/Tortoise">Tortoise</router-link>
+      &nbsp;
+      /
+      &nbsp;
+      <router-link to="/Sort">Sort</router-link>
     </div>
     <router-view />
   </div>
