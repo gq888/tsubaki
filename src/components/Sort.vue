@@ -1,6 +1,25 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
+<div class="btns">
+
+  <input type="button" value="UNDO" @click="undo" :disabled="step <= 0 || !hitflag || !lockflag"/>    
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag" />
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
+</div>
   <div class="row">
     <div>
       <ul class="cardsul flex-col" style="padding-left: 0; width: 100%; height: 2100px; max-width: 500px; margin: 0 auto; position: static">
@@ -36,6 +55,7 @@
     <transition>
     <div class="lose" v-if="loseflag" style="background-color: rgba(0,0,0,0.5);">
       <h1>U LOSE</h1>
+      <h1 class="small">{{n + '/' + number}}</h1>
       <input type="button" value="RESTART" @click="goon"/>
       <input type="button" value="UNDO" @click="undo" :disabled="step <= 0"/>
     </div>
