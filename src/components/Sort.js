@@ -104,7 +104,6 @@ export default {
         let index = this.cards1.indexOf(id)
         let card = this.cards1[index - 1]
         temp[id] = {
-          id,
           index,
           card: card,
           priority: 0,
@@ -116,33 +115,39 @@ export default {
         let index = temp[id].index
         let card = temp[id].card
         if (card >= 4) {
-          over = false
-          if (this.cards1[index + 1] < 0 && card >= 8) {
-            prior.push([this.cards1[index + 1], id])
-            temp[id].priority++
-            temp[id]._in++
-          }
+          let i = index - 1, type = card % 4
           let next_i = this.cards1.indexOf(card - 4)
-          if (this.cards1[next_i - 1] < 4 || this.cards1[next_i + 1] < 0) {
+          while (this.cards1[i] == (12 - (i % 14)) * 4 + type) {
+            i--
+          }
+          if (i < 0 || i % 14 == 13) {
+            if (card < 8 || next_i % 14 == 13 || this.cards1[next_i + 1] == card - 8) {
+              this.next = [card - 4, index]
+              return
+            }
+          }
+          over = false
+          while (card >= 4) {
+            next_i = this.cards1.indexOf(card - 4)
             if (this.cards1[next_i - 1] < 0 && this.cards1[next_i - 2] >= 8) {
               prior.push([id, this.cards1[next_i - 1]])
               temp[this.cards1[next_i - 1]].proirity++
               temp[this.cards1[next_i - 1]]._in++
             }
-            if (this.cards1[next_i + 1] < 0) {
+            if (this.cards1[next_i + 1] < 0 && card >= 8) {
               prior.push([id, this.cards1[next_i + 1]])
               temp[this.cards1[next_i + 1]].priority++
               temp[this.cards1[next_i + 1]]._in++
             }
+            card = this.cards1[next_i - 1]
             if (this.cards1[next_i - 1] >> 2 == 0) {
               let c = this.cards1[next_i - 1] + 4
-              c += 4
-              next_i -= 2
-              while (this.cards1[next_i] == c && next_i % 14 > 0) {
-                next_i--
+              let n = next_i - 2
+              while (this.cards1[n] == c && n % 14 > 0) {
+                n--
                 c += 4
               }
-              if (next_i % 14 == 0) {
+              if (n % 14 == 0) {
                 continue
               }
               let prev_i = this.cards1.indexOf(c)
@@ -152,7 +157,6 @@ export default {
                 temp[this.cards1[prev_i + 1]]._in++
               }
             }
-            continue
           }
         } else if (card >= 0) {
           card += 4
@@ -170,6 +174,10 @@ export default {
             temp[this.cards1[prev_i + 1]].priority++
             temp[this.cards1[prev_i + 1]]._in++
           }
+        } else if (this.cards1[index - 2] >= 8) {
+          prior.push([id, this.cards1[index - 1]])
+          temp[this.cards1[index - 1]].priority++
+          temp[this.cards1[index - 1]]._in++
         }
       }
       if (over) {
@@ -186,17 +194,17 @@ export default {
         }
         return
       }
+      console.log(prior)
       let signs = [-1, -2, -3, -4]
       while (signs.length > 0) {
-        let s = 0
-        for (let i = 0; i < signs.length; i++) {
-          if (temp[signs[i]]._in <= 0) {
-            s = signs[i]
-            signs.splice(i, 1)
+        let ind
+        for (ind = 0; ind < signs.length; ind++) {
+          if (temp[signs[ind]]._in <= 0) {
             break
           }
         }
-        if (s < 0) {
+        if (ind < signs.length) {
+          let s = signs.splice(ind, 1)[0]
           let j = 0
           while (j < prior.length) {
             if (prior[j][0] == s) {
@@ -211,17 +219,14 @@ export default {
           let road = [signs[0]]
           while (prior.length > 0) {
             let p = prior.findIndex(t => t[1] == road[0])
-            console.log(p, prior, road, signs)
             let index = road.indexOf(prior[p][0])
             if (index >= 0) {
               temp[prior[p][1]]._in--
-              temp[prior[p][1]].priority--
               prior.splice(p, 1)
               for (let i = 0; i < index; i++) {
                 for (let j = 0; j < prior.length; j++) {
                   if (prior[j][0] == road[i] && prior[j][1] == road[i + 1]) {
                     temp[prior[j][1]]._in--
-                    temp[prior[j][1]].priority--
                     prior.splice(j, 1)
                     break
                   }
@@ -237,10 +242,10 @@ export default {
       let min = 99, max = -1
       for (let i = -4; i < 0; i++) {
         let t = temp[i]
-        if (!t.able) {
+        if (t.card < 4) {
           continue
         }
-        if (t.card < 4) {
+        if (!t.able) {
           continue
         }
         let diff = Math.abs((t.card - 4 >> 2) - 12 + (t.index % 14))
