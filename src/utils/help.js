@@ -28,7 +28,7 @@ export function preload(cb) {
   for (let i = 0; i < 54; i++) {
     arr.push(new Promise(resolve => {
       let img = new Image()
-      img.src = './static/' + i + '.png'
+      img.src = './static/' + i + '.jpg'
       img.onload = () => {
         cb && cb(img, i)
         resolve(img)
