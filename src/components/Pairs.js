@@ -1,10 +1,7 @@
 import {
   shuffleCards,
   wait,
-  preload,
 } from '../utils/help.js'
-
-preload()
 
 export default {
   name: 'Pairs',
