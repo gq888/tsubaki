@@ -6,6 +6,8 @@ import point24 from "@/components/point24.vue";
 import Month from "@/components/month.vue";
 import Tortoise from "@/components/Tortoise.vue";
 import Sort from "@/components/Sort.vue";
+import Pairs from "@/components/Pairs.vue";
+import Spider from "@/components/Spider.vue";
 
 Vue.use(VueRouter);
 
@@ -37,6 +39,14 @@ const routes = [
   {
     path: "/Sort",
     component: Sort
+  },
+  {
+    path: "/Pairs",
+    component: Pairs
+  },
+  {
+    path: "/Spider",
+    component: Spider
   },
 ];
 
