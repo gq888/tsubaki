@@ -99,6 +99,9 @@ input {
   position: absolute;
   left: 0;
 }
+.static {
+  position: static;
+}
 .card {
   /* float: left; */
   margin: 10px 10px ;

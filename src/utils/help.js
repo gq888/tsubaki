@@ -19,6 +19,21 @@ export function timeout (handle, time) {
   })
 }
 
-export function wait(time){
+export function wait(time) {
   return new Promise(r => setTimeout(r, time))
+}
+
+export function preload(cb) {
+  let arr = []
+  for (let i = 0; i < 54; i++) {
+    arr.push(new Promise(resolve => {
+      let img = new Image()
+      img.src = './static/' + i + '.png'
+      img.onload = () => {
+        cb && cb(img, i)
+        resolve(img)
+      }
+    }))
+  }
+  return Promise.all(arr)
 }
