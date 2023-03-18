@@ -10,15 +10,32 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-  <div class="row center">
-    <img class="avatar" src="../assets/0.png">
-    <span class="scrore">{{score1}}</span>
-    <span class="diff" :style="{opacity : diff1 != 0 ? 1 : 0}">{{diff1 > 0 ? '+' : ''}}{{diff1}}</span>
+  <div class="row flex-row center" style="padding-top: 10px">
+    <div class="flex-col center" style="max-width: 25%;">
+      <img class="avatar" :src="'./static/avatar/27.png'">
+      <span class="diff" :style="{opacity : diff1 != 0 ? 1 : 0}">{{diff1 > 0 ? '+' : ''}}{{diff1}}</span>
+      <span class="scrore">{{score1}}</span>
+    </div>
+    <div class="flex-col center" style="max-width: 25%;">
+      <img class="avatar" :src="'./static/avatar/26.png'">
+      <span class="diff" :style="{opacity : diff2 != 0 ? 1 : 0}">{{diff2 > 0 ? '+' : ''}}{{diff2}}</span>
+      <span class="scrore">{{score2}}</span>
+    </div>
+    <div class="flex-col center" style="max-width: 25%;">
+      <img class="avatar" :src="'./static/avatar/23.png'">
+      <span class="diff" :style="{opacity : diff3 != 0 ? 1 : 0}">{{diff3 > 0 ? '+' : ''}}{{diff3}}</span>
+      <span class="scrore">{{score3}}</span>
+    </div>
+    <div class="flex-col center" style="max-width: 25%;">
+      <img class="avatar" :src="'./static/avatar/24.png'">
+      <span class="diff" :style="{opacity : diff4 != 0 ? 1 : 0}">{{diff4 > 0 ? '+' : ''}}{{diff4}}</span>
+      <span class="scrore">{{score4}}</span>
+    </div>
   </div>
   <div class="row">
     <div>
-      <ul class="cardsul">
-        <li v-for="item in arr" :key='item' class="card">
+      <ul class="cardsul" style="padding-left: 0; margin: 0; min-height: 150px;">
+        <li v-for="item in arr" :key='item' class="card m-0">
           <img :class="{
               shanshuo: ssArr.indexOf(item) >= 0,
               flyin1: flyin1.indexOf(item) >= 0,
@@ -31,11 +48,6 @@
       </ul>
     </div>
   </div>
-  <div class="row center">
-    <img class="avatar" src="../assets/1.png">
-    <span class="scrore">{{score2}}</span>
-    <span class="diff" :style="{opacity : diff2 != 0 ? 1 : 0}">{{diff2 > 0 ? '+' : ''}}{{diff2}}</span>
-  </div>
 <div class="btns">
 
   <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>    
@@ -46,12 +58,8 @@
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
     <transition>
-    <div class="lose" v-if="loseflag">
-      <h1>U LOSE</h1>
-      <input type="button" value="AGAIN" @click="goon"/>
-    </div>
     <div class="lose" v-if="winflag">
-      <h1>U WIN!</h1>
+      <h1><img class="avatar" :src="'./static/avatar/' + [27, 26, 23, 24][step % 4] + '.png'">WIN!</h1>
       <input type="button" value="GO ON" @click="goon"/>
     </div>
     </transition>

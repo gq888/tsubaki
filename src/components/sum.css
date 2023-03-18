@@ -146,9 +146,10 @@ input {
   background-color: #dfcdc3;
 }
 .diff {
-  text-align: left;
+  text-align: center;
   width: 60px;
   font-size: 20px;
+  line-height: 20px;
   margin: 0;
 }
 .lose {

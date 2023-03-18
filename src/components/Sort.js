@@ -114,6 +114,59 @@ export default {
       for (let id = -4; id < 0; id++) {
         let index = temp[id].index
         let card = temp[id].card
+        let prev_a = []
+        let prevFn = (prev_c, deep) => {
+          prev_a.push(prev_c)
+          if (prev_c < 0) {
+            prior.push([id, prev_c, deep])
+            temp[prev_c].priority++
+            temp[prev_c]._in++
+          } else {
+            if (prev_c >= 48) {
+              return
+            }
+            if (prev_a.indexOf(prev_c) >= 0) {
+              return
+            }
+            prev_c = this.cards1[this.cards1.indexOf(prev_c + 4) + 1]
+            prevFn(prev_c, ++deep)
+          }
+        }
+        let nextFn = (next_i, next_c, deep) => {
+          if (deep > 0 && next_c >= 8) {
+            let prev_c = this.cards1[next_i + 1]
+            prevFn(prev_c, ++deep)
+          }
+          next_c = this.cards1[next_i - 1]
+          if (next_c < 4) {
+            let n = next_i - 2
+            let num = 1
+            while (next_c < 0) {
+              next_c = this.cards1[n]
+              n--
+              num++
+            }
+            if (next_c >= num * 4) {
+              prior.push([id, this.cards1[next_i - 1], deep])
+              temp[this.cards1[next_i - 1]].priority++
+              temp[this.cards1[next_i - 1]]._in++
+              return
+            }
+            next_c += 4
+            while (this.cards1[n] == next_c && n % 14 > 0) {
+              n--
+              next_c += 4
+            }
+            if (n % 14 == 0) {
+              return
+            }
+            let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1]
+            prevFn(prev_c, ++deep)
+            return
+          }
+          next_i = this.cards1.indexOf(next_c - 4)
+          nextFn(next_i, next_c, ++deep)
+        }
         if (card >= 4) {
           let i = index - 1, type = card % 4
           let next_i = this.cards1.indexOf(card - 4)
@@ -127,58 +180,8 @@ export default {
             }
           }
           over = false
-          while (card >= 4) {
-            next_i = this.cards1.indexOf(card - 4)
-            if (this.cards1[next_i - 1] < 0 && this.cards1[next_i - 2] >= 8) {
-              prior.push([id, this.cards1[next_i - 1]])
-              temp[this.cards1[next_i - 1]].proirity++
-              temp[this.cards1[next_i - 1]]._in++
-            }
-            if (this.cards1[next_i + 1] < 0 && card >= 8) {
-              prior.push([id, this.cards1[next_i + 1]])
-              temp[this.cards1[next_i + 1]].priority++
-              temp[this.cards1[next_i + 1]]._in++
-            }
-            card = this.cards1[next_i - 1]
-            if (this.cards1[next_i - 1] >> 2 == 0) {
-              let c = this.cards1[next_i - 1] + 4
-              let n = next_i - 2
-              while (this.cards1[n] == c && n % 14 > 0) {
-                n--
-                c += 4
-              }
-              if (n % 14 == 0) {
-                continue
-              }
-              let prev_i = this.cards1.indexOf(c)
-              if (this.cards1[prev_i + 1] < 0) {
-                prior.push([id, this.cards1[prev_i + 1]])
-                temp[this.cards1[prev_i + 1]].priority++
-                temp[this.cards1[prev_i + 1]]._in++
-              }
-            }
-          }
-        } else if (card >= 0) {
-          card += 4
-          index -= 2
-          while (this.cards1[index] == card && index % 14 > 0) {
-            index--
-            card += 4
-          }
-          if (index % 14 == 0) {
-            continue
-          }
-          let prev_i = this.cards1.indexOf(card)
-          if (this.cards1[prev_i + 1] < 0) {
-            prior.push([id, this.cards1[prev_i + 1]])
-            temp[this.cards1[prev_i + 1]].priority++
-            temp[this.cards1[prev_i + 1]]._in++
-          }
-        } else if (this.cards1[index - 2] >= 8) {
-          prior.push([id, this.cards1[index - 1]])
-          temp[this.cards1[index - 1]].priority++
-          temp[this.cards1[index - 1]]._in++
         }
+        nextFn(index, id, 0)
       }
       if (over) {
         this.n = 0
@@ -194,7 +197,6 @@ export default {
         }
         return
       }
-      console.log(prior)
       let signs = [-1, -2, -3, -4]
       while (signs.length > 0) {
         let ind
@@ -209,6 +211,7 @@ export default {
           while (j < prior.length) {
             if (prior[j][0] == s) {
               temp[prior[j][1]]._in--
+              temp[prior[j][1]].deep = prior[j][2]
               prior.splice(j, 1)
               temp[s].able = false
             } else {
@@ -239,7 +242,7 @@ export default {
         }
       }
       this.next = [-1, -1]
-      let min = 99, max = -1
+      let min = 999999, max = -1
       for (let i = -4; i < 0; i++) {
         let t = temp[i]
         if (t.card < 4) {
@@ -248,8 +251,8 @@ export default {
         if (!t.able) {
           continue
         }
-        let diff = Math.abs((t.card - 4 >> 2) - 12 + (t.index % 14))
-        if (t.priority > max || t.priority == max && diff < min) {
+        let diff = t.deep || Math.abs((t.card - 4 >> 2) - 12 + (t.index % 14))
+        if (t.priority > max || t.priority == max && t.deep < min) {
           this.next = [t.card - 4, t.index]
           min = diff
           max = t.priority

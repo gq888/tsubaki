@@ -5,9 +5,13 @@ export default {
       title: 'Fish',
       diff1: 0,
       diff2: 0,
+      diff3: 0,
+      diff4: 0,
       step: 0,
       cards1: [],
       cards2: [],
+      cards3: [],
+      cards4: [],
       ssArr: [],
       flyin1: [],
       flyin2: [],
@@ -15,11 +19,10 @@ export default {
       flyout2: [],
       cardsIndex: '',
       arr: [],
-      loseflag: false,
       winflag: false,
       hitflag: true,
       lockflag: true,
-      timer: ''
+      timer: '',
     }
   },
   created: function () {
@@ -34,7 +37,10 @@ export default {
         cards.push(i);
       }
       this.shuffleCards(cards)
-      this.cards2.push(...cards.splice(27))
+      this.cards2.push(...cards.splice(-14))
+      this.cards3.push(...cards.splice(-13))
+      this.cards4.push(...cards.splice(-13))
+      console.log(cards,this.cards2,this.cards3)
     },
     // 洗牌
     shuffleCards (cards) {
@@ -49,10 +55,24 @@ export default {
     },
     async stepFn () {
       this.hitflag = false
-      await this.hit((this.step % 2) == 0 ? this.cards1 : this.cards2, this.arr).then(() => {
-        this.hitflag = true
-        this.step ++;
-      })
+      let cards = this['cards' + ((this.step % 4) + 1)]
+      while (cards.length <= 0) {
+        this.step++
+        cards = this['cards' + ((this.step % 4) + 1)]
+      }
+      await this.hit(cards, this.arr)
+      let i
+      for (i = 1; i <= 4; i++) {
+        if ((this.step % 4) + 1 != i && this['cards' + i].length > 0) {
+          break
+        }
+      }
+      if (i > 4) {
+        this.winflag = true
+        return
+      }
+      this.hitflag = true
+      this.step ++;
     },
     time (handle, time) {
       return new Promise(resolve => {
@@ -79,7 +99,10 @@ export default {
         this.ssArr.push(currentCard)
         return await this.time(() => {
           this.ssArr.splice(0)
-          arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(0, currentCard == 53 ? 5 : 3))
+          for (let i = 1; i <= 4; i++) {
+            i != (this.step % 4) + 1 && arr.push(...this['cards' + i].splice(0, currentCard == 53 ? 5 : 3))
+          }
+          // arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(0, currentCard == 53 ? 5 : 3))
         }, 1000)
       }
       var index = (value == 10) ? 0 : arr.findIndex(item => (item >> 2) == value)
@@ -95,9 +118,8 @@ export default {
     },
     pass () {
       this.lockflag = false
-      if (!this.winflag && !this.loseflag) {
+      if (!this.winflag) {
         this.stepFn().then(() => {
-          console.log(this.arr, this.cards1,this.cards2)
           setTimeout(this.pass, 1000)
         })
       }
@@ -108,9 +130,9 @@ export default {
       this.lockflag = true
       this.cards1.splice(0)
       this.cards2.splice(0)
-      this.loseflag = false
+      this.cards3.splice(0)
+      this.cards4.splice(0)
       this.winflag = false
-      // clearInterval(this.timer)
       this.init()
     }
   },
@@ -121,29 +143,38 @@ export default {
     },
     score2: function () {
       return this.cards2.length;
-    }
+    },
+    score3: function () {
+      return this.cards3.length;
+    },
+    score4: function () {
+      return this.cards4.length;
+    },
   },
   watch: {
+    score4 (val, old) {
+      this.diff4 = val - old
+      this.time(() => {
+        this.diff4 = 0
+      }, 800)
+    },
+    score3 (val, old) {
+      this.diff3 = val - old
+      this.time(() => {
+        this.diff3 = 0
+      }, 800)
+    },
     score2 (val, old) {
-      if (val === 0) {
-        this.loseflag = true
-      } else {
-        this.diff2 = val - old
-        this.time(() => {
-          this.diff2 = 0
-        }, 800)
-      }
+      this.diff2 = val - old
+      this.time(() => {
+        this.diff2 = 0
+      }, 800)
     },
     score1 (val, old) {
-      if (val === 0) {
-        this.winflag = true
-        // clearInterval(this.timer)
-      } else {
-        this.diff1 = val - old
-        this.time(() => {
-          this.diff1 = 0
-        }, 800)
-      }
+      this.diff1 = val - old
+      this.time(() => {
+        this.diff1 = 0
+      }, 800)
     }
   }
 }

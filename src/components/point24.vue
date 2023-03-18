@@ -18,8 +18,8 @@
           <span class="vertical m-0">=</span>
           <span class="m-0">{{calc(arr[0]).toFixed(2)}}</span>
         </div>
-        <div v-for="(item, i) in arr" :key='i' class="align-center flex-wrap center">
-          <div v-if="i != 0" class="center">
+        <div v-for="(item, i) in arr" :key='i' class="align-center flex-wrap flex-row center">
+          <div v-if="i != 0" class="flex-col center">
             <span class="sign center" @click="hitflag && lockflag && clickCard(item, i)">{{signs[sign]}}</span>
             <point24card :card="item" @click.native="hitflag && lockflag && clickCard(item, i)"></point24card>
           </div>
