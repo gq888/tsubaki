@@ -41,11 +41,12 @@ export default {
     this.init()
   },
   mounted () {
+    let enter = i => () => this.moveEnter(i)
     for(let i = 0; i < 4; i ++) {
       let middle = this.$refs.middleBox[i]
       let down = this.$refs.downBox[i]
-      let middleEnter = () => this.moveEnter(i + 2)
-      let downEnter = () => this.moveEnter(i + 6)
+      let middleEnter = enter(i + 2)
+      let downEnter = enter(i + 6)
       middle.addEventListener('mousemove', middleEnter)
       middle.addEventListener('touchmove', middleEnter)
       down.addEventListener('mousemove', downEnter)
@@ -393,9 +394,6 @@ export default {
     },
     moveEnter (item) {
       console.log("moveEnter", item, this.dragItem)
-      if (item == this.dragItem) {
-        return
-      }
       this.enterItem = item
       this.moveflag = false
     },
