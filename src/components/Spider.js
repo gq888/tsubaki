@@ -24,7 +24,9 @@ export default {
       arr: [],
       sign: -99,
       index: -99,
+      dragCard: -99,
       dragItem: -99,
+      enterItem: -99,
       turn: 1,
       types: ['♥', '♠', '♦', '♣'],
       loseflag: false,
@@ -214,6 +216,9 @@ export default {
         if (this.lock) {
           return false
         }
+        this.dragCard = -99
+        this.dragItem = -99
+        this.enterItem = -99
         this.lock = true
         for (let i = 0; i < this.number; i++) {
           let type = i % 4
@@ -331,7 +336,7 @@ export default {
         return false
       }
       let drag = this.findPos(item)
-      if (drag == 1 && item != this.cards[1][0]) {
+      if (drag < 0 && item != this.cards[1][0]) {
         return
       }
       let data = e.detail.vnode._moveData
@@ -362,24 +367,25 @@ export default {
       this.fresh[drag]++
       this.enterItem = -99
       this.dragItem = -99
+      this.dragCard = -99
     },
-    enter (item) {return item
-      // console.log('enter', item)
-      // this.enterItem = item
+    enter (item) {
+      console.log('enter', item)
+      this.enterItem = item
     },
-    leave (item) {return item
-      // console.log('leave', item)
-      // if (this.enterItem == item) {
-      //   this.enterItem = -99
-      // }
+    leave (item) {
+      console.log('leave', item)
+      if (this.enterItem == item) {
+        this.enterItem = -99
+      }
     },
     moveEnter (item) {
-      console.log("enter", item, this.dragItem)
-      if (item == this.dragItem) {
-        return
-      }
-      this.enterItem = item
-      this.moveflag = false
+      console.log("moveEnter", item, this.dragItem)
+      // if (item == this.dragItem) {
+      //   return
+      // }
+      // this.enterItem = item
+      // this.moveflag = false
     },
     move (e) {
       if (!this.hitflag || !this.lockflag) {
@@ -391,13 +397,13 @@ export default {
       let data = e.detail.vnode._moveData
       e.detail.el.style.left = data.offsetX + data.offsetLeft + 'px'
       e.detail.el.style.top = data.offsetY + data.offsetTop + 'px'
-      if (this.moveflag) {
-        console.log("leave", this.enterItem, this.dragItem)
-        this.enterItem = -99
-        this.moveflag = false
-      } else {
-        this.moveflag = true
-      }
+      // if (this.moveflag) {
+      //   console.log("leave", this.enterItem, this.dragItem)
+      //   this.enterItem = -99
+      //   this.moveflag = false
+      // } else {
+      //   this.moveflag = true
+      // }
       console.log("move", this.dragItem)
       if (this.dragItem >= 6) {
         let index= this.cards[this.dragItem].indexOf(this.dragCard)
@@ -430,6 +436,8 @@ export default {
       this.turn = 1
       this.sign = -99
       this.dragItem = -99
+      this.dragCard = -99
+      this.enterItem = -99
       this.arr.splice(0)
       this.loseflag = false
       this.winflag = false
