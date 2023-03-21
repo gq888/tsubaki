@@ -25,9 +25,7 @@ export default {
     // console.log(this.cardsOrg)
     // console.log(this.cardsChg)
   },
-  // mounted: function () {
-  // },
-  // 初始化
+  component: [],
   methods: {
     init (cards) {
       this.arr1.splice(0)

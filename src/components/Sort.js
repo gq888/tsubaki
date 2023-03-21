@@ -37,10 +37,10 @@ export default {
       this.$set(cards, cards.indexOf(50), -2)
       this.$set(cards, cards.indexOf(49), -3)
       this.$set(cards, cards.indexOf(48), -4)
-      cards.splice(0, 0, 49)
-      cards.splice(14, 0, 48)
-      cards.splice(28, 0, 51)
-      cards.splice(42, 0, 50)
+      cards.splice(0, 0, 48)
+      cards.splice(14, 0, 49)
+      cards.splice(28, 0, 50)
+      cards.splice(42, 0, 51)
       this.autoCalc()
     },
     async stepFn () {

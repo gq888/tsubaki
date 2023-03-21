@@ -97,10 +97,12 @@ input {
 }
 .abso {
   position: absolute;
-  left: 0;
 }
 .static {
   position: static;
+}
+.rela {
+  position: relative;
 }
 .card {
   /* float: left; */
