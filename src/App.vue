@@ -28,10 +28,10 @@
       /
       &nbsp;
       <router-link to="/Pairs">Pairs</router-link>
-      <!-- &nbsp;
+      &nbsp;
       /
       &nbsp;
-      <router-link to="/Spider">Spider</router-link> -->
+      <router-link to="/Spider">Spider</router-link>
     </div>
     <router-view />
   </div>

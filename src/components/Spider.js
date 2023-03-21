@@ -382,14 +382,14 @@ export default {
       console.log('move', data)
       if (this.dragItem >= 6) {
         let index= this.cards[this.dragItem].indexOf(this.dragCard)
-        let sum = 0
-        for (let i = 6; i < this.dragItem; i++) {
-          sum += this.cards[i].length
-        }
-        for (let i = sum + index + 1; i < sum + this.cards[this.dragItem].length; i++) {
-          let down = this.$refs.down[i]
+        let j = 0
+        for (let down of this.$refs.down) {
+          let res = down.className.match("drag")
+          if(!res || ++j <= index) {
+            continue
+          }
           down.style.left = data.offsetX + 'px'
-          down.style.top = data.offsetY + (i - sum) * 30 + 'px'
+          down.style.top = data.offsetY + (j - 1) * 30 + 'px'
         }
       }
     },
