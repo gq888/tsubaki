@@ -51,7 +51,7 @@
            :class="{drag: dragItem == i + 1, opa0: dragCard == item && enterItem >= 0}">
             <img :src="'./static/' + item + '.jpg'" :class="{shanshuo: sign == item, drag: dragItem == i + 1}">
           </div>
-          <img :src="'./static/' + dragCard + '.jpg'" class="card m-0" v-show="dragCard >= 0 && enterItem == i + 1" style="width:100%; height: 150px">
+          <img :src="'./static/' + dragCard + '.jpg'" class="card m-0 abso" v-show="dragCard >= 0 && enterItem == i + 1" style="width:100%; height: 150px; left: 0; top: 0;">
         </li>
       </ul>
       <div class="row" style="height: 30px;"></div>
