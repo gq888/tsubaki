@@ -42,11 +42,11 @@
         <li v-for="i in 4" :key="i" class="cards m-0 rela center" style="width:25%; height: 150px" :style="{zIndex: dragItem == i + 1 ? 11 : 'auto'}"
          :class="{drag: dragItem == i + 1}">
           <div class="card m-0 abso" style="left: 0; width: 100%;" @click="hitflag && lockflag && clickCard(i + 1)"
-           @mouseenter="enter(i + 1)" @touchenter="enter(i + 1)" @mouseleave="leave(i + 1)" @touchleave="leave(i + 1)">
+           @mousemove="moveEnter(i + 1)" @touchmove="moveEnter(i + 1)">
             <span class="m-0">{{types[i - 1] + 'A'}}</span>
           </div>
           <div v-for="item in cards[i + 1]" :key="item + fresh[i + 1] * number" class="card m-0 abso" style="width: 100%; left: 0; top: 0;"
-           v-move="{start, end, move}" @mouseenter="enter(i + 1)" @touchenter="enter(i + 1)" @mouseleave="leave(i + 1)" @touchleave="leave(i + 1)"
+           v-move="{start, end, move}" @mousemove="moveEnter(i + 1)" @touchmove="moveEnter(i + 1)"
            :class="{drag: dragItem == i + 1}">
             <img :src="'./static/' + item + '.jpg'" :class="{shanshuo: sign == item, drag: dragItem == i + 1}">
           </div>
@@ -58,7 +58,7 @@
          :style="{height: cards[i + 5].length * 30 + 120 + 'px', left: 0, zIndex: dragItem == i + 5 ? 11 : 'auto'}" @click1="end">
           <div class="m-0 card abso" v-for="(item, j) in cards[i + 5]" :key='item + fresh[i + 5] * number' style="width: 100%; height: 150px"
            :style="{top: j * 30 + 'px', left: 0}" :class="{drag: dragItem == i + 5}"
-           v-move="{start, end, move}" ref="down" @mouseenter="enter(i + 5)" @touchenter="enter(i + 5)" @mouseleave="leave(i + 5)" @touchleave="leave(i + 5)">
+           v-move="{start, end, move}" ref="down" @mousemove="moveEnter(i + 5)" @touchmove="moveEnter(i + 5)">
             <img :src="'./static/' + item + '.jpg'" :class="{shanshuo: sign == item}">
           </div>
         </li>

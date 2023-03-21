@@ -330,11 +330,15 @@ export default {
       if (!this.hitflag || !this.lockflag) {
         return false
       }
+      let drag = this.findPos(item)
+      if (drag == 1 && item != this.cards[1][0]) {
+        return
+      }
       let data = e.detail.vnode._moveData
       data.offsetLeft = e.detail.el.offsetLeft
       data.offsetTop = e.detail.el.offsetTop
       // this.sign = -99
-      this.dragItem = this.findPos(item)
+      this.dragItem = drag
       if (this.dragItem < 0) {
         this.dragItem = 1
       }
@@ -359,15 +363,23 @@ export default {
       this.enterItem = -99
       this.dragItem = -99
     },
-    enter (item) {
-      console.log('enter', item)
-      this.enterItem = item
+    enter (item) {return item
+      // console.log('enter', item)
+      // this.enterItem = item
     },
-    leave (item) {
-      console.log('leave', item)
-      if (this.enterItem == item) {
-        this.enterItem = -99
+    leave (item) {return item
+      // console.log('leave', item)
+      // if (this.enterItem == item) {
+      //   this.enterItem = -99
+      // }
+    },
+    moveEnter (item) {
+      console.log("enter", item, this.dragItem)
+      if (item == this.dragItem) {
+        return
       }
+      this.enterItem = item
+      this.moveflag = false
     },
     move (e) {
       if (!this.hitflag || !this.lockflag) {
@@ -379,7 +391,14 @@ export default {
       let data = e.detail.vnode._moveData
       e.detail.el.style.left = data.offsetX + data.offsetLeft + 'px'
       e.detail.el.style.top = data.offsetY + data.offsetTop + 'px'
-      console.log('move', data)
+      if (this.moveflag) {
+        console.log("leave", this.enterItem, this.dragItem)
+        this.enterItem = -99
+        this.moveflag = false
+      } else {
+        this.moveflag = true
+      }
+      console.log("move", this.dragItem)
       if (this.dragItem >= 6) {
         let index= this.cards[this.dragItem].indexOf(this.dragCard)
         let j = 0
