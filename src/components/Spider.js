@@ -40,6 +40,18 @@ export default {
   created: function () {
     this.init()
   },
+  mounted () {
+    for(let i = 0; i < 4; i ++) {
+      let middle = this.$refs.middleBox[i]
+      let down = this.$refs.downBox[i]
+      let middleEnter = () => this.moveEnter(i + 2)
+      let downEnter = () => this.moveEnter(i + 6)
+      middle.addEventListener('mousemove', middleEnter)
+      middle.addEventListener('touchmove', middleEnter)
+      down.addEventListener('mousemove', downEnter)
+      down.addEventListener('touchmove', downEnter)
+    }
+  },
   // 初始化
   methods: {
     init () {

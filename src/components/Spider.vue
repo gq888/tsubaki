@@ -40,9 +40,8 @@
       <div class="row" style="height: 30px;"></div>
       <ul class="cardsul" style="padding-left: 0; max-width: 500px; margin: auto; justify-content: space-between;">
         <li v-for="i in 4" :key="i" class="cards m-0 rela center" style="width:25%; height: 150px" :style="{zIndex: dragItem == i + 1 ? 0 : 1}"
-         :class="{drag: dragItem == i + 1}"
-         @mouseenter="enter(i + 1)" @touchenter="enter(i + 1)" @mouseleave="leave(i + 1)" @touchleave="leave(i + 1)"
-         @mousemove="moveEnter(i + 1)" @touchmove="moveEnter(i + 1)">
+         :class="{drag: dragItem == i + 1}" ref="middleBox"
+         @mouseenter="enter(i + 1)" @touchenter="enter(i + 1)" @mouseleave="leave(i + 1)" @touchleave="leave(i + 1)">
           <div class="card m-0 abso" style="left: 0; width: 100%;" @click="hitflag && lockflag && clickCard(i + 1)" :style="{zIndex: dragItem == i + 1 ? 0 : 1}">
             <span class="m-0">{{types[i - 1] + 'A'}}</span>
           </div>
@@ -57,8 +56,8 @@
       <div class="row" style="height: 30px;"></div>
       <ul class="cardsul" style="padding-left: 0; max-width: 500px; margin: auto; justify-content: space-between;">
         <li v-for="i in 4" :key="i" class="cards m-0 rela" style="width:25%" :class="{drag: dragItem == i + 5}"
-         :style="{height: cards[i + 5].length * 30 + 120 + 'px', left: 0, zIndex: dragItem == i + 5 ? 0 : 1}" @mousemove="moveEnter(i + 5)" @touchmove="moveEnter(i + 5)"
-           @mouseenter="enter(i + 5)" @touchenter="enter(i + 5)" @mouseleave="leave(i + 5)" @touchleave="leave(i + 5)">
+         :style="{height: cards[i + 5].length * 30 + 120 + 'px', left: 0, zIndex: dragItem == i + 5 ? 0 : 1}" ref="downBox"
+         @mouseenter="enter(i + 5)" @touchenter="enter(i + 5)" @mouseleave="leave(i + 5)" @touchleave="leave(i + 5)">
           <div class="m-0 card abso" v-for="(item, j) in cards[i + 5]" :key='item + fresh[i + 5] * number' style="width: 100%; height: 150px"
            :style="{top: j * 30 + 'px', left: 0}" :class="{drag: dragItem == i + 5, opa0: dragItem == i + 5 && dragCard >= item && enterItem >= 0}"
            v-move="{start, end, move}" ref="down">
