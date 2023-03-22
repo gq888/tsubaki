@@ -31,6 +31,9 @@ export default {
     this.init()
   },
   mounted () {
+    this.$nextTick(() => {
+      this.width = this.$refs.container.offsetWidth >> 2
+    })
     let enter = i => () => this.moveEnter(i)
     for(let i = 0; i < 4; i ++) {
       let middle = this.$refs.middleBox[i]
@@ -455,20 +458,28 @@ export default {
       this.dragCard = item
       this.enterItem = -99
     },
-    async end () {
-      let enter = this.enterItem
+    async end (e) {
+      // let enter = this.enterItem
       let drag = this.dragItem
-      console.log('end',this.dragItem, drag, this.enterItem, enter)
       if (!this.hitflag || !this.lockflag) {
         return
       }
       if (drag == 1 && this.dragCard != this.cards[1][0]) {
         return
       }
-      await this.clickCard(drag).catch(console.log)
-      if (this.sign != -99 && enter != drag && enter >= 0) {
-        await this.clickCard(enter).catch(console.log)
+      
+      let data = e.detail.vnode._moveData
+      let left = data.offsetX + data.offsetLeft
+      let top = data.offsetY + data.offsetTop
+      let index = Math.floor(left / this.width)
+      if (index >= 0 && index < 4 && top >= 180 && top <= this.height) {
+        index += top <= 330 ? 2 : 6
+        await this.clickCard(drag).catch(console.log)
+        if (this.sign >=0 && index != drag && index >= 0) {
+          await this.clickCard(index).catch(console.log)
+        }
       }
+      console.log('end', drag, index, data, this.width)
       this.fresh[drag]++
       this.enterItem = -99
       this.dragItem = -99
@@ -515,8 +526,8 @@ export default {
           if(!res || ++j <= index) {
             continue
           }
-          down.style.left = data.offsetX + 'px'
-          down.style.top = data.offsetY + (j - 1) * 30 + 'px'
+          down.style.left = data.offsetX + data.offsetLeft + 'px'
+          down.style.top = data.offsetY + data.offsetTop + (j - 1) * 30 + 'px'
         }
       }
     },
@@ -549,6 +560,9 @@ export default {
   computed: {
     step () {
       return this.arr.length
+    },
+    height () {
+      return Math.max(...this.cards.slice(-4).map(cards => cards.length)) * 30 + 480
     },
   },
 }
