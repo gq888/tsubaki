@@ -9,16 +9,6 @@ export default {
   data () {
     return {
       title: 'Spider',
-      cards0: [],
-      cards1: [],
-      cards2: [],
-      cards3: [],
-      cards4: [],
-      cards5: [],
-      cards6: [],
-      cards7: [],
-      cards8: [],
-      cards9: [],
       cards: [[], [], [], [], [], [], [], [], [], []],
       fresh: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       arr: [],
@@ -73,8 +63,47 @@ export default {
       }
       return -99
     },
+    equalArray (arr1, arr2) {
+      if (!arr2) return false
+      for (let i = 0; i < arr2.length; i++) {
+        if (arr1[i] != arr2[i]) return false
+      }
+      return true
+    },
+    checkDeadForeach (array, newest) {
+      for (let i = 0; i < array.length >> 1; i++){
+        if (!this.equalArray(array[i], newest)) {
+          continue
+        }
+        let j
+        let count = {}
+        for (j = 0; j < i; j++) {
+          count[array[i].join('.')] = count[array[i].join('.')] ? count[array[i].join('.')] + 1 : 1
+          if (!this.equalArray(array[j], array[j + i + 1]))
+            break
+        }
+        if (j >= i) {
+          if (i > 40) {
+            console.log('dead foreach', array, newest, i)
+          }
+          return false
+        }
+        let index = Object.values(count).indexOf(1)
+        if (index < 0) {
+          return false
+        }
+      }
+      return true
+    },
+    addAndCheck (card, type) {
+      // console.log(type, card)
+      let res = this.checkDeadForeach(this.record, [card, type])
+      if (!res) return false
+      this.record.unshift([card, type])
+      return true
+    },
     checkDown (card) {
-      console.log('down', card)
+      if (!this.addAndCheck(card, 1)) return
       let type = card % 2
       let level = card >> 2
       if (level == 12) {
@@ -104,12 +133,18 @@ export default {
         let index = cards.indexOf(up)
         if (index == cards.length - 1) {
           let pos = this.findPos(card)
-          if (pos == (pos1 >= 6 ? pos1 : pos2)) {
-            return false
+          if (pos != (pos1 >= 6 ? pos1 : pos2)) {
+            return [pos, pos1 >= 6 ? pos1 : pos2]
           }
-          return [pos, pos1 >= 6 ? pos1 : pos2]
+        } else {
+          let res = this.checkUp(cards[index + 1])
+          if (res) {
+            return res
+          }
         }
-        return this.checkUp(cards[index + 1])
+        if (pos1 < 0 || pos2 < 0) {
+          return false
+        }
       }
       let first
       if (pos1 - 2 == up1 % 4) {
@@ -149,20 +184,16 @@ export default {
       return false
     },
     checkUp (card) {
-      console.log('up', card)
-      if (this.record[card] !== undefined) {
-        // return this.record[card]
-      }
-      this.record[card] = false
+      if (!this.addAndCheck(card, 2)) return
       let type = card % 4
       let level = card >> 2
-      let first = false
+      let result = []
       for (let i = 0; i <= level; i++) {
         let temp = i * 4 + type
         let pos = this.findPos(temp)
         if (pos < 0) {
           if (i == level) {
-            first = first || [pos, type + 2]
+            result.push([pos, type + 2])
             break
           }
           return false
@@ -172,22 +203,19 @@ export default {
         }
         let index = this.cards[pos].indexOf(temp)
         if (index == this.cards[pos].length - 1) {
-          first = first || [pos, type + 2]
+          result.push([pos, type + 2])
           continue
         }
         let res = this.checkMove(this.cards[pos][index + 1])
         if (!res) {
           return false
         }
-        if (!first) {
-          first = res
-        }
+        result.push(res)
       }
-      this.record[card] = first
-      return first
+      return result[0]
     },
     checkMove (card) {
-      console.log('move', card)
+      if (!this.addAndCheck(card, 0)) return
       return this.checkDown(card) || this.checkUp(card)
     },
     async stepFn () {
@@ -197,15 +225,17 @@ export default {
         this.record = []
         next = this.checkMove(this.cards[i][0])
         if (next) {
+          if (!this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) continue
           break
         }
       }
       this.record = []
       !next && this.cards[1].length > 0 && (next = this.checkMove(this.cards[1][0]))
-      if (!next) {
+      if (!next || !this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) {
         this.hitflag = true
         return this.clickCard(0)
       }
+      this.skipCheck = false
       this.sign = -99
       await this.clickCard(next[0] < 0 ? 1 : next[0])
       console.log(next, this.sign)
@@ -217,10 +247,10 @@ export default {
       for (let i = 6; i < 10; i++) {
         if (this.cards[i].length <= 0) {
           if (this.cards[1].length > 0) {
-            this.arr.push([i, 1, 0, 1])
+            this.arr.unshift([i, 1, 0, 1])
             this.cards[i].push(this.cards[1].splice(0, 1)[0])
           } else if (this.cards[0].length > 0) {
-            this.arr.push([i, 0, this.cards[0].length - 1, 1])
+            this.arr.unshift([i, 0, this.cards[0].length - 1, 1])
             this.cards[i].push(this.cards[0].splice(-1)[0])
           }
         }
@@ -236,16 +266,75 @@ export default {
         for (let i = 0; i < this.number; i++) {
           let type = i % 4
           while (this.cards[type + 2].length <= i >> 2) {
-            this.sign = -99
+            this.record = []
             let next = this.checkUp(i)
+            if (!next || !this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) {
+              for (let j = 6; j < 10; j++) {
+                if (this.cards[j].length <= 0 || this.cards[j][0] >> 2 >= 12) {
+                  continue
+                }
+                this.record = []
+                next = this.checkMove(this.cards[j][0])
+                if (next) {
+                  if (!this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) {
+                    next = false
+                    continue
+                  }
+                  break
+                }
+              }
+            }
+            if (!next) {
+              this.skipCheck = true
+              continue
+            }
+            this.skipCheck = false
+            console.log(next)
+            this.sign = -99
             await this.clickCard(next[0])
             await wait(500)
             await this.clickCard(next[1])
-            for (let i = 6; i < 10; i++) {
-              if (this.cards[i].length <= 0) {
-                for (let j = 6; j < 10; j++) {
-                  if (this.cards[j].length > 1) {
-                    this.cards[i].push(this.cards[j].splice(-1)[0])
+            for (let k = 6; k < 10; k++) {
+              if (this.cards[k].length <= 0) {
+                let pos = this.findPos(i)
+                if (this.cards[pos][this.cards[pos].length - 1] != i) {
+                  let index = this.cards[pos].indexOf(i)
+                  let next = [k, pos, index + 1, this.cards[pos].length - index - 1, i]
+                  this.cards[k].push(...this.cards[pos].splice(index + 1))
+                  this.arr.unshift(next)
+                  continue
+                }
+                let l
+                for (l = 48; l < 52; l++) {
+                  let pos = this.findPos(l)
+                  if (pos < 6) {
+                    continue
+                  }
+                  let index = this.cards[pos].indexOf(l)
+                  if (l <= 0) {
+                    continue
+                  }
+                  let next = [k, pos, index, this.cards[pos].length - index, l]
+                  console.log(next)
+                  if (!this.checkDeadForeach(this.arr, next)) {
+                    continue
+                  }
+                  this.cards[k].push(...this.cards[pos].splice(index))
+                  this.arr.unshift(next)
+                  break
+                }
+                if (l < 52) {
+                  continue
+                }
+                for (l = 6; l < 10; l++) {
+                  if (this.cards[l].length > 1) {
+                    let next = [k, l, this.cards[l].length - 1, 1]
+                    if (!this.checkDeadForeach(this.arr, next)) {
+                      continue
+                    }
+                    this.cards[k].push(this.cards[l].splice(-1)[0])
+                    this.arr.unshift(next)
+                    break
                   }
                 }
               }
@@ -261,10 +350,18 @@ export default {
       let len = this.cards[index].length
       if (index == 0) {
         if (this.cards[0].length > 0) {
-          this.arr.push([1, 0, this.turn > 3 ? 1 : 4 - this.turn])
+          this.arr.unshift([1, 0, this.turn > 3 ? 1 : 4 - this.turn])
           this.cards[1].unshift(...this.cards[0].splice(this.turn > 3 ? -1 : this.turn - 4))
         } else {
-          this.arr.push([0, 1, this.cards[1].length])
+          for (let i = 0; i < this.arr.length; i++) {
+            let step = this.arr[i]
+            if (step[0] == 0 && step[1] == 1) {
+              this.skipCheck = true
+            } else if (step[0] != 1 || step[1] != 0) {
+              break
+            }
+          }
+          this.arr.unshift([0, 1, this.cards[1].length])
           this.cards[0].unshift(...this.cards[1].splice(0))
           this.turn++
         }
@@ -276,7 +373,7 @@ export default {
         }
       } else if (index < 6) {
         if (this.sign == index - 2 + len * 4) {
-          this.arr.push([index, this.index, this.cards[this.index].indexOf(this.sign), 1])
+          this.arr.unshift([index, this.index, this.cards[this.index].indexOf(this.sign), 1])
           this.cards[index].push(this.cards[this.index].splice(this.cards[this.index].indexOf(this.sign), 1)[0])
           this.sign = -99
         } else {
@@ -287,21 +384,19 @@ export default {
         }
       } else {
         let top = this.cards[index][len - 1], i
-        if (this.index >= 6 && (i = this.cards[this.index].findIndex(card => {
-            return card >> 2 < 12 && card % 2 != top % 2 && ((card >> 2) + 1) % 13 == (top >> 2)
+        if (this.sign >= 0 && this.index >= 6 && (i = this.cards[this.index].findIndex(card => {
+            return card >> 2 < 13 && card % 2 != top % 2 && ((card >> 2) + 1) % 13 == (top >> 2)
           })) >= 0) {
-          this.arr.push([index, this.index, i, this.cards[this.index].length - i])
+          this.arr.unshift([index, this.index, i, this.cards[this.index].length - i, top])
           this.cards[index].push(...this.cards[this.index].splice(i))
           this.sign = -99
-        } else if (this.index < 6 && this.sign >> 2 < 12 && this.sign % 2 != top % 2 && ((this.sign >> 2) + 1) % 13 == (top >> 2)) {
-          this.arr.push([index, this.index, this.cards[this.index].indexOf(this.sign), 1])
+        } else if (this.sign >= 0 && this.index < 6 && this.sign >> 2 < 13 && this.sign % 2 != top % 2 && ((this.sign >> 2) + 1) % 13 == (top >> 2)) {
+          this.arr.unshift([index, this.index, this.cards[this.index].indexOf(this.sign), 1, top])
           this.cards[index].push(this.cards[this.index].splice(this.cards[this.index].indexOf(this.sign), 1)[0])
           this.sign = -99
-        } else {
-          if (len > 0) {
-            this.sign = top
-            this.index = index
-          }
+        } else if (len > 0) {
+          this.sign = top
+          this.index = index
         }
       }
       if (this.sign < 0) {
@@ -313,7 +408,7 @@ export default {
       if (this.step <= 0) {
         return
       }
-      let temp = this.arr.pop(), add = false
+      let temp = this.arr.shift(), add = false
       if (temp[1] == 0) {
         if (temp[0] == 1)
           return this.cards[0].push(...this.cards[1].splice(0, temp[2]))
@@ -323,7 +418,6 @@ export default {
         }
       } else if (temp[1] == 1) {
         if (temp[0] != 0) {
-          console.log(temp, this.cards[temp[0]])
           this.cards[1].unshift(this.cards[temp[0]].splice(-1)[0])
           add = true
           if (temp[0] < 6 || this.cards[temp[0]].length > 0){
@@ -336,11 +430,9 @@ export default {
         }
       }
       if (add) {
-        temp = this.arr.pop()
+        temp = this.arr.shift()
       }
-      console.log(this.cards[temp[1]])
       this.cards[temp[1]].splice(temp[2], 0, ...this.cards[temp[0]].splice(-temp[3]))
-      console.log(this.cards[temp[1]])
     },
     start (e) {
       let item = e.detail.vnode.key % this.number

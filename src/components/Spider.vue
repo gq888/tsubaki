@@ -21,49 +21,44 @@
 </div>
   <div class="row">
     <div calss="center">
-      <ul class="cardsul" style="padding-left: 0; max-width: 500px; margin: auto; justify-content: flex-start;">
-        <li class="card m-0" style="width:25%; height: 150px; z-index: 0;" @click="hitflag && lockflag && clickCard(0)">
+      <ul class="cardsul rela" style="padding-left: 0; max-width: 500px; margin: auto; justify-content: flex-start;"
+       :style="{height: Math.max(...cards.slice(-4).map(cards => cards.length)) * 30 + 480 + 'px'}">
+        <li class="card m-0 abso" style="width:25%; left: 0; top: 0; height: 150px; z-index: 0;" @click="hitflag && lockflag && clickCard(0)">
           <img :src="'./static/bg.jpg'" v-if="cards[0].length > 0" class="card m-0" style="width: 100%">
         </li>
-        <li class="cards m-0 rela" style="width:50%; height: 150px" :style="{zIndex: dragItem == 1 ? 0 : 0}"
+        <li class="cards m-0 abso" style="left: 25%; top: 0; width:50%; height: 150px" :style="{zIndex: dragItem == 1 ? 0 : 0}"
          :class="{drag: dragItem == 1}">
           <div class="m-0 card abso" v-for="i in cards[1].length >= (turn > 3 ? 1 : 4 - turn) ? (turn > 3 ? 1 : 4 - turn) : cards[1].length"
-           :style="{right: (i - 1) * 25 + '%', zIndex: 3 - i}" :key="cards[1][i - 1] + fresh[1] * number" style="width: 50%"
+           :style="{right: (i - 1) * 25 + '%', zIndex: 3 - i}" :key="cards[1][i - 1] + (fresh[1] * 3 + 1) * number" style="width: 50%"
            v-move="{start, end, move}" :class="{drag: dragItem == 1, opa0: dragCard == cards[1][i - 1] && enterItem >= 0}">
             <img :src="'./static/' + cards[1][i - 1] + '.jpg'" :class="{shanshuo: sign == cards[1][i - 1], drag: dragItem == 1}">
           </div>
         </li>
-        <li class="m-0 center" style="width:25%; max-width: 100px; height: 150px">
+        <li class="m-0 center abso" style="left: 75%; top: 0;width:25%; max-width: 100px; height: 150px">
           <span class="m-0" :style="{color: turn > 3 ? 'red' : 'inherit'}">{{turn}}</span><span class="m-0">/3</span>
         </li>
-      </ul>
-      <div class="row" style="height: 30px;"></div>
-      <ul class="cardsul" style="padding-left: 0; max-width: 500px; margin: auto; justify-content: space-between;">
-        <li v-for="i in 4" :key="i" class="cards m-0 rela center" style="width:25%; height: 150px" :style="{zIndex: dragItem == i + 1 ? 0 : 1}"
-         :class="{drag: dragItem == i + 1}" ref="middleBox"
+        <li v-for="i in 4" :key="i" class="cards m-0 abso center" style="top: 180px; width:25%; height: 150px"
+         :class="{drag: dragItem == i + 1}" ref="middleBox" :style="{zIndex: dragItem == i + 1 ? 0 : 1, left: (i - 1) * 25 + '%'}"
          @mouseenter="enter(i + 1)" @touchenter="enter(i + 1)" @mouseleave="leave(i + 1)" @touchleave="leave(i + 1)">
           <div class="card m-0 abso" style="left: 0; width: 100%;" @click="hitflag && lockflag && clickCard(i + 1)" :style="{zIndex: dragItem == i + 1 ? 0 : 1}">
             <span class="m-0">{{types[i - 1] + 'A'}}</span>
           </div>
-          <div v-for="item in cards[i + 1]" :key="item + fresh[i + 1] * number" class="card m-0 abso" style="width: 100%; left: 0; top: 0;"
+          <div v-for="item in cards[i + 1]" :key="item + (fresh[i + 1] * 3 + 2) * number" class="card m-0 abso" style="width: 100%; left: 0; top: 0;"
            v-move="{start, end, move}"
            :class="{drag: dragItem == i + 1, opa0: dragCard == item && enterItem >= 0}">
             <img :src="'./static/' + item + '.jpg'" :class="{shanshuo: sign == item, drag: dragItem == i + 1}">
           </div>
           <img :src="'./static/' + dragCard + '.jpg'" class="card m-0 abso" v-show="dragCard >= 0 && enterItem == i + 1" style="width:100%; height: 150px; left: 0; top: 0;">
         </li>
-      </ul>
-      <div class="row" style="height: 30px;"></div>
-      <ul class="cardsul" style="padding-left: 0; max-width: 500px; margin: auto; justify-content: space-between;">
-        <li v-for="i in 4" :key="i" class="cards m-0 rela" style="width:25%" :class="{drag: dragItem == i + 5}"
-         :style="{height: cards[i + 5].length * 30 + 120 + 'px', left: 0, zIndex: dragItem == i + 5 ? 0 : 1}" ref="downBox"
+        <li v-for="i in 4" :key="i + 4" class="cards m-0 abso" style="width:25%; top: 360px;" :class="{drag: dragItem == i + 5}"
+         :style="{height: cards[i + 5].length * 30 + 120 + 'px', left: (i - 1) * 25 + '%', zIndex: dragItem == i + 5 ? 0 : 1}" ref="downBox"
          @mouseenter="enter(i + 5)" @touchenter="enter(i + 5)" @mouseleave="leave(i + 5)" @touchleave="leave(i + 5)">
-          <div class="m-0 card abso" v-for="(item, j) in cards[i + 5]" :key='item + fresh[i + 5] * number' style="width: 100%; height: 150px"
+          <div class="m-0 card abso" v-for="(item, j) in cards[i + 5]" :key='item + (fresh[i + 5] * 3 + 3) * number' style="width: 100%; height: 150px"
            :style="{top: j * 30 + 'px', left: 0}" :class="{drag: dragItem == i + 5, opa0: dragItem == i + 5 && dragCard >= item && enterItem >= 0}"
            v-move="{start, end, move}" ref="down">
             <img :src="'./static/' + item + '.jpg'" :class="{shanshuo: sign == item, drag: dragItem == i + 5}">
           </div>
-          <img v-for="(item, j) in cards[dragItem]" :key="j" :src="'./static/' + item + '.jpg'" :style="{top: cards[i + 5].length * 30 + (j - cards[dragItem].indexOf(dragCard)) * 30 + 'px', left: 0}" class="card m-0 abso" v-show="enterItem == i + 5 && (dragItem >= 6 && dragCard >= item || dragCard == item)" style="width:100%; height: 150px">
+          <img v-for="(item, j) in cards[dragItem]" :key="j + 8" :src="'./static/' + item + '.jpg'" :style="{top: cards[i + 5].length * 30 + (j - cards[dragItem].indexOf(dragCard)) * 30 + 'px', left: 0}" class="card m-0 abso" v-show="enterItem == i + 5 && (dragItem >= 6 && dragCard >= item || dragCard == item)" style="width:100%; height: 150px">
         </li>
       </ul>
     </div>
@@ -110,6 +105,6 @@ export default Spider
   z-index: 0;
 }
 .opa0 {
-  opacity: 0;
+  opacity: 0.1;
 }
 </style>
