@@ -1,6 +1,7 @@
 import {
   shuffleCards,
   wait,
+  checkDeadForeach,
 } from '../utils/help.js'
 import move from '../directives/move.js'
 
@@ -31,9 +32,6 @@ export default {
     this.init()
   },
   mounted () {
-    this.$nextTick(() => {
-      this.width = this.$refs.container.offsetWidth >> 2
-    })
     let enter = i => () => this.moveEnter(i)
     for(let i = 0; i < 4; i ++) {
       let middle = this.$refs.middleBox[i]
@@ -66,41 +64,8 @@ export default {
       }
       return -99
     },
-    equalArray (arr1, arr2) {
-      if (!arr2) return false
-      for (let i = 0; i < arr2.length; i++) {
-        if (arr1[i] != arr2[i]) return false
-      }
-      return true
-    },
-    checkDeadForeach (array, newest) {
-      for (let i = 0; i < array.length >> 1; i++){
-        if (!this.equalArray(array[i], newest)) {
-          continue
-        }
-        let j
-        let count = {}
-        for (j = 0; j < i; j++) {
-          count[array[i].join('.')] = count[array[i].join('.')] ? count[array[i].join('.')] + 1 : 1
-          if (!this.equalArray(array[j], array[j + i + 1]))
-            break
-        }
-        if (j >= i) {
-          if (i > 40) {
-            console.log('dead foreach', array, newest, i)
-          }
-          return false
-        }
-        let index = Object.values(count).indexOf(1)
-        if (index < 0) {
-          return false
-        }
-      }
-      return true
-    },
     addAndCheck (card, type) {
-      // console.log(type, card)
-      let res = this.checkDeadForeach(this.record, [card, type])
+      let res = checkDeadForeach(this.record, [card, type])
       if (!res) return false
       this.record.unshift([card, type])
       return true
@@ -228,13 +193,13 @@ export default {
         this.record = []
         next = this.checkMove(this.cards[i][0])
         if (next) {
-          if (!this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) continue
+          if (!this.skipCheck && !checkDeadForeach(this.arr, [next[1], next[0]])) continue
           break
         }
       }
       this.record = []
       !next && this.cards[1].length > 0 && (next = this.checkMove(this.cards[1][0]))
-      if (!next || !this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) {
+      if (!next || !this.skipCheck && !checkDeadForeach(this.arr, [next[1], next[0]])) {
         this.hitflag = true
         return this.clickCard(0)
       }
@@ -271,7 +236,7 @@ export default {
           while (this.cards[type + 2].length <= i >> 2) {
             this.record = []
             let next = this.checkUp(i)
-            if (!next || !this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) {
+            if (!next || !this.skipCheck && !checkDeadForeach(this.arr, [next[1], next[0]])) {
               for (let j = 6; j < 10; j++) {
                 if (this.cards[j].length <= 0 || this.cards[j][0] >> 2 >= 12) {
                   continue
@@ -279,7 +244,7 @@ export default {
                 this.record = []
                 next = this.checkMove(this.cards[j][0])
                 if (next) {
-                  if (!this.skipCheck && !this.checkDeadForeach(this.arr, [next[1], next[0]])) {
+                  if (!this.skipCheck && !checkDeadForeach(this.arr, [next[1], next[0]])) {
                     next = false
                     continue
                   }
@@ -319,7 +284,7 @@ export default {
                   }
                   let next = [k, pos, index, this.cards[pos].length - index, l]
                   console.log(next)
-                  if (!this.checkDeadForeach(this.arr, next)) {
+                  if (!checkDeadForeach(this.arr, next)) {
                     continue
                   }
                   this.cards[k].push(...this.cards[pos].splice(index))
@@ -332,7 +297,7 @@ export default {
                 for (l = 6; l < 10; l++) {
                   if (this.cards[l].length > 1) {
                     let next = [k, l, this.cards[l].length - 1, 1]
-                    if (!this.checkDeadForeach(this.arr, next)) {
+                    if (!checkDeadForeach(this.arr, next)) {
                       continue
                     }
                     this.cards[k].push(this.cards[l].splice(-1)[0])
@@ -439,7 +404,6 @@ export default {
     },
     start (e) {
       let item = e.detail.vnode.key % this.number
-      console.log('start', item)
       if (!this.hitflag || !this.lockflag) {
         return false
       }
@@ -450,7 +414,6 @@ export default {
       let data = e.detail.vnode._moveData
       data.offsetLeft = e.detail.el.offsetLeft
       data.offsetTop = e.detail.el.offsetTop
-      // this.sign = -99
       this.dragItem = drag
       if (this.dragItem < 0) {
         this.dragItem = 1
@@ -459,7 +422,6 @@ export default {
       this.enterItem = -99
     },
     async end (e) {
-      // let enter = this.enterItem
       let drag = this.dragItem
       if (!this.hitflag || !this.lockflag) {
         return
@@ -467,19 +429,17 @@ export default {
       if (drag == 1 && this.dragCard != this.cards[1][0]) {
         return
       }
-      
       let data = e.detail.vnode._moveData
       let left = data.offsetX + data.offsetLeft
       let top = data.offsetY + data.offsetTop
-      let index = Math.floor(left / this.width)
-      if (index >= 0 && index < 4 && top >= 180 && top <= this.height) {
+      let index = Math.floor((left + 50) / this.cardWidth)
+      if (index >= 0 && index < 4 && top >= 115 && top <= this.height - 75) {
         index += top <= 330 ? 2 : 6
         await this.clickCard(drag).catch(console.log)
         if (this.sign >=0 && index != drag && index >= 0) {
           await this.clickCard(index).catch(console.log)
         }
       }
-      console.log('end', drag, index, data, this.width)
       this.fresh[drag]++
       this.enterItem = -99
       this.dragItem = -99
@@ -497,8 +457,11 @@ export default {
     },
     moveEnter (item) {
       console.log("moveEnter", item, this.dragItem)
-      this.enterItem = item
-      this.moveflag = false
+      // if (item == this.dragItem) {
+      //   return
+      // }
+      // this.enterItem = item
+      // this.moveflag = false
     },
     move (e) {
       if (!this.hitflag || !this.lockflag) {
@@ -508,16 +471,18 @@ export default {
         return
       }
       let data = e.detail.vnode._moveData
-      e.detail.el.style.left = data.offsetX + data.offsetLeft + 'px'
-      e.detail.el.style.top = data.offsetY + data.offsetTop + 'px'
-      if (this.moveflag) {
-        console.log("leave", this.enterItem, this.dragItem)
-        this.enterItem = -99
-        this.moveflag = false
+      let left = data.offsetX + data.offsetLeft
+      let top = data.offsetY + data.offsetTop
+      let index = Math.floor((left + 50) / this.cardWidth)
+      if (index >= 0 && index < 4 && top >= 115 && top <= this.height - 75) {
+        index += top <= 330 ? 2 : 6
+        if (this.dragItem != index)
+          this.enterItem = index
       } else {
-        this.moveflag = true
+        this.enterItem = -99
       }
-      console.log("move", this.dragItem)
+      e.detail.el.style.left = left + 'px'
+      e.detail.el.style.top = top + 'px'
       if (this.dragItem >= 6) {
         let index= this.cards[this.dragItem].indexOf(this.dragCard)
         let j = 0
@@ -527,7 +492,7 @@ export default {
             continue
           }
           down.style.left = data.offsetX + data.offsetLeft + 'px'
-          down.style.top = data.offsetY + data.offsetTop + (j - 1) * 30 + 'px'
+          down.style.top = data.offsetY + data.offsetTop + (j - index - 1) * 30 + 'px'
         }
       }
     },
@@ -563,6 +528,9 @@ export default {
     },
     height () {
       return Math.max(...this.cards.slice(-4).map(cards => cards.length)) * 30 + 480
+    },
+    cardWidth () {
+      return this.$refs.container.offsetWidth >> 2
     },
   },
 }

@@ -1,6 +1,7 @@
 import {
   shuffleCards,
   wait,
+  checkDeadForeach,
 } from '../utils/help.js'
 
 export default {
@@ -114,9 +115,8 @@ export default {
       for (let id = -4; id < 0; id++) {
         let index = temp[id].index
         let card = temp[id].card
-        let prev_a = []
+        let dead = []
         let prevFn = (prev_c, deep) => {
-          prev_a.push(prev_c)
           if (prev_c < 0) {
             prior.push([id, prev_c, deep])
             temp[prev_c].priority++
@@ -125,17 +125,18 @@ export default {
             if (prev_c >= 48) {
               return
             }
-            if (prev_a.indexOf(prev_c) >= 0) {
-              return
-            }
+            if (!checkDeadForeach(dead, [prev_c, 0])) return
+            dead.unshift([prev_c, 0])
             prev_c = this.cards1[this.cards1.indexOf(prev_c + 4) + 1]
-            prevFn(prev_c, ++deep)
+            prevFn(prev_c, deep)
           }
         }
         let nextFn = (next_i, next_c, deep) => {
+          if (!checkDeadForeach(dead, [next_c, 1])) return
+          dead.unshift([next_c, 1])
           if (deep > 0 && next_c >= 8) {
             let prev_c = this.cards1[next_i + 1]
-            prevFn(prev_c, ++deep)
+            prevFn(prev_c, deep)
           }
           next_c = this.cards1[next_i - 1]
           if (next_c < 4) {
@@ -156,16 +157,17 @@ export default {
             while (this.cards1[n] == next_c && n % 14 > 0) {
               n--
               next_c += 4
+              deep++
             }
             if (n % 14 == 0) {
               return
             }
             let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1]
-            prevFn(prev_c, ++deep)
+            prevFn(prev_c, deep)
             return
           }
           next_i = this.cards1.indexOf(next_c - 4)
-          nextFn(next_i, next_c, ++deep)
+          nextFn(next_i, next_c, deep)
         }
         if (card >= 4) {
           let i = index - 1, type = card % 4
@@ -252,7 +254,7 @@ export default {
           continue
         }
         let diff = t.deep || Math.abs((t.card - 4 >> 2) - 12 + (t.index % 14))
-        if (t.priority > max || t.priority == max && t.deep < min) {
+        if (t.priority > max || t.priority == max && diff < min) {
           this.next = [t.card - 4, t.index]
           min = diff
           max = t.priority

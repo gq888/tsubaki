@@ -37,3 +37,37 @@ export function preload(cb) {
   }
   return Promise.all(arr)
 }
+
+function equalArray (arr1, arr2) {
+  if (!arr2) return false
+  for (let i = 0; i < arr2.length; i++) {
+    if (arr1[i] != arr2[i]) return false
+  }
+  return true
+}
+
+export function checkDeadForeach (array, newest) {
+  for (let i = 0; i < array.length >> 1; i++){
+    if (!equalArray(array[i], newest)) {
+      continue
+    }
+    let j
+    let count = {}
+    for (j = 0; j < i; j++) {
+      count[array[i].join('.')] = count[array[i].join('.')] ? count[array[i].join('.')] + 1 : 1
+      if (!equalArray(array[j], array[j + i + 1]))
+        break
+    }
+    if (j >= i) {
+      if (i > 40) {
+        console.log('dead foreach', array, newest, i)
+      }
+      return false
+    }
+    let index = Object.values(count).indexOf(1)
+    if (index < 0) {
+      return false
+    }
+  }
+  return true
+}
