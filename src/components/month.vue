@@ -11,7 +11,7 @@
 </div>
   <div class="row">
     <div class="center">
-      <ul class="cardsul" style="padding-left: 0; max-width: 690px; justify-content: space-between;">
+      <ul class="cardsul" style="padding-left: 0; max-width: 690px; justify-content: space-between; margin-top: 180px;">
         <li v-for="(item, i) in arr" :key='i' class="cards m-0" :class="'cards' + i">
           <img v-for="(card, j) in item" :key='card' class="m-0 card abso"
            :style="{top: (step == i ? j : 1 + j) * 30 + 'px', left: 0}"
@@ -57,17 +57,20 @@ export default month
 @import url("./sum.css");
 
 .cards12, .cards12 .card {
-  position: static;
 }
 
 .cards12 {
+  position: absolute;
+  top: -180px;
+  height: 150px;
+  min-width: 400px;
   width: 100%;
-  margin: auto;
   height: 150px;
   display: flex;
   flex-direction: row;
   justify-content: space-around;
 }
 .cards12 .card {
+  position: static;
 }
 </style>
