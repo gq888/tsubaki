@@ -39,6 +39,9 @@ li {
   /* height: 300px; */
   background-color: #3c4245;
 }
+.bg-fff {
+  background-color: #FFF;
+}
 .center {
   display: flex;
   justify-content: center;

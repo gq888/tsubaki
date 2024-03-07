@@ -16,12 +16,13 @@
 </div>
   <div class="row">
     <span>TIME: {{time}}</span>
+    <br>
     <span>STEP: {{step}}</span>
   </div>
   <div class="row">
     <div>
       <ul class="cardsul flex-row center" style="padding-left: 0; margin: 0;">
-        <div v-for="(item, i) in cards1" :key='i' class="card m-0 radius">
+        <div v-for="(item, i) in cards1" :key='i' class="card m-0 radius" style="max-width: 25%;">
           <img :src="'./static/' + item + '.jpg'" v-if="sign == item || sign2 == item || cards2[item]">
           <img :src="'./static/bg.jpg'" v-else
             @click="hitflag && lockflag && clickCard(item, i)">

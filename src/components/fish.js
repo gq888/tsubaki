@@ -1,8 +1,13 @@
+import message from './message.vue'
+
 export default {
   name: 'Fish',
+  components: {
+    message
+  },
   data () {
     return {
-      title: 'Fish',
+      title: 'FISHING CONTEST OF DOG TEAM',
       diff1: 0,
       diff2: 0,
       diff3: 0,

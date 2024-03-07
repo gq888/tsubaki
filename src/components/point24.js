@@ -106,9 +106,6 @@ export default {
         this.arr.splice(0, 1, temp)
         this.sign = 0;
         this.$set(this.cards2, this.step++, temp)
-        if (this.step >= 3) {
-          this.winflag = true
-        }
       } else {
         let temp = this.arr[0];
         this.$set(this.arr, 0, this.arr[i])
@@ -151,6 +148,11 @@ export default {
     autoCalc () {
       let step = this.step
       if (step >= 3) {
+        if (calc(this.arr[0]) == 24) {
+          this.winflag = true
+        } else {
+          this.loseflag = true
+        }
         return;
       }
       let temp = [...this.arr]

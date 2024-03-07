@@ -1,10 +1,10 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-  <div class="row" style1="overflow:scroll">
-    <div>
+  <div class="row center" style1="overflow:scroll">
+    <div class="flex-row center">
       <ul class="cardsul flex-row center" style="padding-left: 0;">
-        <div class="flex-col center" style="width: 100%">
+        <div class="flex-col center m-0">
           <!-- <span class="vertical m-0">(</span> -->
           <point24card :card="arr[0]"></point24card>
           <div class="flex-row" v-show="step < 3">
@@ -18,8 +18,10 @@
           <span class="vertical m-0">=</span>
           <span class="m-0">{{calc(arr[0]).toFixed(2)}}</span>
         </div>
+      </ul>
+      <ul class="cardsul flex-row center" style="padding-left: 0;">
         <div v-for="(item, i) in arr" :key='i' class="align-center flex-wrap flex-row center">
-          <div v-if="i != 0" class="flex-col center">
+          <div v-if="i != 0" class="flex-row center m-0">
             <span class="sign center" @click="hitflag && lockflag && clickCard(item, i)">{{signs[sign]}}</span>
             <point24card :card="item" @click.native="hitflag && lockflag && clickCard(item, i)"></point24card>
           </div>
