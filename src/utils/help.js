@@ -71,3 +71,14 @@ export function checkDeadForeach (array, newest) {
   }
   return true
 }
+
+let s = 1;
+
+export function setSeed (seed) {
+  s = seed;
+}
+
+export function seededRandom () {
+  s = (s * 9301 + 49297) % 233280;
+  return s / 233280.0;
+}
