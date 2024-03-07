@@ -4,7 +4,7 @@ export default {
   data () {
     return {
       title: 'Month',
-      step: 0,
+      step: 12,
       cards1: [],
       cards2: [],
       arr: [],
@@ -12,7 +12,7 @@ export default {
       hitflag: true,
       lockflag: true,
       timer: '',
-      number: 48
+      number: 52
     }
   },
   created: function () {
@@ -26,7 +26,7 @@ export default {
         cards.push(i);
       }
       shuffleCards(cards, this.number)
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < this.number >> 2; i++) {
         this.cards2.push(0);
         this.arr.push(cards.splice(0, 4))
       }
@@ -44,7 +44,7 @@ export default {
     // 摸牌
     async hit () {
       let step = this.step
-      if (this.cards2[0] >= 4) {
+      if (this.cards2[12] >= 4) {
         this.loseflag = true
         return
       }
@@ -63,7 +63,7 @@ export default {
       }
     },
     goon () {
-      this.step = 0
+      this.step = 12
       this.hitflag = true
       this.lockflag = true
       this.cards1.splice(0)

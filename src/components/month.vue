@@ -12,9 +12,11 @@
   <div class="row">
     <div class="center">
       <ul class="cardsul" style="padding-left: 0; max-width: 690px; justify-content: space-between;">
-        <li v-for="(item, i) in arr" :key='i' class="cards m-0" :style="{marginTop: i != 0 &&step == i ? 0 : '30px'}">
-          <img v-for="(card, j) in item" :key='card' :style="{top: j * 30 + 'px', left: 0}" class="m-0 card abso"
-           :src="'./static/' + (cards2[i] > j || step == i && (step == 0 && j == 3 || j == 4) ? card : 'bg') + '.jpg'">
+        <li v-for="(item, i) in arr" :key='i' class="cards m-0" :class="'cards' + i">
+          <img v-for="(card, j) in item" :key='card' class="m-0 card abso"
+           :style="{top: (step == i ? j : 1 + j) * 30 + 'px', left: 0}"
+           :src="'./static/' + (cards2[i] > j || step == i && (step == 12 && j == 3 || j == 4) ? card : 'bg') + '.jpg'">
+          <div v-show="i == 12 && step != i" class="m-0 card" style="background-color: #719192;"></div>
         </li>
       </ul>
     </div>
@@ -35,7 +37,7 @@
         <div>
           <ul class="cardsul" style="padding-left: 0; max-width: 740px;">
             <div v-for="(item, i) in cards2" :key='i'>
-              <img v-if="item >= 4" :src="'./static/' + (i * 4 + 1) + '.jpg'" class="card">
+              <img v-if="item >= 4 && i < 12" :src="'./static/' + (i * 4 + 1) + '.jpg'" class="card">
             </div>
           </ul>
         </div>
@@ -53,4 +55,19 @@ export default month
 
 <style scoped>
 @import url("./sum.css");
+
+.cards12, .cards12 .card {
+  position: static;
+}
+
+.cards12 {
+  width: 100%;
+  margin: auto;
+  height: 150px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+.cards12 .card {
+}
 </style>
