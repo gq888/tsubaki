@@ -23,9 +23,7 @@ export default {
       arr: [],
       sign: -1,
       sign2: -2,
-      step: 0,
-      loseflag: false,
-      winflag: false,
+      status: 0,
       hitflag: true,
       lockflag: true,
       number: 36,
@@ -53,11 +51,13 @@ export default {
     this.init()
   },
   computed: {
+    step () {
+      return this.arr.length
+    },
     validBoxes () {
       return this.getValidBoxes(this.sign)
     },
     lowCount () {
-      console.log(1)
       return this.cards1.filter(item => this.grades[item] === 0).length
     },
     highCount () {
@@ -92,80 +92,205 @@ export default {
       if (index - h[1] * 6 >= 0 && (index % 6) + h[0] < 6) arr.push(index - h[1] * 6 + h[0])
       if (index + h[1] * 6 < 36 && (index % 6) - h[0] >= 0) arr.push(index + h[1] * 6 - h[0])
       if (index - h[1] * 6 >= 0 && (index % 6) - h[0] >= 0) arr.push(index - h[1] * 6 - h[0])
-      // console.log(index, mode, h, v, arr)
       return arr
     },
+    async stepTwiceFn () {
+      this.hitflag = false
+      await this.stepFn()
+      await wait(500)
+      await this.stepFn()
+      this.hitflag = true
+    },
     async stepFn () {
-      if (this.sign >= 0) {
-        for (let i = 0; i < 4; i++) {
-          let sign = this.sign - (this.sign % 4) + i
-          if (sign != this.sign && this.arr[sign] && !this.cards2[sign]) {
-            return await this.clickCard(sign)
-          }
+      // 1.挪2.送3.翻4.翻吃5.坏翻6.中翻7.友8.躲9.敌10.吃
+      let temp = []
+      let hide = [], friends = []
+      let grade = this.step % 2 == 0 ? this.grade : !this.grade
+      let _this = this
+      let moveFn = async function (from, to) {
+        console.log(from, to)
+        _this.sign = -1
+        await _this.clickCard(from, true)
+        await wait(1000)
+        await _this.clickCard(to, true)
+      }
+      for (let i = 0; i < this.cards1.length; i++) {
+        let item = this.cards1[i]
+        if (item < 0) {
+          temp[i] = temp[i] || 1
+          continue
         }
-      } else {
-        let num
-        for (let i = 0; i < this.number; i ++) {
-          if (i % 4 == 0) {
-            num = 0
+        if (!this.cards2[item]) {
+          temp[i] = temp[i] || 3
+          hide.push(i)
+          continue
+        }
+        if (this.grades[item] == grade) {
+          temp[i] = 7
+          friends.push(i)
+          let boxes = this.getValidBoxes(item)
+          for (let b of boxes) {
+            let c = this.cards1[b]
+            if (c < 0) {
+              continue
+            }
+            if (!this.cards2[c]) {
+              temp[b] = temp[b] == 5 || temp[b] == 6 ? 6 : 4
+              continue
+            }
+            if (this.grades[c] != grade) {
+              return await moveFn(i, b)
+            }
           }
-          if (this.arr[i] && !this.cards2[i]) {
-            num ++
+          continue
+        }
+        temp[i] = 9
+        let boxes = this.getValidBoxes(item)
+        for (let b of boxes) {
+          let c = this.cards1[b]
+          if (c < 0) {
+            temp[b] = 2
+            continue
           }
-          if (num > 1) {
-            return await this.clickCard(i)
+          if (!this.cards2[c]) {
+            temp[b] = temp[b] == 4 || temp[b] == 6 ? 6 : 5
+            continue
+          }
+          if (this.grades[c] == grade) {
+            temp[b] = 8
           }
         }
       }
-      for (let i = 0; i < this.number; i++) {
-        let c = this.cards1[i]
-        if (!this.arr[c] && !this.cards2[c]) {
-          return await this.clickCard(c)
+      // 1.吃2.躲3.翻吃4.中翻5.翻6.挪7.坏翻8.送
+      for (let f of friends) {
+        let t = temp[f]
+        if (t == 8) {
+          let c = this.cards1[f]
+          let boxes = this.getValidBoxes(c)
+          for (let box of boxes) {
+            if (temp[box] == 1) {
+              return await moveFn(f, box)
+            }
+          }
         }
+      }
+      let best = -1
+      let worst = -1
+      for (let i = 0; i < hide.length; i++) {
+        let h = hide[i]
+        let t = temp[h]
+        if (t == 4) {
+          return await this.clickCard(h, true)
+        }
+        if (t == 5) {
+          worst = h
+          hide.splice(i, 1)
+          i--
+        }
+        if (t == 6) {
+          best = h
+        }
+      }
+      if (best >= 0) {
+        return await this.clickCard(best, true)
+      }
+      if (hide.length > 0) {
+        let random = Math.floor(Math.random() * hide.length)
+        return await this.clickCard(hide[random], true)
+      }
+      let suicide = false;
+      let road = []
+      for (let f of friends) {
+        let c = this.cards1[f]
+        let boxes = this.getValidBoxes(c)
+        for (let box of boxes) {
+          if (temp[box] == 1) {
+            road.push([f, box])
+            // return await moveFn(f, box)
+          }
+          if (temp[box] == 2) {
+            suicide = [f, box]
+          }
+        }
+      }
+      if (road.length > 0) {
+        let random = Math.floor(Math.random() * road.length)
+        return await moveFn(road[random][0], road[random][1])
+      }
+      if (worst >= 0) {
+        return await this.clickCard(worst, true)
+      }
+      if (suicide) {
+        return await moveFn(suicide[0], suicide[1])
+      } else {
+        console.log('unkown error')
       }
     },
-    async clickCard (card, i) {
+    async clickCard (i, isAuto) {
+      let card = this.cards1[i]
       if (this.grade < 0) {
         this.grade = this.grades[card]
       }
       if (card >= 0 && !this.cards2[card]) {
         this.$set(this.cards2, card, true)
+        this.arr.push([0, card])
         this.sign = -1
+        if (!isAuto) {
+          this.hitflag = false
+          await wait(500)
+          await this.stepFn()
+          this.hitflag = true
+        }
         return
       }
-      if (this.sign >= 0 && this.grades[this.sign] != this.grade) {
-        this.sign = card != this.sign && card >= 0 && this.grades[card] != this.grade ? card : -1
+      let grade = this.step % 2 == 0 ? this.grade : !this.grade
+      if (this.sign >= 0 && this.grades[this.sign] != grade) {
+        this.sign = card != this.sign && card >= 0 && this.grades[card] != grade ? card : -1
         return
       }
-      if (this.sign >= 0 && this.grades[this.sign] == this.grade) {
-        if (card >= 0 && this.grades[card] == this.grade) {
+      if (this.sign >= 0 && this.grades[this.sign] == grade) {
+        if (card >= 0 && this.grades[card] == grade) {
           this.sign = this.sign == card ? -1 : card
           return
         }
         if (this.validBoxes.indexOf(i) >= 0) {
-          this.$set(this.cards1, this.cards1.indexOf(this.sign), -1)
+          let signIndex = this.cards1.indexOf(this.sign)
+          this.$set(this.cards1, signIndex, -1)
           this.$set(this.cards1, i, this.sign)
-          if (card >= 0) {
-            this.$set(this.arr, card, true)
-            if (this.lowCount <= 0) if (this.grade == 1) this.winflag = true; else this.loseflag = true;
-            if (this.highCount <= 0) if (this.grade == 0) this.winflag = true; else this.loseflag = true;
-          }
+          this.arr.push([1, card, i, this.sign, signIndex])
           this.sign = -1
+          if (card >= 0) {
+            if (this.lowCount <= 0) if (this.grade == 1) this.status = 2; else this.status = 1;
+            if (this.highCount <= 0) if (this.grade == 0) this.status = 1; else this.status = 2;
+            if (this.lowCount == 1 && this.highCount == 1) this.status = 3;
+          }
+          if (!isAuto && this.status <= 0) {
+            this.hitflag = false
+            await wait(500)
+            await this.stepFn()
+            this.hitflag = true
+          }
           return
         }
       }
       this.sign = card
-      // this.hitflag = false
-      // this.sign2 = card
-      // await wait(500)
-      // this.sign = -1
-      // this.sign2 = -1
-      // this.hitflag = true
     },
-    undo() {},
+    undo() {
+      let log = [this.arr.pop(), this.arr.pop()]
+      for(let l of log) {
+        console.log(l)
+        if(l[0] == 0) {
+          this.$set(this.cards2, l[1], false)
+        } else {
+          this.$set(this.cards1, l[4], l[3])
+          if (l[1] >= 0) this.$set(this.cards1, l[2], l[1])
+        }
+      }
+      this.status = 0
+    },
     async pass () {
       this.lockflag = false
-      if (!this.winflag && !this.loseflag) {
+      if (this.status <= 0) {
         await this.stepFn()
         await wait(500)
         this.pass()
@@ -179,8 +304,7 @@ export default {
       this.cards1.splice(0)
       this.cards2.splice(0)
       this.arr.splice(0)
-      this.loseflag = false
-      this.winflag = false
+      this.status = 0
       this.init()
     },
   },
