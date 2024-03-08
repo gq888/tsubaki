@@ -20,7 +20,7 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-  <div class="row">
+  <div class="row center">
     <!-- <div>
       <ul class="cardsul flex-col" :style="{height: 150 * (number + 1) + 'px'}" style="padding-left: 0; width: 100%; max-width: 500px; margin: 0 auto; position: static">
         <div v-for="(item, i) in cards1" :key='i' class="card m-0" style="width:25%; height: 150px">
@@ -33,21 +33,26 @@
       </ul>
     </div> -->
     <div>
-      <div class="cardsul center bg-fff"
-       style="padding-left: 0; margin: 0; width: 100%; background-color: #719192;">
-        <div v-for="(item, i) in cards1" :key='item' class="m-0 center"
+      <div class="cardsul center"
+       style="padding-left: 0; margin: 0; width: 100%; max-width: 600px; background-color: #719192; padding: 5px 0;">
+        <div v-for="(item, i) in cards1" :key='i' class="m-0 center"
          style="width: 16%; border-radius: 50%; overflow: hidden;"
          @click="hitflag && lockflag && clickCard(item, i)">
-          <div class="center" style="width: 100%;"
-           :style="{backgroundColor: !cards2[item] ? '#fff' : grades[item] ? '#5FB878' : '#01AAED'}">
+          <div class="center" style="width: 100%; position: relative;"
+           :style="{backgroundColor: item < 0 ? 'transparent' : !cards2[item] ? '#fff' : item == sign ? '#FFB800' : grades[item] == grade ? '#01AAED' : '#5FB878'}">
+            <div class="shanshuo abso" v-show="validBoxes.indexOf(i) >= 0"
+             style="width: 100%; height: 100%; background-color: #FF5722; top: 0; left: 0;"></div>
             <img
-              :style="{transform: cards2[item] && grades[item] ? 'rotate(180deg)' : ''}"
+              :style="{transform: cards2[item] && grades[item] != grade ? 'rotate(180deg)' : 'rotate(0)', opacity: item < 0 ? 0 : 100}"
               :src="!cards2[item] ? './static/logo.png' : './static/avatar/' + item + '.png'" style="width: 100%;"
             >
           </div>
         </div>
       </div>
     </div>
+  </div>
+  <div class="row">
+    <span class="m-0 scrore">{{lowCount + ' : ' + highCount}}</span>
   </div>
 <div class="btns">
 

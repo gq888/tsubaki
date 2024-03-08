@@ -52,6 +52,18 @@ export default {
   created: function () {
     this.init()
   },
+  computed: {
+    validBoxes () {
+      return this.getValidBoxes(this.sign)
+    },
+    lowCount () {
+      console.log(1)
+      return this.cards1.filter(item => this.grades[item] === 0).length
+    },
+    highCount () {
+      return this.cards1.filter(item => this.grades[item] === 1).length
+    },
+  },
   // 初始化
   methods: {
     init () {
@@ -63,19 +75,24 @@ export default {
       }
       shuffleCards(cards, this.number)
     },
-    getValidBoxes (index) {
-      let item = this.cards1[index];
+    getValidBoxes (item) {
+      let arr = []
+      // let item = this.cards1[index];
+      let index = this.cards1.indexOf(item)
+      if (item < 0 || index < 0) {
+        return arr
+      }
       let mode = this.modes.indexOf(item);
       let h = _modes[Math.floor(mode / 6)], v = _modes[mode % 6];
-      let arr = []
-      if (index + v[0] * 6 < 36 && (index % 6) + v[1] < 6) arr.push[index + v[0] * 6 + v[1]]
-      if (index - v[0] * 6 >= 0 && (index % 6) + v[1] < 6) arr.push[index - v[0] * 6 + v[1]]
-      if (index + v[0] * 6 < 36 && (index % 6) - v[1] >= 0) arr.push[index + v[0] * 6 - v[1]]
-      if (index - v[0] * 6 >= 0 && (index % 6) - v[1] >= 0) arr.push[index - v[0] * 6 - v[1]]
-      if (index + h[1] * 6 < 36 && (index % 6) + h[0] < 6) arr.push[index + h[1] * 6 + h[0]]
-      if (index - h[1] * 6 >= 0 && (index % 6) + h[0] < 6) arr.push[index - h[1] * 6 + h[0]]
-      if (index + h[1] * 6 < 36 && (index % 6) - h[0] >= 0) arr.push[index + h[1] * 6 - h[0]]
-      if (index - h[1] * 6 >= 0 && (index % 6) - h[0] >= 0) arr.push[index - h[1] * 6 - h[0]]
+      if (index + v[0] * 6 < 36 && (index % 6) + v[1] < 6) arr.push(index + v[0] * 6 + v[1])
+      if (index - v[0] * 6 >= 0 && (index % 6) + v[1] < 6) arr.push(index - v[0] * 6 + v[1])
+      if (index + v[0] * 6 < 36 && (index % 6) - v[1] >= 0) arr.push(index + v[0] * 6 - v[1])
+      if (index - v[0] * 6 >= 0 && (index % 6) - v[1] >= 0) arr.push(index - v[0] * 6 - v[1])
+      if (index + h[1] * 6 < 36 && (index % 6) + h[0] < 6) arr.push(index + h[1] * 6 + h[0])
+      if (index - h[1] * 6 >= 0 && (index % 6) + h[0] < 6) arr.push(index - h[1] * 6 + h[0])
+      if (index + h[1] * 6 < 36 && (index % 6) - h[0] >= 0) arr.push(index + h[1] * 6 - h[0])
+      if (index - h[1] * 6 >= 0 && (index % 6) - h[0] >= 0) arr.push(index - h[1] * 6 - h[0])
+      // console.log(index, mode, h, v, arr)
       return arr
     },
     async stepFn () {
@@ -107,54 +124,43 @@ export default {
         }
       }
     },
-    async clickCard (card) {
-      console.log(1)
+    async clickCard (card, i) {
       if (this.grade < 0) {
         this.grade = this.grades[card]
       }
-      if (this.sign < 0 && !this.cards2[card]) {//} this.cards2.indexOf(card) < 0) {
-        // this.cards2.push(card)
+      if (card >= 0 && !this.cards2[card]) {
         this.$set(this.cards2, card, true)
-      console.log(2)
+        this.sign = -1
         return
       }
       if (this.sign >= 0 && this.grades[this.sign] != this.grade) {
-        
-          console.log(3)
-        this.sign = -1
+        this.sign = card != this.sign && card >= 0 && this.grades[card] != this.grade ? card : -1
         return
       }
-      if (this.sign == card) {
-        this.sign = -1
-      } else if (this.sign >> 2 != card >> 2) {
-        this.sign = card
-      } else {
-        this.cards2.push(this.sign, card)
-        this.sign = -1
+      if (this.sign >= 0 && this.grades[this.sign] == this.grade) {
+        if (card >= 0 && this.grades[card] == this.grade) {
+          this.sign = this.sign == card ? -1 : card
+          return
+        }
+        if (this.validBoxes.indexOf(i) >= 0) {
+          this.$set(this.cards1, this.cards1.indexOf(this.sign), -1)
+          this.$set(this.cards1, i, this.sign)
+          if (card >= 0) {
+            this.$set(this.arr, card, true)
+            if (this.lowCount <= 0) if (this.grade == 1) this.winflag = true; else this.loseflag = true;
+            if (this.highCount <= 0) if (this.grade == 0) this.winflag = true; else this.loseflag = true;
+          }
+          this.sign = -1
+          return
+        }
       }
-      if (this.sign == card || this.cards2[card]) {
-        return
-      }
-      this.arr[card] = true
-      if (this.sign < 0) {
-        this.sign = card
-        return
-      }
-      if (this.sign >> 2 == card >> 2) {
-        this.$set(this.cards2, card, true)
-        this.$set(this.cards2, this.sign, true)
-        this.sign = -1
-      }
-      this.hitflag = false
-      this.sign2 = card
-      await wait(500)
-      this.sign = -1
-      this.sign2 = -1
-      this.hitflag = true
-      for (let i = 0; i < this.number; i++) {
-        if (!this.cards2[i]) return
-      }
-      this.winflag = true
+      this.sign = card
+      // this.hitflag = false
+      // this.sign2 = card
+      // await wait(500)
+      // this.sign = -1
+      // this.sign2 = -1
+      // this.hitflag = true
     },
     undo() {},
     async pass () {
@@ -166,13 +172,12 @@ export default {
       }
     },
     goon () {
-      this.step = 0
       this.sign = -1
-      this.sign2 = -1
       this.grade = -1
       this.hitflag = true
       this.lockflag = true
       this.cards1.splice(0)
+      this.cards2.splice(0)
       this.arr.splice(0)
       this.loseflag = false
       this.winflag = false
