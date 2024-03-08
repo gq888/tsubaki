@@ -260,8 +260,8 @@ export default {
           this.arr.push([1, card, i, this.sign, signIndex])
           this.sign = -1
           if (card >= 0) {
-            if (this.lowCount <= 0) if (this.grade == 1) this.status = 2; else this.status = 1;
-            if (this.highCount <= 0) if (this.grade == 0) this.status = 1; else this.status = 2;
+            if (this.lowCount <= 0) if (this.grade == 1) this.status = 1; else this.status = 2;
+            if (this.highCount <= 0) if (this.grade == 0) this.status = 2; else this.status = 1;
             if (this.lowCount == 1 && this.highCount == 1) this.status = 3;
           }
           if (!isAuto && this.status <= 0) {
