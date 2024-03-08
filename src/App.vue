@@ -32,6 +32,10 @@
       /
       &nbsp;
       <router-link to="/Spider">Spider</router-link>
+      &nbsp;
+      /
+      &nbsp;
+      <router-link to="/Chess">Chess</router-link>
     </div>
     <router-view />
   </div>

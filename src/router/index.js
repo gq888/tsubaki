@@ -8,6 +8,7 @@ import Tortoise from "@/components/Tortoise.vue";
 import Sort from "@/components/Sort.vue";
 import Pairs from "@/components/Pairs.vue";
 import Spider from "@/components/Spider.vue";
+import Chess from "@/components/Chess.vue";
 
 Vue.use(VueRouter);
 
@@ -47,6 +48,10 @@ const routes = [
   {
     path: "/Spider",
     component: Spider
+  },
+  {
+    path: "/Chess",
+    component: Chess
   },
 ];
 

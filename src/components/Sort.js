@@ -18,7 +18,7 @@ export default {
       winflag: false,
       hitflag: true,
       lockflag: true,
-      number: 52,
+      number: 12,
       n: 0,
     }
   },
@@ -30,18 +30,16 @@ export default {
     init () {
       let cards = this.cards1
       this.cards2.splice(0)
-      for (let i = 0; i < this.number; i++) {
+      for (let i = 0; i < this.number * 4; i++) {
         cards.push(i);
       }
-      shuffleCards(cards, this.number)
-      this.$set(cards, cards.indexOf(51), -1)
-      this.$set(cards, cards.indexOf(50), -2)
-      this.$set(cards, cards.indexOf(49), -3)
-      this.$set(cards, cards.indexOf(48), -4)
-      cards.splice(0, 0, 48)
-      cards.splice(14, 0, 49)
-      cards.splice(28, 0, 50)
-      cards.splice(42, 0, 51)
+      shuffleCards(cards, this.number * 4)
+      for (let i = 0; i < 4; i++) {
+        this.$set(cards, cards.indexOf(this.number * 4 - 1 - i), - 1 - i)
+      }
+      for (let i = 0; i < 4; i++) {
+        cards.splice(i * (this.number + 1), 0, this.number * 4 - 4 + i)
+      }
       this.autoCalc()
     },
     async stepFn () {
@@ -71,7 +69,7 @@ export default {
       }
       let temp = ((card >> 2) - 1) * 4 + (card % 4)
       let index = this.cards1.indexOf(temp)
-      document.documentElement.scrollTop = window.document.body.scrollTop = (index % 14) * 150
+      document.documentElement.scrollTop = window.document.body.scrollTop = (index % (this.number + 1)) * 150
     },
     undo () {
       let undo = this.cards2.pop()
@@ -154,12 +152,12 @@ export default {
               return
             }
             next_c += 4
-            while (this.cards1[n] == next_c && n % 14 > 0) {
+            while (this.cards1[n] == next_c && n % (this.number + 1) > 0) {
               n--
               next_c += 4
               deep++
             }
-            if (n % 14 == 0) {
+            if (n % (this.number + 1) == 0) {
               return
             }
             let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1]
@@ -172,11 +170,11 @@ export default {
         if (card >= 4) {
           let i = index - 1, type = card % 4
           let next_i = this.cards1.indexOf(card - 4)
-          while (this.cards1[i] == (12 - (i % 14)) * 4 + type) {
+          while (this.cards1[i] == (this.number - 1 - (i % (this.number + 1))) * 4 + type) {
             i--
           }
-          if (i < 0 || i % 14 == 13) {
-            if (card < 8 || next_i % 14 == 13 || this.cards1[next_i + 1] == card - 8) {
+          if (i < 0 || i % (this.number + 1) == this.number) {
+            if (card < 8 || next_i % (this.number + 1) == this.number || this.cards1[next_i + 1] == card - 8) {
               this.next = [card - 4, index]
               return
             }
@@ -187,12 +185,12 @@ export default {
       }
       if (over) {
         this.n = 0
-        for (let i = 0; i < this.number + 4; i++) {
-          if (this.cards1[i] >> 2 == 12 - (i % 14)) {
+        for (let i = 0; i < this.number * 4 + 4; i++) {
+          if (this.cards1[i] >> 2 == this.number - 1 - (i % (this.number + 1))) {
             this.n ++
           }
         }
-        if (this.n >= this.number) {
+        if (this.n >= this.number * 4) {
           this.winflag = true
         } else {
           this.loseflag = true
@@ -253,7 +251,7 @@ export default {
         if (!t.able) {
           continue
         }
-        let diff = t.deep || Math.abs((t.card - 4 >> 2) - 12 + (t.index % 14))
+        let diff = t.deep || Math.abs((t.card - 4 >> 2) - (this.number - 1) + (t.index % this.number + 1))
         if (t.priority > max || t.priority == max && diff < min) {
           this.next = [t.card - 4, t.index]
           min = diff

@@ -2,7 +2,7 @@
   <div class="Sum">
   <h1>{{ title }}</h1>
   <div class="row center">
-    <img class="avatar" :src="'./static/avatar/6.png'">
+    <img class="avatar" :src="'./static/avatar/17.png'">
     <span class="scrore">{{score1}}</span>
   </div>
   <div class="row">
@@ -20,7 +20,7 @@
     </div>
   </div>
   <div class="row center">
-    <img class="avatar" :src="'./static/avatar/27.png'">
+    <img class="avatar" :src="'./static/avatar/32.png'">
     <span class="scrore">{{score2}}</span>
   </div>
 <div class="btns">

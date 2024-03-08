@@ -13,25 +13,25 @@
   <div class="row flex-row" style="padding-top: 10px; justify-content: space-around;">
     <div class="flex-col center rela" style="max-width: 25%;">
       <message class="abso" style="top: 70px;left: 0px;width: 100%;" show1="1">1</message>
-      <img class="avatar" :src="'./static/avatar/27.png'">
+      <img class="avatar" :src="'./static/avatar/32.png'">
       <span class="diff" :style="{opacity : diff1 != 0 ? 1 : 0}">{{diff1 > 0 ? '+' : ''}}{{diff1}}</span>
       <span class="scrore">{{score1}}</span>
     </div>
     <div class="flex-col center rela" style="max-width: 25%;">
       <message class="abso" style="top: 70px;left: 0px;width: 100%;">asfasfasdfasfdasdfasdfas</message>
-      <img class="avatar" :src="'./static/avatar/26.png'">
+      <img class="avatar" :src="'./static/avatar/31.png'">
       <span class="diff" :style="{opacity : diff2 != 0 ? 1 : 0}">{{diff2 > 0 ? '+' : ''}}{{diff2}}</span>
       <span class="scrore">{{score2}}</span>
     </div>
     <div class="flex-col center rela" style="max-width: 25%;">
       <message class="abso" style="top: 70px;left: 0px;width: 100%;">1</message>
-      <img class="avatar" :src="'./static/avatar/23.png'">
+      <img class="avatar" :src="'./static/avatar/29.png'">
       <span class="diff" :style="{opacity : diff3 != 0 ? 1 : 0}">{{diff3 > 0 ? '+' : ''}}{{diff3}}</span>
       <span class="scrore">{{score3}}</span>
     </div>
     <div class="flex-col center rela" style="max-width: 25%;">
       <message class="abso" style="top: 70px;left: 0px;width: 100%;">1</message>
-      <img class="avatar" :src="'./static/avatar/24.png'">
+      <img class="avatar" :src="'./static/avatar/30.png'">
       <span class="diff" :style="{opacity : diff4 != 0 ? 1 : 0}">{{diff4 > 0 ? '+' : ''}}{{diff4}}</span>
       <span class="scrore">{{score4}}</span>
     </div>
@@ -63,7 +63,7 @@
 </div>
     <transition>
     <div class="lose" v-if="winflag">
-      <h1><img class="avatar" :src="'./static/avatar/' + [27, 26, 23, 24][step % 4] + '.png'">WIN!</h1>
+      <h1><img class="avatar" :src="'./static/avatar/' + [32, 31, 29, 30][step % 4] + '.png'">WIN!</h1>
       <input type="button" value="GO ON" @click="goon"/>
     </div>
     </transition>
