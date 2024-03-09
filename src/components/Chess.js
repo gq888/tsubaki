@@ -261,7 +261,7 @@ export default {
           this.sign = -1
           if (card >= 0) {
             if (this.lowCount <= 0) if (this.grade == 1) this.status = 1; else this.status = 2;
-            if (this.highCount <= 0) if (this.grade == 0) this.status = 2; else this.status = 1;
+            if (this.highCount <= 0) if (this.grade == 0) this.status = 1; else this.status = 2;
             if (this.lowCount == 1 && this.highCount == 1) this.status = 3;
           }
           if (!isAuto && this.status <= 0) {
@@ -283,7 +283,7 @@ export default {
           this.$set(this.cards2, l[1], false)
         } else {
           this.$set(this.cards1, l[4], l[3])
-          if (l[1] >= 0) this.$set(this.cards1, l[2], l[1])
+          this.$set(this.cards1, l[2], l[1] >= 0 ? l[1] : -1)
         }
       }
       this.status = 0
