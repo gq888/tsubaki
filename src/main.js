@@ -2,10 +2,10 @@ import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
 import store from "./store";
-import {preload} from "./utils/help.js"
+import { preload } from "./utils/help.js";
 
 Vue.config.productionTip = false;
-preload()
+preload();
 
 new Vue({
   router,

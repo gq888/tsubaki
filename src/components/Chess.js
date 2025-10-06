@@ -1,7 +1,4 @@
-import {
-  shuffleCards,
-  wait,
-} from '../utils/help.js'
+import { shuffleCards, wait } from "../utils/help.js";
 
 let _modes = [
   [1, 0],
@@ -10,14 +7,14 @@ let _modes = [
   [2, 2],
   [3, 1],
   [3, 2],
-  [3, 3],
-]
+  [3, 3]
+];
 
 export default {
-  name: 'Chess',
-  data () {
+  name: "Chess",
+  data() {
     return {
-      title: 'Chess',
+      title: "Chess",
       cards1: [],
       cards2: [],
       // 移除arr数组，因为现在由GameStateManager管理历史记录
@@ -32,195 +29,265 @@ export default {
       n: 0,
       grade: -1,
       modes: [
-        0, 1, 3, 6, 10, 15,
-        2, 5, 7, 13, 18, 21,
-        4, 8, 14, 17, 24, 27,
-        9, 12, 20, 25, 26, 31,
-        11, 19, 23, 29, 30, 35,
-        16, 22, 28, 32, 34, 33,
+        0,
+        1,
+        3,
+        6,
+        10,
+        15,
+        2,
+        5,
+        7,
+        13,
+        18,
+        21,
+        4,
+        8,
+        14,
+        17,
+        24,
+        27,
+        9,
+        12,
+        20,
+        25,
+        26,
+        31,
+        11,
+        19,
+        23,
+        29,
+        30,
+        35,
+        16,
+        22,
+        28,
+        32,
+        34,
+        33
       ],
       grades: [
-        1, 0, 0, 1, 1, 0,
-        0, 0, 0, 0, 0, 0,
-        1, 1, 0, 0, 0, 1,
-        1, 1, 1, 1, 0, 1,
-        1, 0, 1, 0, 0, 1,
-        1, 0, 0, 1, 1, 1,
-      ],
-    }
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    };
   },
   computed: {
-    step () {
+    step() {
       // 这个值现在由Chess.vue中的覆盖计算属性提供
-      return 0
+      return 0;
     },
-    validBoxes () {
-      return this.getValidBoxes(this.sign)
+    validBoxes() {
+      return this.getValidBoxes(this.sign);
     },
-    lowCount () {
-      return this.cards1.filter(item => this.grades[item] === 0).length
+    lowCount() {
+      return this.cards1.filter(item => this.grades[item] === 0).length;
     },
-    highCount () {
-      return this.cards1.filter(item => this.grades[item] === 1).length
-    },
+    highCount() {
+      return this.cards1.filter(item => this.grades[item] === 1).length;
+    }
   },
   // 初始化
   methods: {
     // 添加wait方法的引用，以便在Chess.vue中使用
     wait: wait,
-    
-    init () {
-      let cards = this.cards1
-      this.cards2.splice(0)
+
+    init() {
+      let cards = this.cards1;
+      this.cards2.splice(0);
       // return cards.splice(0, 0, ...this.modes)
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
       }
-      shuffleCards(cards, this.number)
+      shuffleCards(cards, this.number);
     },
-    getValidBoxes (item) {
-      let arr = []
+    getValidBoxes(item) {
+      let arr = [];
       // let item = this.cards1[index];
-      let index = this.cards1.indexOf(item)
+      let index = this.cards1.indexOf(item);
       if (item < 0 || index < 0) {
-        return arr
+        return arr;
       }
       let mode = this.modes.indexOf(item);
-      let h = _modes[Math.floor(mode / 6)], v = _modes[mode % 6];
-      if (index + v[0] * 6 < 36 && (index % 6) + v[1] < 6) arr.push(index + v[0] * 6 + v[1])
-      if (index - v[0] * 6 >= 0 && (index % 6) + v[1] < 6) arr.push(index - v[0] * 6 + v[1])
-      if (index + v[0] * 6 < 36 && (index % 6) - v[1] >= 0) arr.push(index + v[0] * 6 - v[1])
-      if (index - v[0] * 6 >= 0 && (index % 6) - v[1] >= 0) arr.push(index - v[0] * 6 - v[1])
-      if (index + h[1] * 6 < 36 && (index % 6) + h[0] < 6) arr.push(index + h[1] * 6 + h[0])
-      if (index - h[1] * 6 >= 0 && (index % 6) + h[0] < 6) arr.push(index - h[1] * 6 + h[0])
-      if (index + h[1] * 6 < 36 && (index % 6) - h[0] >= 0) arr.push(index + h[1] * 6 - h[0])
-      if (index - h[1] * 6 >= 0 && (index % 6) - h[0] >= 0) arr.push(index - h[1] * 6 - h[0])
-      return arr
+      let h = _modes[Math.floor(mode / 6)],
+        v = _modes[mode % 6];
+      if (index + v[0] * 6 < 36 && (index % 6) + v[1] < 6)
+        arr.push(index + v[0] * 6 + v[1]);
+      if (index - v[0] * 6 >= 0 && (index % 6) + v[1] < 6)
+        arr.push(index - v[0] * 6 + v[1]);
+      if (index + v[0] * 6 < 36 && (index % 6) - v[1] >= 0)
+        arr.push(index + v[0] * 6 - v[1]);
+      if (index - v[0] * 6 >= 0 && (index % 6) - v[1] >= 0)
+        arr.push(index - v[0] * 6 - v[1]);
+      if (index + h[1] * 6 < 36 && (index % 6) + h[0] < 6)
+        arr.push(index + h[1] * 6 + h[0]);
+      if (index - h[1] * 6 >= 0 && (index % 6) + h[0] < 6)
+        arr.push(index - h[1] * 6 + h[0]);
+      if (index + h[1] * 6 < 36 && (index % 6) - h[0] >= 0)
+        arr.push(index + h[1] * 6 - h[0]);
+      if (index - h[1] * 6 >= 0 && (index % 6) - h[0] >= 0)
+        arr.push(index - h[1] * 6 - h[0]);
+      return arr;
     },
-    async stepFn () {
+    async stepFn() {
       // 1.挪2.送3.翻4.翻吃5.坏翻6.中翻7.友8.躲9.敌10.吃
-      let temp = []
-      let hide = [], friends = []
-      let grade = this.step % 2 == 0 ? this.grade : !this.grade
-      let _this = this
-      let moveFn = async function (from, to) {
-        console.log(from, to)
-        _this.sign = -1
-        await _this.clickCard(from, true)
-        await wait(1000)
-        await _this.clickCard(to, true)
-      }
+      let temp = [];
+      let hide = [],
+        friends = [];
+      let grade = this.step % 2 == 0 ? this.grade : !this.grade;
+      let _this = this;
+      let moveFn = async function(from, to) {
+        console.log(from, to);
+        _this.sign = -1;
+        await _this.clickCard(from, true);
+        await wait(1000);
+        await _this.clickCard(to, true);
+      };
       for (let i = 0; i < this.cards1.length; i++) {
-        let item = this.cards1[i]
+        let item = this.cards1[i];
         if (item < 0) {
-          temp[i] = temp[i] || 1
-          continue
+          temp[i] = temp[i] || 1;
+          continue;
         }
         if (!this.cards2[item]) {
-          temp[i] = temp[i] || 3
-          hide.push(i)
-          continue
+          temp[i] = temp[i] || 3;
+          hide.push(i);
+          continue;
         }
         if (this.grades[item] == grade) {
-          temp[i] = 7
-          friends.push(i)
-          let boxes = this.getValidBoxes(item)
+          temp[i] = 7;
+          friends.push(i);
+          let boxes = this.getValidBoxes(item);
           for (let b of boxes) {
-            let c = this.cards1[b]
+            let c = this.cards1[b];
             if (c < 0) {
-              continue
+              continue;
             }
             if (!this.cards2[c]) {
-              temp[b] = temp[b] == 5 || temp[b] == 6 ? 6 : 4
-              continue
+              temp[b] = temp[b] == 5 || temp[b] == 6 ? 6 : 4;
+              continue;
             }
             if (this.grades[c] != grade) {
-              return await moveFn(i, b)
+              return await moveFn(i, b);
             }
           }
-          continue
+          continue;
         }
-        temp[i] = 9
-        let boxes = this.getValidBoxes(item)
+        temp[i] = 9;
+        let boxes = this.getValidBoxes(item);
         for (let b of boxes) {
-          let c = this.cards1[b]
+          let c = this.cards1[b];
           if (c < 0) {
-            temp[b] = 2
-            continue
+            temp[b] = 2;
+            continue;
           }
           if (!this.cards2[c]) {
-            temp[b] = temp[b] == 4 || temp[b] == 6 ? 6 : 5
-            continue
+            temp[b] = temp[b] == 4 || temp[b] == 6 ? 6 : 5;
+            continue;
           }
           if (this.grades[c] == grade) {
-            temp[b] = 8
+            temp[b] = 8;
           }
         }
       }
       // 1.吃2.躲3.翻吃4.中翻5.翻6.挪7.坏翻8.送
       for (let f of friends) {
-        let t = temp[f]
+        let t = temp[f];
         if (t == 8) {
-          let c = this.cards1[f]
-          let boxes = this.getValidBoxes(c)
+          let c = this.cards1[f];
+          let boxes = this.getValidBoxes(c);
           for (let box of boxes) {
             if (temp[box] == 1) {
-              return await moveFn(f, box)
+              return await moveFn(f, box);
             }
           }
         }
       }
-      let best = -1
-      let worst = -1
+      let best = -1;
+      let worst = -1;
       for (let i = 0; i < hide.length; i++) {
-        let h = hide[i]
-        let t = temp[h]
+        let h = hide[i];
+        let t = temp[h];
         if (t == 4) {
-          return await this.clickCard(h, true)
+          return await this.clickCard(h, true);
         }
         if (t == 5) {
-          worst = h
-          hide.splice(i, 1)
-          i--
+          worst = h;
+          hide.splice(i, 1);
+          i--;
         }
         if (t == 6) {
-          best = h
+          best = h;
         }
       }
       if (best >= 0) {
-        return await this.clickCard(best, true)
+        return await this.clickCard(best, true);
       }
       if (hide.length > 0) {
-        let random = Math.floor(Math.random() * hide.length)
-        return await this.clickCard(hide[random], true)
+        let random = Math.floor(Math.random() * hide.length);
+        return await this.clickCard(hide[random], true);
       }
       let suicide = false;
-      let road = []
+      let road = [];
       for (let f of friends) {
-        let c = this.cards1[f]
-        let boxes = this.getValidBoxes(c)
+        let c = this.cards1[f];
+        let boxes = this.getValidBoxes(c);
         for (let box of boxes) {
           if (temp[box] == 1) {
-            road.push([f, box])
+            road.push([f, box]);
             // return await moveFn(f, box)
           }
           if (temp[box] == 2) {
-            suicide = [f, box]
+            suicide = [f, box];
           }
         }
       }
       if (road.length > 0) {
-        let random = Math.floor(Math.random() * road.length)
-        return await moveFn(road[random][0], road[random][1])
+        let random = Math.floor(Math.random() * road.length);
+        return await moveFn(road[random][0], road[random][1]);
       }
       if (worst >= 0) {
-        return await this.clickCard(worst, true)
+        return await this.clickCard(worst, true);
       }
       if (suicide) {
-        return await moveFn(suicide[0], suicide[1])
+        return await moveFn(suicide[0], suicide[1]);
       } else {
-        console.log('unkown error')
+        console.log("unkown error");
       }
-    },
-  },
-}
+    }
+  }
+};

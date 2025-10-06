@@ -3,18 +3,18 @@
     <div :class="['lose', customClass]" :style="modalStyle">
       <h1 v-if="title">{{ title }}</h1>
       <h1 v-if="subtitle" class="small">{{ subtitle }}</h1>
-      
+
       <!-- 用于显示额外内容的插槽 -->
       <slot name="content"></slot>
-      
+
       <!-- 用于显示卡片的插槽 -->
       <slot name="cards"></slot>
-      
+
       <div class="modal-buttons">
-        <input 
-          v-for="(button, index) in buttons" 
+        <input
+          v-for="(button, index) in buttons"
           :key="index"
-          type="button" 
+          type="button"
           :value="button.text"
           @click="button.callback"
           :disabled="button.disabled"
@@ -27,15 +27,15 @@
 
 <script>
 export default {
-  name: 'GameResultModal',
+  name: "GameResultModal",
   props: {
     title: {
       type: String,
-      default: ''
+      default: ""
     },
     subtitle: {
       type: String,
-      default: ''
+      default: ""
     },
     buttons: {
       type: Array,
@@ -47,10 +47,10 @@ export default {
     },
     customClass: {
       type: String,
-      default: ''
+      default: ""
     }
   }
-}
+};
 </script>
 
 <style scoped>

@@ -52,7 +52,7 @@ const routes = [
   {
     path: "/Chess",
     component: Chess
-  },
+  }
 ];
 
 const router = new VueRouter({

@@ -1,27 +1,33 @@
 <template>
   <div class="btns">
-    <div v-for="(button, index) in displayButtons" :key="button.id || index" class="button-wrapper">
-      <input 
-        type="button" 
-        :value="button.label" 
+    <div
+      v-for="(button, index) in displayButtons"
+      :key="button.id || index"
+      class="button-wrapper"
+    >
+      <input
+        type="button"
+        :value="button.label"
         :disabled="button.disabled"
         @click="handleButtonClick(button.action)"
       />
-      <span v-if="index < displayButtons.length - 1">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span v-if="index < displayButtons.length - 1"
+        >&nbsp;&nbsp;&nbsp;&nbsp;</span
+      >
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'GameControls',
+  name: "GameControls",
   props: {
     // 使用数组定义按钮配置，优先级高于单独的show属性
     buttons: {
       type: Array,
       default: () => []
     },
-    
+
     // 以下属性保持向后兼容性
     showUndo: {
       type: Boolean,
@@ -39,7 +45,7 @@ export default {
       type: Boolean,
       default: true
     },
-    
+
     undoDisabled: {
       type: Boolean,
       default: false
@@ -64,42 +70,42 @@ export default {
       if (this.buttons && this.buttons.length > 0) {
         return this.buttons;
       }
-      
+
       // 否则使用单独的show属性生成默认按钮列表（保持向后兼容）
       const defaultButtons = [];
-      
+
       if (this.showUndo) {
         defaultButtons.push({
-          label: 'UNDO',
-          action: 'undo',
+          label: "UNDO",
+          action: "undo",
           disabled: this.undoDisabled
         });
       }
-      
+
       if (this.showRestart) {
         defaultButtons.push({
-          label: 'RESTART',
-          action: 'goon',
+          label: "RESTART",
+          action: "goon",
           disabled: this.restartDisabled
         });
       }
-      
+
       if (this.showStep) {
         defaultButtons.push({
-          label: 'STEP',
-          action: 'step',
+          label: "STEP",
+          action: "step",
           disabled: this.stepDisabled
         });
       }
-      
+
       if (this.showAuto) {
         defaultButtons.push({
-          label: 'AUTO',
-          action: 'auto',
+          label: "AUTO",
+          action: "auto",
           disabled: this.autoDisabled
         });
       }
-      
+
       return defaultButtons;
     }
   },
@@ -108,22 +114,22 @@ export default {
     handleButtonClick(action) {
       this.$emit(action);
     },
-    
+
     // 保留原有方法以保持兼容性
     undo() {
-      this.$emit('undo')
+      this.$emit("undo");
     },
     goon() {
-      this.$emit('goon')
+      this.$emit("goon");
     },
     stepFn() {
-      this.$emit('step')
+      this.$emit("step");
     },
     pass() {
-      this.$emit('auto')
+      this.$emit("auto");
     }
   }
-}
+};
 </script>
 
 <style scoped>

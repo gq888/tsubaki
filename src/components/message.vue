@@ -11,15 +11,15 @@
 </template>
 
 <script>
-  export default {
-    name: 'message',
-    props: ['corners', 'show'],
-    methods: {
-      close () {
-        this.$emit('close')
-      },
+export default {
+  name: "message",
+  props: ["corners", "show"],
+  methods: {
+    close() {
+      this.$emit("close");
     }
   }
+};
 </script>
 
 <style>

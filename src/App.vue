@@ -1,40 +1,23 @@
 <template>
   <div id="app">
     <div id="nav">
-      GAMES:
-      &nbsp;
+      GAMES: &nbsp;
       <router-link to="/month">Month</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/fish">Fish</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/blackjack">BlackJack</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/point24">Point24</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/Tortoise">Tortoise</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/Sort">Sort</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/Pairs">Pairs</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/Spider">Spider</router-link>
-      &nbsp;
-      /
-      &nbsp;
+      &nbsp; / &nbsp;
       <router-link to="/Chess">Chess</router-link>
     </div>
     <router-view />
