@@ -19,7 +19,7 @@
           <span class="m-0">{{calc(arr[0]).toFixed(2)}}</span>
         </div>
       </ul>
-      <ul class="cardsul flex-row center" style="padding-left: 0;">
+      <ul class="cardsul flex-row center" style="padding-left: 0;margin-left: 20px;">
         <div v-for="(item, i) in arr" :key='i' class="align-center flex-wrap flex-row center">
           <div v-if="i != 0" class="flex-row center m-0">
             <span class="sign center" @click="hitflag && lockflag && clickCard(item, i)">{{signs[sign]}}</span>
@@ -85,11 +85,12 @@
 import point24 from './point24.js'
 import GameResultModal from './GameResultModal.vue'
 
-// 扩展point24组件以包含GameResultModal
+// 扩展point24组件以包含GameResultModal，同时保留原有的point24card组件
 const point24WithModal = {
   ...point24,
   components: {
-    GameResultModal
+    ...point24.components, // 保留原来的组件
+    GameResultModal         // 添加新组件
   }
 }
 

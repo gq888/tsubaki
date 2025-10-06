@@ -60,12 +60,9 @@ export default {
   display: flex;
   gap: 16px;
   justify-content: center;
-  margin-top: 20px;
 }
 
 .modal-button {
-  padding: 8px 16px;
-  font-size: 16px;
   cursor: pointer;
 }
 </style>

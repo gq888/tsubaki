@@ -1,6 +1,15 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
+<div class="btns">
+
+  <input type="button" value="HIT" @click="hit(cardsChg,arr2)" :disabled="!hitflag"/>
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  &nbsp;
+  <input type="button" value="PASS" @click="pass" :disabled="!hitflag" />
+</div>
   <div class="row center">
     <img class="avatar" :src="'./static/avatar/17.png'">
     <span class="scrore">{{score1}}</span>
@@ -33,25 +42,41 @@
   <input type="button" value="PASS" @click="pass" :disabled="!hitflag" />
 </div>
     <transition>
-    <div class="lose" v-if="loseflag">
-      <h1>U LOSE</h1>
-      <input type="button" value="AGAIN" @click="goon"/>
-    </div>
-    <div class="lose" v-if="winflag">
-      <h1>U WIN!</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    <div class="draw lose" v-if="drawflag">
-      <h1>DRAW GAME</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
+    <GameResultModal 
+      v-if="loseflag" 
+      :title="'U LOSE'"
+      :buttons="[{ text: 'AGAIN', callback: goon }]"
+      :modalStyle="{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }"
+      :customClass="'lose'"
+    />
+    <GameResultModal 
+      v-if="winflag" 
+      :title="'U WIN!'"
+      :buttons="[{ text: 'GO ON', callback: goon }]"
+      :modalStyle="{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }"
+      :customClass="'lose'"
+    />
+    <GameResultModal 
+      v-if="drawflag" 
+      :title="'DRAW GAME'"
+      :buttons="[{ text: 'GO ON', callback: goon }]"
+      :modalStyle="{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }"
+      :customClass="'draw lose'"
+    />
     </transition>
   </div>
 </template>
 
 <script>
 import sum from './sum.js'
-export default sum
+import GameResultModal from './GameResultModal.vue'
+const componentConfig = {
+  ...sum,
+  components: {
+    GameResultModal
+  }
+}
+export default componentConfig
 </script>
 
 <style scoped>
