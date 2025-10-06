@@ -135,7 +135,6 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 10px 0;
-  background-color: #3c4245;
 }
 
 /* 覆盖原有input样式以确保按钮一致性 */
