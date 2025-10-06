@@ -73,7 +73,8 @@ import GameResultModal from './GameResultModal.vue'
 const componentConfig = {
   ...sum,
   components: {
-    GameResultModal
+    ...sum.components, // 保留原来的组件
+    GameResultModal    // 添加弹窗组件
   }
 }
 export default componentConfig

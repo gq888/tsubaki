@@ -61,11 +61,12 @@
 import month from './month.js'
 import GameResultModal from './GameResultModal.vue'
 
-// 扩展month组件以包含GameResultModal
+// 扩展month组件以包含GameResultModal，同时保留原有组件
 const monthWithModal = {
   ...month,
   components: {
-    GameResultModal
+    ...month.components, // 保留原来的组件
+    GameResultModal     // 添加弹窗组件
   }
 }
 

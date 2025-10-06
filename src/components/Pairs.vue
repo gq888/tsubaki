@@ -66,11 +66,12 @@
 import Pairs from './Pairs.js'
 import GameResultModal from './GameResultModal.vue'
 
-// 扩展Pairs组件以包含GameResultModal
+// 扩展Pairs组件以包含GameResultModal，同时保留原有组件
 const pairsWithModal = {
   ...Pairs,
   components: {
-    GameResultModal
+    ...Pairs.components, // 保留原来的组件
+    GameResultModal     // 添加弹窗组件
   }
 }
 

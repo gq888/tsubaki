@@ -1,15 +1,6 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-<div class="btns">
-
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
   <div class="row flex-row" style="padding-top: 10px; justify-content: space-around;">
     <div class="flex-col center rela" style="max-width: 25%;">
       <message class="abso" style="top: 70px;left: 0px;width: 100%;" show1="1">1</message>
@@ -81,12 +72,15 @@
 <script>
 import fish from './fish.js'
 import GameResultModal from './GameResultModal.vue'
+import message from './message.vue'
 
-// 扩展fish组件以包含GameResultModal
+// 扩展fish组件以包含GameResultModal和message组件，同时保留原有组件
 const fishWithModal = {
   ...fish,
   components: {
-    GameResultModal
+    ...fish.components, // 保留原来的组件
+    GameResultModal,    // 添加弹窗组件
+    message             // 添加message组件
   }
 }
 
