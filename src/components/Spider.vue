@@ -91,6 +91,7 @@ import GameControls from './GameControls.vue'
 const spiderWithModal = {
   ...Spider,
   components: {
+    ...Spider.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }

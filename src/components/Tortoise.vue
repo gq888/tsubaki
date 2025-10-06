@@ -62,6 +62,7 @@ import GameControls from './GameControls.vue'
 const tortoiseWithModal = {
   ...Tortoise,
   components: {
+    ...Tortoise.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }

@@ -103,6 +103,7 @@ import GameControls from './GameControls.vue'
 const chessWithModal = {
   ...Chess,
   components: {
+    ...Chess.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }

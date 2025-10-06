@@ -65,6 +65,7 @@ import GameControls from './GameControls.vue'
 const monthWithModal = {
   ...month,
   components: {
+    ...month.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }

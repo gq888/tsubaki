@@ -85,6 +85,7 @@ import GameControls from './GameControls.vue'
 const sortWithModal = {
   ...Sort,
   components: {
+    ...Sort.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }

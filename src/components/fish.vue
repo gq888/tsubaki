@@ -1,14 +1,6 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-<GameControls
-  :showUndo="false"
-  :showRestart="false"
-  :stepDisabled="!hitflag || !lockflag"
-  :autoDisabled="!hitflag || !lockflag"
-  @step="stepFn"
-  @auto="pass"
-/>
   <div class="row flex-row" style="padding-top: 10px; justify-content: space-around;">
     <div class="flex-col center rela" style="max-width: 25%;">
       <message class="abso" style="top: 70px;left: 0px;width: 100%;" show1="1">1</message>
@@ -85,6 +77,7 @@ import GameControls from './GameControls.vue'
 const fishWithModal = {
   ...fish,
   components: {
+    ...fish.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }

@@ -92,6 +92,7 @@ import GameControls from './GameControls.vue'
 const componentConfig = {
   ...sum,
   components: {
+    ...sum.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }

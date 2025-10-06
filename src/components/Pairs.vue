@@ -63,6 +63,7 @@ import GameControls from './GameControls.vue'
 const pairsWithModal = {
   ...Pairs,
   components: {
+    ...Pairs.components, // 保留原来的组件
     GameResultModal,
     GameControls
   }
