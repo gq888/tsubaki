@@ -1,19 +1,15 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-<div class="btns">
-  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :showUndo="false"
+  :restartDisabled="!hitflag || !lockflag"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @goon="goon"
+  @step="stepFn"
+  @auto="pass"
+/>
   <div class="row">
     <span>TIME: {{time}}</span>
     <br>
@@ -30,19 +26,15 @@
       </ul>
     </div>
   </div>
-<div class="btns">
-  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :showUndo="false"
+  :restartDisabled="!hitflag || !lockflag"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @goon="goon"
+  @step="stepFn"
+  @auto="pass"
+/>
     <GameResultModal
       v-if="winflag"
       title="U WIN!"
@@ -65,12 +57,14 @@
 <script>
 import Pairs from './Pairs.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 
-// 扩展Pairs组件以包含GameResultModal
+// 扩展Pairs组件以包含GameResultModal和GameControls
 const pairsWithModal = {
   ...Pairs,
   components: {
-    GameResultModal
+    GameResultModal,
+    GameControls
   }
 }
 

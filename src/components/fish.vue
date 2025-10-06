@@ -1,15 +1,14 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-<div class="btns">
-
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :showUndo="false"
+  :showRestart="false"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @step="stepFn"
+  @auto="pass"
+/>
   <div class="row flex-row" style="padding-top: 10px; justify-content: space-around;">
     <div class="flex-col center rela" style="max-width: 25%;">
       <message class="abso" style="top: 70px;left: 0px;width: 100%;" show1="1">1</message>
@@ -52,15 +51,14 @@
       </ul>
     </div>
   </div>
-<div class="btns">
-
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :showUndo="false"
+  :showRestart="false"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @step="stepFn"
+  @auto="pass"
+/>
     <GameResultModal
       v-if="winflag"
       :buttons="[
@@ -81,12 +79,14 @@
 <script>
 import fish from './fish.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 
-// 扩展fish组件以包含GameResultModal
+// 扩展fish组件以包含GameResultModal和GameControls
 const fishWithModal = {
   ...fish,
   components: {
-    GameResultModal
+    GameResultModal,
+    GameControls
   }
 }
 

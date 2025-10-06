@@ -1,25 +1,16 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-<div class="btns">
-
-  <input type="button" value="UNDO" @click="undo" :disabled="step <= 0 || !hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :undoDisabled="step <= 0 || !hitflag || !lockflag"
+  :restartDisabled="!hitflag || !lockflag"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @undo="undo"
+  @goon="goon"
+  @step="stepFn"
+  @auto="pass"
+/>
   <div class="row">
     <div>
       <ul class="cardsul flex-col" :style="{height: 150 * (number + 1) + 'px'}" style="padding-left: 0; width: 100%; max-width: 500px; margin: 0 auto; position: static">
@@ -88,12 +79,14 @@
 <script>
 import Sort from './Sort.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 
-// 扩展Sort组件以包含GameResultModal
+// 扩展Sort组件以包含GameResultModal和GameControls
 const sortWithModal = {
   ...Sort,
   components: {
-    GameResultModal
+    GameResultModal,
+    GameControls
   }
 }
 

@@ -2,13 +2,22 @@
   <div class="Sum">
   <h1>{{ title }}</h1>
 <div class="btns">
-
-  <input type="button" value="HIT" @click="hit(cardsChg,arr2)" :disabled="!hitflag"/>
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="PASS" @click="pass" :disabled="!hitflag" />
+  <GameControls 
+    :buttons="[
+      { 
+        label: 'HIT', 
+        action: 'hitBtn', 
+        disabled: !hitflag 
+      },
+      { 
+        label: 'PASS', 
+        action: 'passBtn', 
+        disabled: !hitflag 
+      }
+    ]"
+    @hitBtn="hit(cardsChg,arr2)"
+    @passBtn="pass"
+  />
 </div>
   <div class="row center">
     <img class="avatar" :src="'./static/avatar/17.png'">
@@ -33,13 +42,22 @@
     <span class="scrore">{{score2}}</span>
   </div>
 <div class="btns">
-
-  <input type="button" value="HIT" @click="hit(cardsChg,arr2)" :disabled="!hitflag"/>
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="PASS" @click="pass" :disabled="!hitflag" />
+  <GameControls 
+    :buttons="[
+      { 
+        label: 'HIT', 
+        action: 'hitBtn', 
+        disabled: !hitflag 
+      },
+      { 
+        label: 'PASS', 
+        action: 'passBtn', 
+        disabled: !hitflag 
+      }
+    ]"
+    @hitBtn="hit(cardsChg,arr2)"
+    @passBtn="pass"
+  />
 </div>
     <transition>
     <GameResultModal 
@@ -70,10 +88,12 @@
 <script>
 import sum from './sum.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 const componentConfig = {
   ...sum,
   components: {
-    GameResultModal
+    GameResultModal,
+    GameControls
   }
 }
 export default componentConfig

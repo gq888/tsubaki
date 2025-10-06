@@ -1,25 +1,16 @@
 <template>
   <div class="Sum" style="width:100%;">
   <h1>{{ title }}</h1>
-<div class="btns">
-
-  <input type="button" value="UNDO" @click="undo" :disabled="step <= 0 || !hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="STEP" @click="stepTwiceFn" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :undoDisabled="step <= 0 || !hitflag || !lockflag"
+  :restartDisabled="!hitflag || !lockflag"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @undo="undo"
+  @goon="goon"
+  @step="stepTwiceFn"
+  @auto="pass"
+/>
   <div class="row center">
     <div>
       <div class="cardsul center"
@@ -43,25 +34,16 @@
   <div class="row">
     <span class="m-0 scrore">{{lowCount + ' : ' + highCount}}</span>
   </div>
-<div class="btns">
-
-  <input type="button" value="UNDO" @click="undo" :disabled="step <= 0 || !hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="STEP" @click="stepTwiceFn" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :undoDisabled="step <= 0 || !hitflag || !lockflag"
+  :restartDisabled="!hitflag || !lockflag"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @undo="undo"
+  @goon="goon"
+  @step="stepTwiceFn"
+  @auto="pass"
+/>
     <GameResultModal
       v-if="status == 3"
       title="DRAW GAME"
@@ -115,12 +97,14 @@
 <script>
 import Chess from './Chess.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 
-// 扩展Chess组件以包含GameResultModal
+// 扩展Chess组件以包含GameResultModal和GameControls
 const chessWithModal = {
   ...Chess,
   components: {
-    GameResultModal
+    GameResultModal,
+    GameControls
   }
 }
 

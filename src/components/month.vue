@@ -1,14 +1,14 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-<div class="btns">
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :showUndo="false"
+  :showRestart="false"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @step="stepFn"
+  @auto="pass"
+/>
   <div class="row">
     <div class="center">
       <ul class="cardsul" style="padding-left: 0; max-width: 690px; justify-content: space-between; margin-top: 180px;">
@@ -21,15 +21,14 @@
       </ul>
     </div>
   </div>
-<div class="btns">
-
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :showUndo="false"
+  :showRestart="false"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @step="stepFn"
+  @auto="pass"
+/>
     <GameResultModal
       v-if="loseflag"
       subtitle="YOUR LUCKY CLASSES:"
@@ -60,12 +59,14 @@
 <script>
 import month from './month.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 
-// 扩展month组件以包含GameResultModal
+// 扩展month组件以包含GameResultModal和GameControls
 const monthWithModal = {
   ...month,
   components: {
-    GameResultModal
+    GameResultModal,
+    GameControls
   }
 }
 

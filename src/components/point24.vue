@@ -29,25 +29,16 @@
       </ul>
     </div>
   </div>
-<div class="btns">
-
-  <input type="button" value="UNDO" @click="undo" :disabled="step <= 0 || !hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :undoDisabled="step <= 0 || !hitflag || !lockflag"
+  :restartDisabled="!hitflag || !lockflag"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @undo="undo"
+  @goon="goon"
+  @step="stepFn"
+  @auto="pass"
+/>
     <GameResultModal
       v-if="loseflag"
       title="U LOSE"
@@ -84,13 +75,15 @@
 <script>
 import point24 from './point24.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 
-// 扩展point24组件以包含GameResultModal，同时保留原有的point24card组件
+// 扩展point24组件以包含GameResultModal和GameControls，同时保留原有的point24card组件
 const point24WithModal = {
   ...point24,
   components: {
     ...point24.components, // 保留原来的组件
-    GameResultModal         // 添加新组件
+    GameResultModal,       // 添加弹窗组件
+    GameControls           // 添加控制按钮组件
   }
 }
 

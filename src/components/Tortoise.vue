@@ -10,25 +10,16 @@
       </ul>
     </div>
   </div>
-<div class="btns">
-
-  <input type="button" value="UNDO" @click="undo" :disabled="step <= 0 || !hitflag || !lockflag"/>    
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="RESTART" @click="goon" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="STEP" @click="stepFn" :disabled="!hitflag || !lockflag" />
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  &nbsp;
-  <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
-</div>
+<GameControls
+  :undoDisabled="step <= 0 || !hitflag || !lockflag"
+  :restartDisabled="!hitflag || !lockflag"
+  :stepDisabled="!hitflag || !lockflag"
+  :autoDisabled="!hitflag || !lockflag"
+  @undo="undo"
+  @goon="goon"
+  @step="stepFn"
+  @auto="pass"
+/>
     <GameResultModal
       v-if="loseflag"
       title="U LOSE"
@@ -65,12 +56,14 @@
 <script>
 import Tortoise from './Tortoise.js'
 import GameResultModal from './GameResultModal.vue'
+import GameControls from './GameControls.vue'
 
-// 扩展Tortoise组件以包含GameResultModal
+// 扩展Tortoise组件以包含GameResultModal和GameControls
 const tortoiseWithModal = {
   ...Tortoise,
   components: {
-    GameResultModal
+    GameResultModal,
+    GameControls
   }
 }
 
