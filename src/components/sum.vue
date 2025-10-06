@@ -1,24 +1,6 @@
 <template>
   <div class="Sum">
   <h1>{{ title }}</h1>
-<div class="btns">
-  <GameControls 
-    :buttons="[
-      { 
-        label: 'HIT', 
-        action: 'hitBtn', 
-        disabled: !hitflag 
-      },
-      { 
-        label: 'PASS', 
-        action: 'passBtn', 
-        disabled: !hitflag 
-      }
-    ]"
-    @hitBtn="hit(cardsChg,arr2)"
-    @passBtn="pass"
-  />
-</div>
   <div class="row center">
     <img class="avatar" :src="'./static/avatar/17.png'">
     <span class="scrore">{{score1}}</span>
