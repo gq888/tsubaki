@@ -20,12 +20,14 @@ export default {
       title: 'Chess',
       cards1: [],
       cards2: [],
-      arr: [],
+      // 移除arr数组，因为现在由GameStateManager管理历史记录
+      // arr: [],
       sign: -1,
       sign2: -2,
       status: 0,
-      hitflag: true,
-      lockflag: true,
+      // 移除hitflag和lockflag，现在由GameStateManager管理
+      // hitflag: true,
+      // lockflag: true,
       number: 36,
       n: 0,
       grade: -1,
@@ -47,12 +49,10 @@ export default {
       ],
     }
   },
-  created: function () {
-    this.init()
-  },
   computed: {
     step () {
-      return this.arr.length
+      // 这个值现在由Chess.vue中的覆盖计算属性提供
+      return 0
     },
     validBoxes () {
       return this.getValidBoxes(this.sign)
@@ -66,6 +66,9 @@ export default {
   },
   // 初始化
   methods: {
+    // 添加wait方法的引用，以便在Chess.vue中使用
+    wait: wait,
+    
     init () {
       let cards = this.cards1
       this.cards2.splice(0)
@@ -93,13 +96,6 @@ export default {
       if (index + h[1] * 6 < 36 && (index % 6) - h[0] >= 0) arr.push(index + h[1] * 6 - h[0])
       if (index - h[1] * 6 >= 0 && (index % 6) - h[0] >= 0) arr.push(index - h[1] * 6 - h[0])
       return arr
-    },
-    async stepTwiceFn () {
-      this.hitflag = false
-      await this.stepFn()
-      await wait(500)
-      await this.stepFn()
-      this.hitflag = true
     },
     async stepFn () {
       // 1.挪2.送3.翻4.翻吃5.坏翻6.中翻7.友8.躲9.敌10.吃
@@ -225,87 +221,6 @@ export default {
       } else {
         console.log('unkown error')
       }
-    },
-    async clickCard (i, isAuto) {
-      let card = this.cards1[i]
-      if (this.grade < 0) {
-        this.grade = this.grades[card]
-      }
-      if (card >= 0 && !this.cards2[card]) {
-        this.$set(this.cards2, card, true)
-        this.arr.push([0, card])
-        this.sign = -1
-        if (!isAuto) {
-          this.hitflag = false
-          await wait(500)
-          await this.stepFn()
-          this.hitflag = true
-        }
-        return
-      }
-      let grade = this.step % 2 == 0 ? this.grade : !this.grade
-      if (this.sign >= 0 && this.grades[this.sign] != grade) {
-        this.sign = card != this.sign && card >= 0 && this.grades[card] != grade ? card : -1
-        return
-      }
-      if (this.sign >= 0 && this.grades[this.sign] == grade) {
-        if (card >= 0 && this.grades[card] == grade) {
-          this.sign = this.sign == card ? -1 : card
-          return
-        }
-        if (this.validBoxes.indexOf(i) >= 0) {
-          let signIndex = this.cards1.indexOf(this.sign)
-          this.$set(this.cards1, signIndex, -1)
-          this.$set(this.cards1, i, this.sign)
-          this.arr.push([1, card, i, this.sign, signIndex])
-          this.sign = -1
-          if (card >= 0) {
-            if (this.lowCount <= 0) if (this.grade == 1) this.status = 1; else this.status = 2;
-            if (this.highCount <= 0) if (this.grade == 0) this.status = 1; else this.status = 2;
-            if (this.lowCount == 1 && this.highCount == 1) this.status = 3;
-          }
-          if (!isAuto && this.status <= 0) {
-            this.hitflag = false
-            await wait(500)
-            await this.stepFn()
-            this.hitflag = true
-          }
-          return
-        }
-      }
-      this.sign = card
-    },
-    undo() {
-      let log = [this.arr.pop(), this.arr.pop()]
-      for(let l of log) {
-        console.log(l)
-        if(l[0] == 0) {
-          this.$set(this.cards2, l[1], false)
-        } else {
-          this.$set(this.cards1, l[4], l[3])
-          this.$set(this.cards1, l[2], l[1] >= 0 ? l[1] : -1)
-        }
-      }
-      this.status = 0
-    },
-    async pass () {
-      this.lockflag = false
-      if (this.status <= 0) {
-        await this.stepFn()
-        await wait(500)
-        this.pass()
-      }
-    },
-    goon () {
-      this.sign = -1
-      this.grade = -1
-      this.hitflag = true
-      this.lockflag = true
-      this.cards1.splice(0)
-      this.cards2.splice(0)
-      this.arr.splice(0)
-      this.status = 0
-      this.init()
     },
   },
 }
