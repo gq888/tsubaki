@@ -61,18 +61,36 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-    <transition>
-    <div class="lose" v-if="winflag">
-      <h1><img class="avatar" :src="'./static/avatar/' + [32, 31, 29, 30][step % 4] + '.png'">WIN!</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    </transition>
+    <GameResultModal
+      v-if="winflag"
+      :buttons="[
+        {
+          text: 'GO ON',
+          callback: goon,
+          disabled: false
+        }
+      ]"
+    >
+      <template v-slot:content>
+        <h1><img class="avatar" :src="'./static/avatar/' + [32, 31, 29, 30][step % 4] + '.png'">WIN!</h1>
+      </template>
+    </GameResultModal>
   </div>
 </template>
 
 <script>
 import fish from './fish.js'
-export default fish
+import GameResultModal from './GameResultModal.vue'
+
+// 扩展fish组件以包含GameResultModal
+const fishWithModal = {
+  ...fish,
+  components: {
+    GameResultModal
+  }
+}
+
+export default fishWithModal
 </script>
 
 <style scoped>

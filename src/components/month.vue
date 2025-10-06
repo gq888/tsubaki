@@ -30,27 +30,46 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-    <transition>
-    <div class="lose" v-if="loseflag" style="background-color: rgba(0,0,0,0.8);">
-      <h1 class="small">YOUR LUCKY CLASSES:</h1>
-      <div class1="row" style="margin-top: 10px;">
-        <div>
-          <ul class="cardsul" style="padding-left: 0; max-width: 740px;">
-            <div v-for="(item, i) in cards2" :key='i'>
-              <img v-if="item >= 4 && i < 12" :src="'./static/' + (i * 4 + 1) + '.jpg'" class="card">
-            </div>
-          </ul>
+    <GameResultModal
+      v-if="loseflag"
+      subtitle="YOUR LUCKY CLASSES:"
+      :buttons="[
+        {
+          text: 'GO ON',
+          callback: goon,
+          disabled: false
+        }
+      ]"
+      :modalStyle="{ backgroundColor: 'rgba(0,0,0,0.8)' }"
+    >
+      <template v-slot:cards>
+        <div class1="row" style="margin-top: 10px;">
+          <div>
+            <ul class="cardsul" style="padding-left: 0; max-width: 740px;">
+              <div v-for="(item, i) in cards2" :key='i'>
+                <img v-if="item >= 4 && i < 12" :src="'./static/' + (i * 4 + 1) + '.jpg'" class="card">
+              </div>
+            </ul>
+          </div>
         </div>
-      </div>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    </transition>
+      </template>
+    </GameResultModal>
   </div>
 </template>
 
 <script>
 import month from './month.js'
-export default month
+import GameResultModal from './GameResultModal.vue'
+
+// 扩展month组件以包含GameResultModal
+const monthWithModal = {
+  ...month,
+  components: {
+    GameResultModal
+  }
+}
+
+export default monthWithModal
 </script>
 
 <style scoped>

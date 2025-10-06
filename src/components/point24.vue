@@ -48,24 +48,52 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-    <transition>
-    <div class="lose" v-if="loseflag" style="background-color: rgba(0,0,0,0.5);">
-      <h1>U LOSE</h1>
-      <h1 class="small">NO EXP = 24</h1>
-      <input type="button" value="RESTART" @click="goon"/>
-      <input type="button" value="UNDO" @click="undo" :disabled="step <= 0"/>
-    </div>
-    <div class="lose" v-if="winflag">
-      <h1>U WIN!</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    </transition>
+    <GameResultModal
+      v-if="loseflag"
+      title="U LOSE"
+      subtitle="NO EXP = 24"
+      :buttons="[
+        {
+          text: 'RESTART',
+          callback: goon,
+          disabled: false
+        },
+        {
+          text: 'UNDO',
+          callback: undo,
+          disabled: step <= 0
+        }
+      ]"
+      :modalStyle="{ backgroundColor: 'rgba(0,0,0,0.5)' }"
+    />
+    
+    <GameResultModal
+      v-if="winflag"
+      title="U WIN!"
+      :buttons="[
+        {
+          text: 'GO ON',
+          callback: goon,
+          disabled: false
+        }
+      ]"
+    />
   </div>
 </template>
 
 <script>
 import point24 from './point24.js'
-export default point24
+import GameResultModal from './GameResultModal.vue'
+
+// 扩展point24组件以包含GameResultModal
+const point24WithModal = {
+  ...point24,
+  components: {
+    GameResultModal
+  }
+}
+
+export default point24WithModal
 </script>
 
 <style scoped>

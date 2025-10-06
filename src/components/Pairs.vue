@@ -43,20 +43,38 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-    <transition>
-    <div class="lose" v-if="winflag">
-      <h1>U WIN!</h1>
-      <h1 class="small">TIME: {{time}}</h1>
-      <h1 class="small">STEP: {{step}}</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    </transition>
+    <GameResultModal
+      v-if="winflag"
+      title="U WIN!"
+      :buttons="[
+        {
+          text: 'GO ON',
+          callback: goon,
+          disabled: false
+        }
+      ]"
+    >
+      <template v-slot:content>
+        <h1 class="small">TIME: {{time}}</h1>
+        <h1 class="small">STEP: {{step}}</h1>
+      </template>
+    </GameResultModal>
   </div>
 </template>
 
 <script>
 import Pairs from './Pairs.js'
-export default Pairs
+import GameResultModal from './GameResultModal.vue'
+
+// 扩展Pairs组件以包含GameResultModal
+const pairsWithModal = {
+  ...Pairs,
+  components: {
+    GameResultModal
+  }
+}
+
+export default pairsWithModal
 </script>
 
 <style scoped>

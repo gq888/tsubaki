@@ -29,24 +29,52 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-    <transition>
-    <div class="lose" v-if="loseflag" style="background-color: rgba(0,0,0,0.5);">
-      <h1>U LOSE</h1>
-      <h1 class="small">NO PAIR</h1>
-      <input type="button" value="RESTART" @click="goon"/>
-      <input type="button" value="UNDO" @click="undo" :disabled="step <= 0"/>
-    </div>
-    <div class="lose" v-if="winflag">
-      <h1>U WIN!</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    </transition>
+    <GameResultModal
+      v-if="loseflag"
+      title="U LOSE"
+      subtitle="NO PAIR"
+      :buttons="[
+        {
+          text: 'RESTART',
+          callback: goon,
+          disabled: false
+        },
+        {
+          text: 'UNDO',
+          callback: undo,
+          disabled: step <= 0
+        }
+      ]"
+      :modalStyle="{ backgroundColor: 'rgba(0,0,0,0.5)' }"
+    />
+    
+    <GameResultModal
+      v-if="winflag"
+      title="U WIN!"
+      :buttons="[
+        {
+          text: 'GO ON',
+          callback: goon,
+          disabled: false
+        }
+      ]"
+    />
   </div>
 </template>
 
 <script>
 import Tortoise from './Tortoise.js'
-export default Tortoise
+import GameResultModal from './GameResultModal.vue'
+
+// 扩展Tortoise组件以包含GameResultModal
+const tortoiseWithModal = {
+  ...Tortoise,
+  components: {
+    GameResultModal
+  }
+}
+
+export default tortoiseWithModal
 </script>
 
 <style scoped>

@@ -62,28 +62,69 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-    <transition>
-    <div class="lose" v-if="status == 3" style="background-color: rgba(0,0,0,0.5);">
-      <h1>DRAW GAME</h1>
-      <input type="button" value="RESTART" @click="goon"/>
-      <input type="button" value="UNDO" @click="undo" :disabled="step <= 0"/>
-    </div>
-    <div class="lose" v-if="status == 2" style="background-color: rgba(0,0,0,0.5);">
-      <h1>U LOSE</h1>
-      <input type="button" value="RESTART" @click="goon"/>
-      <input type="button" value="UNDO" @click="undo" :disabled="step <= 0"/>
-    </div>
-    <div class="lose" v-if="status == 1">
-      <h1>U WIN!</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    </transition>
+    <GameResultModal
+      v-if="status == 3"
+      title="DRAW GAME"
+      :buttons="[
+        {
+          text: 'RESTART',
+          callback: goon,
+          disabled: false
+        },
+        {
+          text: 'UNDO',
+          callback: undo,
+          disabled: step <= 0
+        }
+      ]"
+      :modalStyle="{ backgroundColor: 'rgba(0,0,0,0.5)' }"
+    />
+    
+    <GameResultModal
+      v-if="status == 2"
+      title="U LOSE"
+      :buttons="[
+        {
+          text: 'RESTART',
+          callback: goon,
+          disabled: false
+        },
+        {
+          text: 'UNDO',
+          callback: undo,
+          disabled: step <= 0
+        }
+      ]"
+      :modalStyle="{ backgroundColor: 'rgba(0,0,0,0.5)' }"
+    />
+    
+    <GameResultModal
+      v-if="status == 1"
+      title="U WIN!"
+      :buttons="[
+        {
+          text: 'GO ON',
+          callback: goon,
+          disabled: false
+        }
+      ]"
+    />
   </div>
 </template>
 
 <script>
 import Chess from './Chess.js'
-export default Chess
+import GameResultModal from './GameResultModal.vue'
+
+// 扩展Chess组件以包含GameResultModal
+const chessWithModal = {
+  ...Chess,
+  components: {
+    GameResultModal
+  }
+}
+
+export default chessWithModal
 </script>
 
 <style scoped>

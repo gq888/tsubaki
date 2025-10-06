@@ -84,18 +84,33 @@
   &nbsp;
   <input type="button" value="AUTO" @click="pass" :disabled="!hitflag || !lockflag" />
 </div>
-    <transition>
-    <div class="lose" v-if="winflag">
-      <h1>U WIN!</h1>
-      <input type="button" value="GO ON" @click="goon"/>
-    </div>
-    </transition>
+    <GameResultModal
+      v-if="winflag"
+      title="U WIN!"
+      :buttons="[
+        {
+          text: 'GO ON',
+          callback: goon,
+          disabled: false
+        }
+      ]"
+    />
   </div>
 </template>
 
 <script>
 import Spider from './Spider.js'
-export default Spider
+import GameResultModal from './GameResultModal.vue'
+
+// 扩展Spider组件以包含GameResultModal
+const spiderWithModal = {
+  ...Spider,
+  components: {
+    GameResultModal
+  }
+}
+
+export default spiderWithModal
 </script>
 
 <style scoped>
