@@ -139,7 +139,6 @@ export default class GameStateManager {
   async step(stepCallback) {
     if (
       !this.hitflag ||
-      !this.lockflag ||
       this.winflag ||
       this.loseflag ||
       this.drawflag
