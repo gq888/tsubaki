@@ -13,9 +13,6 @@ export default {
       step: 0,
       time: 0,
       timer: 0,
-      winflag: false,
-      hitflag: true,
-      lockflag: true,
       number: 54,
       n: 0
     };

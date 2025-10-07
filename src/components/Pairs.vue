@@ -3,9 +3,9 @@
     <h1>{{ title }}</h1>
     <GameControls
       :showUndo="false"
-      :restartDisabled="!canRestart"
-      :stepDisabled="!canStep"
-      :autoDisabled="!canAuto"
+      :restartDisabled="restartDisabled"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @goon="goon"
       @step="stepFn"
       @auto="pass"
@@ -39,9 +39,9 @@
     </div>
     <GameControls
       :showUndo="false"
-      :restartDisabled="!canRestart"
-      :stepDisabled="!canStep"
-      :autoDisabled="!canAuto"
+      :restartDisabled="restartDisabled"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @goon="goon"
       @step="stepFn"
       @auto="pass"
@@ -69,6 +69,7 @@
 import Pairs from "./Pairs.js";
 import GameResultModal from "./GameResultModal.vue";
 import GameControls from "./GameControls.vue";
+import GameStateManager from "../utils/gameStateManager.js";
 
 // 扩展Pairs组件以包含GameResultModal和GameControls
 const pairsWithModal = {
@@ -81,27 +82,26 @@ const pairsWithModal = {
   data() {
     return {
       ...Pairs.data.call(this),
+      gameManager: new GameStateManager({
+        autoStepDelay: 500
+      })
     };
   },
   created: function() {
+    // 初始化GameStateManager
+    this.gameManager.init();
     this.init();
   },
   beforeUnmount() {
     // 清理定时器
     clearInterval(this.timer);
+    // 停止自动模式
+    this.gameManager.stopAuto();
   },
   computed: {
     ...Pairs.computed,
-    // 计算按钮状态
-    canRestart() {
-      return this.hitflag && this.lockflag;
-    },
-    canStep() {
-      return this.hitflag && this.lockflag;
-    },
-    canAuto() {
-      return this.hitflag && this.lockflag;
-    }
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties()
   },
   methods: {
     ...Pairs.methods,
@@ -126,12 +126,12 @@ const pairsWithModal = {
         this.$set(this.cards2, this.sign, true);
         this.sign = -1;
       }
-      this.hitflag = false;
+      this.gameManager.hitflag = false;
       this.sign2 = card;
       await Pairs.methods.wait(500);
       this.sign = -1;
       this.sign2 = -1;
-      this.hitflag = true;
+      this.gameManager.hitflag = true;
 
       // 检查游戏是否结束
       let gameOver = true;
@@ -143,9 +143,7 @@ const pairsWithModal = {
       }
 
       if (gameOver) {
-        this.winflag = true;
-        this.hitflag = false;
-        this.lockflag = false;
+        this.gameManager.setWin();
         clearInterval(this.timer);
         this.timer = 0;
       }
@@ -180,24 +178,22 @@ const pairsWithModal = {
       }
     },
     async pass() {
-      this.lockflag = false;
-      if (!this.winflag) {
-        await this.stepFn();
-        await Pairs.methods.wait(500);
-        this.pass();
-      }
+      await this.gameManager.startAuto(async () => {
+        if (!this.winflag) {
+          await this.stepFn();
+        }
+      });
     },
     goon() {
-      this.step = 0;
-      this.time = 0;
-      clearInterval(this.timer);
-      this.timer = 0;
-      this.sign = -1;
-      this.sign2 = -1;
-      this.hitflag = true;
-      this.lockflag = true;
-      this.winflag = false;
-      this.init();
+      this.gameManager.reset(() => {
+        this.step = 0;
+        this.time = 0;
+        clearInterval(this.timer);
+        this.timer = 0;
+        this.sign = -1;
+        this.sign2 = -1;
+        this.init();
+      });
     }
   }
 };

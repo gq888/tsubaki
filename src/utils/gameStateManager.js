@@ -338,40 +338,6 @@ export default class GameStateManager {
                manager.isAutoRunning;
       },
       
-      // 通用按钮状态（兼容旧的命名方式）
-      canUndo() {
-        const manager = this.gameStateManager || this.gameManager;
-        return manager && manager.canUndo();
-      },
-      
-      canRestart() {
-        const manager = this.gameStateManager || this.gameManager;
-        return manager &&
-               manager.hitflag &&
-               manager.lockflag;
-      },
-      
-      canStep() {
-        const manager = this.gameStateManager || this.gameManager;
-        return manager &&
-               manager.hitflag &&
-               manager.lockflag &&
-               !manager.winflag &&
-               !manager.loseflag &&
-               !manager.drawflag;
-      },
-      
-      canAuto() {
-        const manager = this.gameStateManager || this.gameManager;
-        return manager &&
-               manager.hitflag &&
-               manager.lockflag &&
-               !manager.winflag &&
-               !manager.loseflag &&
-               !manager.drawflag &&
-               !manager.isAutoRunning;
-      },
-      
       // 游戏状态
       gameState() {
         const manager = this.gameStateManager || this.gameManager;

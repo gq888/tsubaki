@@ -44,10 +44,10 @@
     </div>
     <div class="btns">
       <GameControls
-        :undoDisabled="!canUndo"
-        :restartDisabled="!canRestart"
-        :stepDisabled="!canStep"
-        :autoDisabled="!canAuto"
+        :undoDisabled="undoDisabled"
+        :restartDisabled="restartDisabled"
+        :stepDisabled="stepDisabled"
+        :autoDisabled="autoDisabled"
         @undo="undo"
         @goon="goon"
         @step="stepFn"
@@ -67,7 +67,7 @@
         {
           text: 'UNDO',
           callback: undo,
-          disabled: !canUndo
+          disabled: undoDisabled
         }
       ]"
       :modalStyle="{ backgroundColor: 'rgba(0,0,0,0.5)' }"
