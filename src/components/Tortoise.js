@@ -1,4 +1,5 @@
 import { shuffleCards, wait } from "../utils/help.js";
+import GameStateManager from "../utils/gameStateManager.js";
 
 export default {
   name: "Tortoise",
@@ -8,13 +9,9 @@ export default {
       sign: -1,
       cards1: [],
       cards2: [],
-      arr: [],
       next: [],
-      loseflag: false,
-      winflag: false,
-      hitflag: true,
-      lockflag: true,
       number: 54,
+      gameStateManager: new GameStateManager(),
       map: [
         { "z-index": 0, left: "10%", top: "75px", up: [16, 30] },
         { "z-index": 0, left: "30%", top: "75px", up: [16, 17, 31] },
@@ -74,11 +71,19 @@ export default {
     };
   },
   created: function() {
+    this.setupGameStateListeners();
     this.init();
   },
   // 初始化
   methods: {
+    setupGameStateListeners() {
+      // 监听游戏状态变化
+      this.gameStateManager.on('stateChange', () => {
+        this.$forceUpdate(); // 强制更新视图
+      });
+    },
     init() {
+      this.gameStateManager.init();
       let cards = this.cards1;
       this.cards2.splice(0);
       for (let i = 0; i < this.number; i++) {
@@ -91,7 +96,7 @@ export default {
       if (this.step >= this.number) {
         return;
       }
-      this.hitflag = false;
+      await this.gameStateManager.step(async () => {
       let next,
         next_i,
         max = -1;
@@ -122,7 +127,7 @@ export default {
         }
       }
       this.clickCard(next, next_i);
-      this.hitflag = true;
+      });
     },
     check(i) {
       return (
@@ -148,33 +153,25 @@ export default {
     },
     undo() {
       this.sign = -1;
-      this.cards2.pop();
-      this.cards2.pop();
-      this.loseflag = false;
-      this.lockflag = true;
+        this.cards2.pop();
+        this.cards2.pop();
     },
     async pass() {
-      this.lockflag = false;
-      if (!this.winflag && !this.loseflag) {
+      await this.gameStateManager.startAuto(async () => {
         await this.stepFn();
-        await wait(1000);
-        this.pass();
-      }
+      });
     },
     goon() {
-      this.sign = -1;
-      this.hitflag = true;
-      this.lockflag = true;
-      this.cards1.splice(0);
-      this.arr.splice(0);
-      this.loseflag = false;
-      this.winflag = false;
-      this.init();
+      this.gameStateManager.reset(() => {
+        this.sign = -1;
+        this.cards1.splice(0);
+        this.init();
+      });
     },
     autoCalc() {
       let step = this.step;
       if (step >= this.number) {
-        this.winflag = true;
+        this.gameStateManager.setWin();
         return;
       }
       let temp = [],
@@ -211,7 +208,7 @@ export default {
         }
       }
       if (m < 0) {
-        this.loseflag = true;
+        this.gameStateManager.setLose();
       }
     }
   },
@@ -223,6 +220,18 @@ export default {
   computed: {
     step() {
       return this.cards2.length;
+    },
+    hitflag() {
+      return this.gameStateManager ? this.gameStateManager.hitflag : true;
+    },
+    lockflag() {
+      return this.gameStateManager ? this.gameStateManager.lockflag : true;
+    },
+    winflag() {
+      return this.gameStateManager ? this.gameStateManager.winflag : false;
+    },
+    loseflag() {
+      return this.gameStateManager ? this.gameStateManager.loseflag : false;
     }
   }
 };
