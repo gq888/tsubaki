@@ -128,56 +128,8 @@ const sortWithModal = {
   },
   computed: {
     ...Sort.computed,
-
-    // 计算属性，用于判断按钮是否可用
-    canUndo() {
-      return this.gameManager.canUndo();
-    },
-
-    canRestart() {
-      return this.gameManager.hitflag && this.gameManager.lockflag;
-    },
-
-    canStep() {
-      return (
-        this.gameManager.hitflag &&
-        this.gameManager.lockflag &&
-        !this.gameManager.winflag &&
-        !this.gameManager.loseflag
-      );
-    },
-
-    canAuto() {
-      return (
-        this.gameManager.hitflag &&
-        this.gameManager.lockflag &&
-        !this.gameManager.winflag &&
-        !this.gameManager.loseflag &&
-        !this.gameManager.isAutoRunning
-      );
-    },
-
-    // 覆盖原有的hitflag和lockflag
-    hitflag() {
-      return this.gameManager.hitflag;
-    },
-
-    lockflag() {
-      return this.gameManager.lockflag;
-    },
-
-    loseflag() {
-      return this.gameManager.loseflag;
-    },
-
-    winflag() {
-      return this.gameManager.winflag;
-    },
-
-    // 覆盖原有的step计算属性
-    step() {
-      return this.gameManager.getStepCount();
-    }
+    // 使用GameStateManager的默认计算属性，gameManager会自动映射到gameStateManager
+    ...GameStateManager.getDefaultComputedProperties()
   },
   methods: {
     ...Sort.methods,

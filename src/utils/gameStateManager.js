@@ -264,4 +264,119 @@ export default class GameStateManager {
     Object.assign(this, state);
     this.emit("stateChange", this.getState());
   }
+
+  /**
+   * 获取默认计算属性对象
+   * 供Vue组件使用扩展运算符导入
+   * @returns {Object} 默认计算属性对象
+   */
+  static getDefaultComputedProperties() {
+    return {
+      // 基础状态标志
+      hitflag() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager ? manager.hitflag : true;
+      },
+      
+      lockflag() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager ? manager.lockflag : true;
+      },
+      
+      winflag() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager ? manager.winflag : false;
+      },
+      
+      loseflag() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager ? manager.loseflag : false;
+      },
+      
+      drawflag() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager ? manager.drawflag : false;
+      },
+      
+      // 步数计算属性
+      step() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager ? manager.getStepCount() : 0;
+      },
+      
+      // 按钮禁用状态计算属性
+      undoDisabled() {
+        const manager = this.gameStateManager || this.gameManager;
+        return !manager || !manager.canUndo();
+      },
+      
+      restartDisabled() {
+        const manager = this.gameStateManager || this.gameManager;
+        return !manager || 
+               !manager.hitflag || 
+               !manager.lockflag;
+      },
+      
+      stepDisabled() {
+        const manager = this.gameStateManager || this.gameManager;
+        return !manager ||
+               !manager.hitflag ||
+               !manager.lockflag ||
+               manager.winflag ||
+               manager.loseflag ||
+               manager.drawflag;
+      },
+      
+      autoDisabled() {
+        const manager = this.gameStateManager || this.gameManager;
+        return !manager ||
+               !manager.hitflag ||
+               !manager.lockflag ||
+               manager.winflag ||
+               manager.loseflag ||
+               manager.drawflag ||
+               manager.isAutoRunning;
+      },
+      
+      // 通用按钮状态（兼容旧的命名方式）
+      canUndo() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager && manager.canUndo();
+      },
+      
+      canRestart() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager &&
+               manager.hitflag &&
+               manager.lockflag;
+      },
+      
+      canStep() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager &&
+               manager.hitflag &&
+               manager.lockflag &&
+               !manager.winflag &&
+               !manager.loseflag &&
+               !manager.drawflag;
+      },
+      
+      canAuto() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager &&
+               manager.hitflag &&
+               manager.lockflag &&
+               !manager.winflag &&
+               !manager.loseflag &&
+               !manager.drawflag &&
+               !manager.isAutoRunning;
+      },
+      
+      // 游戏状态
+      gameState() {
+        const manager = this.gameStateManager || this.gameManager;
+        return manager ? manager.getState() : {};
+      }
+    };
+  }
 }

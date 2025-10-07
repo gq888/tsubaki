@@ -177,49 +177,10 @@ const chessWithModal = {
   },
   computed: {
     ...Chess.computed,
-    // 计算属性，用于获取游戏状态
-    gameState() {
-      return this.gameManager.getState();
-    },
-
-    // 计算属性，用于判断按钮是否可用
-    undoDisabled() {
-      return !this.gameManager.canUndo();
-    },
-
-    restartDisabled() {
-      return !this.gameManager.hitflag || !this.gameManager.lockflag;
-    },
-
-    stepDisabled() {
-      return (
-        !this.gameManager.hitflag ||
-        !this.gameManager.lockflag ||
-        this.gameManager.winflag ||
-        this.gameManager.loseflag
-      );
-    },
-
-    autoDisabled() {
-      return (
-        !this.gameManager.hitflag ||
-        !this.gameManager.lockflag ||
-        this.gameManager.winflag ||
-        this.gameManager.loseflag ||
-        this.gameManager.isAutoRunning
-      );
-    },
-
-    // 覆盖原有的hitflag和lockflag
-    hitflag() {
-      return this.gameManager.hitflag;
-    },
-
-    lockflag() {
-      return this.gameManager.lockflag;
-    },
-
-    // 覆盖原有的step计算属性
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties(),
+    
+    // 覆盖默认的step计算属性，因为Chess游戏的step计算方式不同
     step() {
       return this.gameManager.getStepCount() / 2; // 原来的arr中每两步对应一个完整操作
     }

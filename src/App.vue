@@ -2,23 +2,23 @@
   <div id="app">
     <div id="nav">
       GAMES: &nbsp;
-      <router-link to="/month">Month</router-link>
+      <router-link to="/month">🌛</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/fish">Fish</router-link>
+      <router-link to="/fish">🐟</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/blackjack">BlackJack</router-link>
+      <router-link to="/blackjack">♠️</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/point24">Point24</router-link>
+      <router-link to="/point24">24</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/Tortoise">Tortoise</router-link>
+      <router-link to="/Tortoise">🐢</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/Sort">Sort</router-link>
+      <router-link to="/Sort">🐗</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/Pairs">Pairs</router-link>
+      <router-link to="/Pairs">🐰</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/Spider">Spider</router-link>
+      <router-link to="/Spider">🕷️</router-link>
       &nbsp; / &nbsp;
-      <router-link to="/Chess">Chess</router-link>
+      <router-link to="/Chess">♟️</router-link>
     </div>
     <router-view />
   </div>

@@ -133,56 +133,8 @@ const point24WithModal = {
   },
   computed: {
     ...point24.computed,
-
-    // 计算属性，用于判断按钮是否可用
-    undoDisabled() {
-      return !this.gameManager.canUndo();
-    },
-
-    restartDisabled() {
-      return !this.gameManager.hitflag || !this.gameManager.lockflag;
-    },
-
-    stepDisabled() {
-      return (
-        !this.gameManager.hitflag ||
-        !this.gameManager.lockflag ||
-        this.gameManager.winflag ||
-        this.gameManager.loseflag
-      );
-    },
-
-    autoDisabled() {
-      return (
-        !this.gameManager.hitflag ||
-        !this.gameManager.lockflag ||
-        this.gameManager.winflag ||
-        this.gameManager.loseflag ||
-        this.gameManager.isAutoRunning
-      );
-    },
-
-    // 覆盖原有的hitflag和lockflag
-    hitflag() {
-      return this.gameManager.hitflag;
-    },
-
-    lockflag() {
-      return this.gameManager.lockflag;
-    },
-
-    loseflag() {
-      return this.gameManager.loseflag;
-    },
-
-    winflag() {
-      return this.gameManager.winflag;
-    },
-
-    // 覆盖原有的step计算属性
-    step() {
-      return this.gameManager.getStepCount();
-    }
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties()
   },
   methods: {
     ...point24.methods,

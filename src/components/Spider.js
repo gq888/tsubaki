@@ -590,21 +590,10 @@ export default {
     }
   },
   computed: {
-    step() {
-      return this.gameStateManager ? this.gameStateManager.getStepCount() : 0;
-    },
-    hitflag() {
-      return this.gameStateManager ? this.gameStateManager.hitflag : true;
-    },
-    lockflag() {
-      return this.gameStateManager ? this.gameStateManager.lockflag : true;
-    },
-    winflag() {
-      return this.gameStateManager ? this.gameStateManager.winflag : false;
-    },
-    loseflag() {
-      return this.gameStateManager ? this.gameStateManager.loseflag : false;
-    },
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties(),
+    
+    // 保留Spider特有的计算属性
     height() {
       return (
         Math.max(...this.cards.slice(-4).map(cards => cards.length)) * 30 + 480

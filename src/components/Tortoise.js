@@ -217,20 +217,7 @@ export default {
     }
   },
   computed: {
-    step() {
-      return this.gameStateManager.getStepCount();
-    },
-    hitflag() {
-      return this.gameStateManager ? this.gameStateManager.hitflag : true;
-    },
-    lockflag() {
-      return this.gameStateManager ? this.gameStateManager.lockflag : true;
-    },
-    winflag() {
-      return this.gameStateManager ? this.gameStateManager.winflag : false;
-    },
-    loseflag() {
-      return this.gameStateManager ? this.gameStateManager.loseflag : false;
-    }
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties()
   }
 };
