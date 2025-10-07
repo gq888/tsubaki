@@ -105,22 +105,8 @@ const componentConfig = {
   },
   computed: {
     ...sum.computed,
-    // 覆盖原有的状态标志
-    hitflag() {
-      return this.gameManager.hitflag;
-    },
-
-    loseflag() {
-      return this.gameManager.loseflag;
-    },
-
-    winflag() {
-      return this.gameManager.winflag;
-    },
-
-    drawflag() {
-      return this.gameManager.drawflag;
-    }
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties()
   },
   methods: {
     ...sum.methods,

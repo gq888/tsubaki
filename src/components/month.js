@@ -4,13 +4,10 @@ export default {
   data() {
     return {
       title: "Month",
-      step: 12,
+      month: 12,
       cards1: [],
       cards2: [],
       arr: [],
-      loseflag: false,
-      hitflag: true,
-      lockflag: true,
       timer: "",
       number: 52
     };
@@ -32,45 +29,18 @@ export default {
       }
     },
     async stepFn() {
-      this.hitflag = false;
-      await this.hit().then(() => {
-        console.log(1);
-        this.hitflag = true;
-      });
+      await this.hit();
     },
     async push(arr, item) {
       arr.push(item);
     },
     // 摸牌
     async hit() {
-      let step = this.step;
-      if (this.cards2[12] >= 4) {
-        this.loseflag = true;
-        return;
-      }
-      let currentCard = this.arr[step].pop();
+      let currentCard = this.arr[this.month].pop();
       var value = currentCard >> 2;
       this.arr[value].unshift(currentCard);
-      this.step = value;
+      this.month = value;
       this.cards2[value]++;
-    },
-    pass() {
-      this.lockflag = false;
-      if (!this.loseflag) {
-        this.stepFn().then(() => {
-          setTimeout(this.pass, 1000);
-        });
-      }
-    },
-    goon() {
-      this.step = 12;
-      this.hitflag = true;
-      this.lockflag = true;
-      this.cards1.splice(0);
-      this.cards2.splice(0);
-      this.arr.splice(0);
-      this.loseflag = false;
-      this.init();
     }
   }
 };

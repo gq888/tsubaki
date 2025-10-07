@@ -75,8 +75,8 @@
     <GameControls
       :showUndo="false"
       :showRestart="false"
-      :stepDisabled="!hitflag || !lockflag"
-      :autoDisabled="!hitflag || !lockflag"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @step="stepFn"
       @auto="pass"
     />
@@ -106,6 +106,7 @@
 import fish from "./fish.js";
 import GameResultModal from "./GameResultModal.vue";
 import GameControls from "./GameControls.vue";
+import GameStateManager from "../utils/gameStateManager.js";
 
 // 扩展fish组件以包含GameResultModal和GameControls
 const fishWithModal = {
@@ -114,6 +115,71 @@ const fishWithModal = {
     ...fish.components, // 保留原来的组件
     GameResultModal,
     GameControls
+  },
+  data() {
+    return {
+      ...fish.data.call(this),
+      gameManager: new GameStateManager({
+        autoStepDelay: 1000
+      })
+    };
+  },
+  created() {
+    // 初始化GameStateManager
+    this.gameManager.init();
+    this.init();
+  },
+  beforeUnmount() {
+    // 停止自动模式
+    this.gameManager.stopAuto();
+  },
+  computed: {
+    ...fish.computed,
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties()
+  },
+  methods: {
+    ...fish.methods,
+    // 重写stepFn方法添加胜利检测
+    async stepFn() {
+      await this.gameManager.step(async () => {
+        let cards = this["cards" + ((this.step % 4) + 1)];
+        while (cards.length <= 0) {
+          this.gameManager.recordOperation();
+          cards = this["cards" + ((this.step % 4) + 1)];
+        }
+        await this.hit(cards, this.arr);
+        // 检查胜利条件
+        let i;
+        for (i = 1; i <= 4; i++) {
+          if ((this.step % 4) + 1 != i && this["cards" + i].length > 0) {
+            break;
+          }
+        }
+        if (i > 4) {
+          this.gameManager.setWin();
+        }
+        this.gameManager.recordOperation();
+      });
+    },
+    // 重写pass方法使用GameStateManager
+    pass() {
+      this.gameManager.startAuto(async () => {
+        if (!this.winflag) {
+          await this.stepFn();
+        }
+      });
+    },
+    // 重写goon方法使用GameStateManager
+    goon() {
+      this.gameManager.reset(() => {
+        this.cards1.splice(0);
+        this.cards2.splice(0);
+        this.cards3.splice(0);
+        this.cards4.splice(0);
+        this.init();
+      });
+    }
   }
 };
 

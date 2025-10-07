@@ -10,10 +10,9 @@ export default {
       arr: [],
       sign: -1,
       sign2: -2,
-      step: 0,
       time: 0,
       timer: 0,
-      number: 54,
+      number: 48,
       n: 0
     };
   },

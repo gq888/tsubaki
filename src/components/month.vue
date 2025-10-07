@@ -4,8 +4,8 @@
     <GameControls
       :showUndo="false"
       :showRestart="false"
-      :stepDisabled="!hitflag || !lockflag"
-      :autoDisabled="!hitflag || !lockflag"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @step="stepFn"
       @auto="pass"
     />
@@ -25,18 +25,18 @@
               v-for="(card, j) in item"
               :key="card"
               class="m-0 card abso"
-              :style="{ top: (step == i ? j : 1 + j) * 30 + 'px', left: 0 }"
+              :style="{ top: (month == i ? j : 1 + j) * 30 + 'px', left: 0 }"
               :src="
                 './static/' +
                   (cards2[i] > j ||
-                  (step == i && ((step == 12 && j == 3) || j == 4))
+                  (month == i && ((month == 12 && j == 3) || j == 4))
                     ? card
                     : 'bg') +
                   '.jpg'
               "
             />
             <div
-              v-show="i == 12 && step != i"
+              v-show="i == 12 && month != i"
               class="m-0 card"
               style="background-color: #719192;"
             ></div>
@@ -47,8 +47,8 @@
     <GameControls
       :showUndo="false"
       :showRestart="false"
-      :stepDisabled="!hitflag || !lockflag"
-      :autoDisabled="!hitflag || !lockflag"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @step="stepFn"
       @auto="pass"
     />
@@ -87,6 +87,7 @@
 import month from "./month.js";
 import GameResultModal from "./GameResultModal.vue";
 import GameControls from "./GameControls.vue";
+import GameStateManager from "../utils/gameStateManager.js";
 
 // 扩展month组件以包含GameResultModal和GameControls
 const monthWithModal = {
@@ -95,6 +96,59 @@ const monthWithModal = {
     ...month.components, // 保留原来的组件
     GameResultModal,
     GameControls
+  },
+  data() {
+    return {
+      ...month.data.call(this),
+      gameManager: new GameStateManager({
+        autoStepDelay: 1000
+      })
+    };
+  },
+  created() {
+    // 初始化GameStateManager
+    this.gameManager.init();
+    this.init();
+  },
+  beforeUnmount() {
+    // 停止自动模式
+    this.gameManager.stopAuto();
+  },
+  computed: {
+    ...month.computed,
+    // 使用GameStateManager的默认计算属性
+    ...GameStateManager.getDefaultComputedProperties()
+  },
+  methods: {
+    ...month.methods,
+    // 重写stepFn方法添加失败检测
+    async stepFn() {
+      // 检查失败条件
+      if (this.cards2[12] >= 4) {
+        this.gameManager.setLose();
+      }
+      await this.gameManager.step(async () => {
+        await month.methods.stepFn.call(this);
+      });
+    },
+    // 重写pass方法使用GameStateManager
+    pass() {
+      this.gameManager.startAuto(async () => {
+        if (!this.loseflag) {
+          await this.stepFn();
+        }
+      });
+    },
+    // 重写goon方法使用GameStateManager
+    goon() {
+      this.gameManager.reset(() => {
+        this.month = 12;
+        this.cards1.splice(0);
+        this.cards2.splice(0);
+        this.arr.splice(0);
+        this.init();
+      });
+    }
   }
 };
 

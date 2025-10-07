@@ -12,7 +12,6 @@ export default {
       diff2: 0,
       diff3: 0,
       diff4: 0,
-      step: 0,
       cards1: [],
       cards2: [],
       cards3: [],
@@ -24,9 +23,6 @@ export default {
       flyout2: [],
       cardsIndex: "",
       arr: [],
-      winflag: false,
-      hitflag: true,
-      lockflag: true,
       timer: ""
     };
   },
@@ -57,27 +53,6 @@ export default {
         cards[rand] = tmp;
       }
       return cards;
-    },
-    async stepFn() {
-      this.hitflag = false;
-      let cards = this["cards" + ((this.step % 4) + 1)];
-      while (cards.length <= 0) {
-        this.step++;
-        cards = this["cards" + ((this.step % 4) + 1)];
-      }
-      await this.hit(cards, this.arr);
-      let i;
-      for (i = 1; i <= 4; i++) {
-        if ((this.step % 4) + 1 != i && this["cards" + i].length > 0) {
-          break;
-        }
-      }
-      if (i > 4) {
-        this.winflag = true;
-        return;
-      }
-      this.hitflag = true;
-      this.step++;
     },
     time(handle, time) {
       return new Promise(resolve => {
@@ -123,25 +98,6 @@ export default {
         this.ssArr.splice(0);
         cards.push(...arr.splice(index));
       }, 1000);
-    },
-    pass() {
-      this.lockflag = false;
-      if (!this.winflag) {
-        this.stepFn().then(() => {
-          setTimeout(this.pass, 1000);
-        });
-      }
-    },
-    goon() {
-      this.step = 0;
-      this.hitflag = true;
-      this.lockflag = true;
-      this.cards1.splice(0);
-      this.cards2.splice(0);
-      this.cards3.splice(0);
-      this.cards4.splice(0);
-      this.winflag = false;
-      this.init();
     }
   },
   computed: {

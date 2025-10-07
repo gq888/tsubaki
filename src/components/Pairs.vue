@@ -116,7 +116,7 @@ const pairsWithModal = {
         return;
       }
       this.arr[card] = true;
-      this.step++;
+      this.gameManager.recordOperation();
       if (this.sign < 0) {
         this.sign = card;
         return;
@@ -186,7 +186,6 @@ const pairsWithModal = {
     },
     goon() {
       this.gameManager.reset(() => {
-        this.step = 0;
         this.time = 0;
         clearInterval(this.timer);
         this.timer = 0;
