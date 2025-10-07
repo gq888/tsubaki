@@ -2,10 +2,10 @@
   <div class="Sum">
     <h1>{{ title }}</h1>
     <GameControls
-      :undoDisabled="step <= 0 || !hitflag || !lockflag"
-      :restartDisabled="!hitflag || !lockflag"
-      :stepDisabled="!hitflag || !lockflag"
-      :autoDisabled="!hitflag || !lockflag"
+      :undoDisabled="undoDisabled"
+      :restartDisabled="restartDisabled"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @undo="undo"
       @goon="goon"
       @step="stepFn"
@@ -187,10 +187,10 @@
       </div>
     </div>
     <GameControls
-      :undoDisabled="step <= 0 || !hitflag || !lockflag"
-      :restartDisabled="!hitflag || !lockflag"
-      :stepDisabled="!hitflag || !lockflag"
-      :autoDisabled="!hitflag || !lockflag"
+      :undoDisabled="undoDisabled"
+      :restartDisabled="restartDisabled"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @undo="undo"
       @goon="goon"
       @step="stepFn"

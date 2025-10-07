@@ -2,10 +2,10 @@
   <div class="Sum">
     <h1>{{ title }}</h1>
     <GameControls
-      :undoDisabled="!canUndo"
-      :restartDisabled="!canRestart"
-      :stepDisabled="!canStep"
-      :autoDisabled="!canAuto"
+      :undoDisabled="undoDisabled"
+      :restartDisabled="restartDisabled"
+      :stepDisabled="stepDisabled"
+      :autoDisabled="autoDisabled"
       @undo="undo"
       @goon="goon"
       @step="stepFn"
