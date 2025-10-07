@@ -118,12 +118,10 @@ const sortWithModal = {
 
     // 注册游戏状态管理器的事件监听器
     this.gameManager.on("undo", this.handleUndo);
-    this.gameManager.on("stateChange", this.handleStateChange);
   },
   beforeUnmount() {
     // 移除事件监听器，防止内存泄漏
     this.gameManager.off("undo", this.handleUndo);
-    this.gameManager.off("stateChange", this.handleStateChange);
 
     // 停止自动模式
     this.gameManager.stopAuto();

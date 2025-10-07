@@ -1,4 +1,4 @@
-import { shuffleCards, timeout } from "../utils/help.js";
+import { shuffleCards } from "../utils/help.js";
 import point24card from "./point24card.vue";
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
 var opts = [1, 3, 2, 2, 4, 4];
@@ -55,16 +55,11 @@ export default {
   data() {
     return {
       title: "Point24",
-      step: 0,
       sign: 0,
       cards1: [],
       cards2: [0, 0, 0],
       signs: ["UP", "+", "-", "X", "/"],
       arr: [],
-      loseflag: false,
-      winflag: false,
-      hitflag: true,
-      lockflag: true,
       number: 52
     };
   },
@@ -74,7 +69,6 @@ export default {
   // 初始化
   methods: {
     init() {
-      this.step = 0;
       let cards = this.cards1;
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
@@ -84,45 +78,8 @@ export default {
       this.autoCalc();
     },
     calc,
-    async stepFn() {
-      if (this.step >= 3) {
-        return;
-      }
-      let temp = this.cards2[this.step];
-      this.hitflag = false;
-      this.sign = 0;
-      this.clickCard(temp[0], this.arr.indexOf(temp[0]));
-      await timeout(() => {}, 1000);
-      this.clickSign(temp[1]);
-      await timeout(() => {}, 1000);
-      this.clickCard(temp[2], this.arr.indexOf(temp[2]));
-      this.hitflag = true;
-    },
-    clickCard(card, i) {
-      if (i == 0) {
-        return;
-      }
-      if (this.sign != 0) {
-        let temp = [this.arr[0], this.sign, this.arr.splice(i, 1)[0]];
-        this.arr.splice(0, 1, temp);
-        this.sign = 0;
-        this.$set(this.cards2, this.step++, temp);
-      } else {
-        let temp = this.arr[0];
-        this.$set(this.arr, 0, this.arr[i]);
-        this.$set(this.arr, i, temp);
-      }
-    },
-    undo() {
-      if (this.step == 0) {
-        return;
-      }
-      let temp = this.cards2.splice(--this.step, 1)[0];
-      let s = first(temp);
-      let i = this.arr.findIndex(a => first(a) == s);
-      this.arr.splice(i, 1, temp[0], temp[2]);
-      this.loseflag = false;
-    },
+    first,
+    process,
     clickSign(sign) {
       this.sign = this.sign == sign ? 0 : sign;
     },
@@ -136,32 +93,10 @@ export default {
         // this.lockflag = true
       }
     },
-    goon() {
-      this.sign = 0;
-      this.hitflag = true;
-      this.lockflag = true;
-      this.cards1.splice(0);
-      this.arr.splice(0);
-      this.loseflag = false;
-      this.winflag = false;
-      this.init();
-    },
     autoCalc() {
       let step = this.step;
-      if (step >= 3) {
-        if (calc(this.arr[0]) == 24) {
-          this.winflag = true;
-        } else {
-          this.loseflag = true;
-        }
-        return;
-      }
       let temp = [...this.arr];
-      let f = process(temp, temp.length, 24);
-      if (!f) {
-        this.loseflag = true;
-        return;
-      }
+      process(temp, temp.length, 24);
       this.cards2.splice(2, 1, temp[0]);
       if (step >= 2) {
         return;
