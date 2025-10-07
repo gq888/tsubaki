@@ -124,6 +124,7 @@ export default class GameStateManager {
     }
 
     this.isAutoRunning = false;
+    this.lockflag = true;
     if (this.autoInterval) {
       clearInterval(this.autoInterval);
       this.autoInterval = null;
@@ -137,12 +138,7 @@ export default class GameStateManager {
    * @param {Function} stepCallback - 单步操作的回调函数
    */
   async step(stepCallback) {
-    if (
-      !this.hitflag ||
-      this.winflag ||
-      this.loseflag ||
-      this.drawflag
-    ) {
+    if (!this.hitflag || this.winflag || this.loseflag || this.drawflag) {
       return;
     }
 

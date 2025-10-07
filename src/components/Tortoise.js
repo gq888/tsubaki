@@ -1,4 +1,4 @@
-import { shuffleCards, wait } from "../utils/help.js";
+import { shuffleCards } from "../utils/help.js";
 import GameStateManager from "../utils/gameStateManager.js";
 
 export default {
@@ -8,7 +8,6 @@ export default {
       title: "Tortoise",
       sign: -1,
       cards1: [],
-      cards2: [],
       next: [],
       number: 54,
       gameStateManager: new GameStateManager(),
@@ -85,7 +84,6 @@ export default {
     init() {
       this.gameStateManager.init();
       let cards = this.cards1;
-      this.cards2.splice(0);
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
       }
@@ -136,7 +134,7 @@ export default {
       );
     },
     done(card) {
-      return this.cards2.indexOf(card) >= 0;
+      return this.gameStateManager.history.indexOf(card) >= 0;
     },
     clickCard(card, i) {
       if (!this.check(i)) {
@@ -147,14 +145,15 @@ export default {
       } else if (this.sign >> 2 != card >> 2) {
         this.sign = card;
       } else {
-        this.cards2.push(this.sign, card);
+        this.gameStateManager.recordOperation(this.sign);
+        this.gameStateManager.recordOperation(card);
         this.sign = -1;
       }
     },
     undo() {
       this.sign = -1;
-        this.cards2.pop();
-        this.cards2.pop();
+      this.gameStateManager.undo();
+      this.gameStateManager.undo();
     },
     async pass() {
       await this.gameStateManager.startAuto(async () => {
@@ -219,7 +218,7 @@ export default {
   },
   computed: {
     step() {
-      return this.cards2.length;
+      return this.gameStateManager.getStepCount();
     },
     hitflag() {
       return this.gameStateManager ? this.gameStateManager.hitflag : true;
