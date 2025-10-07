@@ -9,11 +9,8 @@ export default {
       cards2: [],
       types: ["♥", "♠", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
-      loseflag: false,
-      winflag: false,
-      hitflag: true,
-      lockflag: true,
       number: 12,
+      state: 0,
       n: 0
     };
   },
@@ -21,6 +18,7 @@ export default {
     wait,
     init() {
       let cards = this.cards1;
+      this.state = 0;
       this.cards2.splice(0);
       for (let i = 0; i < this.number * 4; i++) {
         cards.push(i);
@@ -151,9 +149,9 @@ export default {
           }
         }
         if (this.n >= this.number * 4) {
-          this.winflag = true
+          this.state = 1
         } else {
-          this.loseflag = true
+          this.state = 2
         }
         return
       }

@@ -91,6 +91,7 @@
 import Sort from "./Sort.js";
 import GameResultModal from "./GameResultModal.vue";
 import GameControls from "./GameControls.vue";
+import GameStateManager from "../utils/gameStateManager.js";
 
 // 扩展Sort组件以包含GameResultModal和GameControls
 const sortWithModal = {
@@ -100,37 +101,118 @@ const sortWithModal = {
     GameResultModal,
     GameControls
   },
-  created: function() {
+  data() {
+    return {
+      ...Sort.data.call(this),
+      gameManager: new GameStateManager({
+        autoStepDelay: 500 // 设置自动模式每步的延迟时间
+      })
+    };
+  },
+  created() {
+    // 创建游戏状态管理器实例
+    this.gameManager.init()
+
+    // 初始化游戏
     this.init();
+
+    // 注册游戏状态管理器的事件监听器
+    this.gameManager.on("undo", this.handleUndo);
+    this.gameManager.on("stateChange", this.handleStateChange);
+  },
+  beforeUnmount() {
+    // 移除事件监听器，防止内存泄漏
+    this.gameManager.off("undo", this.handleUndo);
+    this.gameManager.off("stateChange", this.handleStateChange);
+
+    // 停止自动模式
+    this.gameManager.stopAuto();
   },
   computed: {
     ...Sort.computed,
-    // 计算按钮状态
+
+    // 计算属性，用于判断按钮是否可用
     canUndo() {
-      return this.step > 0 && this.hitflag && this.lockflag;
+      return this.gameManager.canUndo();
     },
+
     canRestart() {
-      return this.hitflag && this.lockflag;
+      return this.gameManager.hitflag && this.gameManager.lockflag;
     },
+
     canStep() {
-      return this.hitflag && this.lockflag;
+      return (
+        this.gameManager.hitflag &&
+        this.gameManager.lockflag &&
+        !this.gameManager.winflag &&
+        !this.gameManager.loseflag
+      );
     },
+
     canAuto() {
-      return this.hitflag && this.lockflag;
+      return (
+        this.gameManager.hitflag &&
+        this.gameManager.lockflag &&
+        !this.gameManager.winflag &&
+        !this.gameManager.loseflag &&
+        !this.gameManager.isAutoRunning
+      );
+    },
+
+    // 覆盖原有的hitflag和lockflag
+    hitflag() {
+      return this.gameManager.hitflag;
+    },
+
+    lockflag() {
+      return this.gameManager.lockflag;
+    },
+
+    loseflag() {
+      return this.gameManager.loseflag;
+    },
+
+    winflag() {
+      return this.gameManager.winflag;
+    },
+
+    // 覆盖原有的step计算属性
+    step() {
+      return this.gameManager.getStepCount();
     }
   },
   methods: {
     ...Sort.methods,
-    undo() {
-      let undo = this.cards2.pop()
-      let i0 = this.cards1.indexOf(undo[0])
-      let i1 = this.cards1.indexOf(undo[1])
-      this.$set(this.cards1, i1, undo[0])
-      this.$set(this.cards1, i0, undo[1])
-      this.loseflag = false;
-      this.winflag = false;
-      this.lockflag = true;
+
+    // 记录移动操作
+    recordMove(from, to, card, sign) {
+      this.gameManager.recordOperation({
+        type: "move",
+        from: from,
+        to: to,
+        card: card,
+        sign: sign,
+        timestamp: Date.now()
+      });
     },
+
+    // 处理撤销操作
+    handleUndo(operation) {
+      // 根据操作类型执行相应的撤销逻辑
+      switch (operation.type) {
+        case "move":
+          // 撤销移动操作
+          this.$set(this.cards1, operation.to, operation.sign);
+          this.$set(this.cards1, operation.from, operation.card);
+          break;
+      }
+    },
+
+    // 重写undo方法
+    undo() {
+      this.gameManager.undo();
+    },
+    // 重写clickCard方法，使用GameStateManager记录操作
     clickCard(card, i) {
       if (!Number.isFinite(i)) {
         i = this.cards1.indexOf(card);
@@ -138,34 +220,48 @@ const sortWithModal = {
       let index = this.cards1.indexOf(card + 4);
       if (index >= 0) {
         if (this.cards1[index + 1] < 0) {
-          this.cards2.push([card, this.cards1[index + 1]]);
-          this.$set(this.cards1, i, this.cards1[index + 1]);
+          let sign = this.cards1[index + 1];
+          this.recordMove(i, index + 1, card, sign); // 使用GameStateManager记录操作
+          this.$set(this.cards1, i, sign);
           this.$set(this.cards1, index + 1, card);
         }
       }
     },
+    // 重写stepFn方法
     async stepFn() {
-      this.hitflag = false;
-      this.clickSign(this.next[1]);
-      await Sort.methods.wait(1000);
-      this.clickCard(this.next[0]);
-      this.hitflag = true;
+      await this.gameManager.step(async () => {
+        this.clickSign(this.next[1]);
+        await Sort.methods.wait(1000);
+        this.clickCard(this.next[0]);
+      });
     },
-    async pass() {
-      this.lockflag = this.winflag || this.loseflag;
-      if (!this.lockflag) {
+
+    // 重写pass方法（自动模式）
+    pass() {
+      this.gameManager.startAuto(async () => {
         await this.stepFn();
         await Sort.methods.wait(1000);
-        this.pass();
-      }
+      });
     },
+    // 重写goon方法（重置游戏）
     goon() {
-      this.hitflag = true;
-      this.lockflag = true;
-      this.cards1.splice(0);
-      this.loseflag = false;
-      this.winflag = false;
-      this.init();
+      this.gameManager.reset(() => {
+        this.cards1.splice(0);
+        this.init();
+      });
+    },
+
+    // 覆盖Sort.js中的autoCalc方法，使用GameStateManager设置游戏结果
+    autoCalc() {
+      // 先调用原始方法
+      Sort.methods.autoCalc.call(this);
+      
+      // 然后使用gameManager设置结果
+      if (this.state == 1) {
+        this.gameManager.setWin();
+      } else if (this.state == 2) {
+        this.gameManager.setLose();
+      }
     }
   }
 };

@@ -142,11 +142,17 @@ const chessWithModal = {
     GameResultModal,
     GameControls
   },
+  data() {
+    return {
+      ...Chess.data.call(this),
+      gameManager: new GameStateManager({
+        autoStepDelay: 500 // 设置自动模式每步的延迟时间
+      })
+    };
+  },
   created() {
     // 创建游戏状态管理器实例
-    this.gameManager = new GameStateManager({
-      autoStepDelay: 500 // 设置自动模式每步的延迟时间
-    });
+    this.gameManager.init()
 
     // 初始化游戏
     this.init();
