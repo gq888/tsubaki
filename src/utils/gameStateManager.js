@@ -43,8 +43,8 @@ export default class GameStateManager {
    * 记录游戏操作到历史记录
    * @param {Object} operation - 操作对象
    */
-  recordOperation(operation) {
-    this.history.push(operation);
+  recordOperation(operation, backword = false) {
+    backword ? this.history.unshift(operation) : this.history.push(operation);
     this.emit("historyUpdate", this.history);
   }
 
