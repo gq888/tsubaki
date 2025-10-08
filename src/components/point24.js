@@ -1,4 +1,4 @@
-import { shuffleCards } from "../utils/help.js";
+import { shuffleCards, timeout } from "../utils/help.js";
 import point24card from "./point24card.vue";
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
 var opts = [1, 3, 2, 2, 4, 4];
@@ -83,10 +83,82 @@ export default {
     clickSign(sign) {
       this.sign = this.sign == sign ? 0 : sign;
     },
+    // 记录操作
+    recordOperation(type, data) {
+      this.gameManager.recordOperation({
+        type: type,
+        ...data,
+        timestamp: Date.now()
+      });
+    },
+  
+    // 处理撤销操作
+    handleUndo(operation) {
+      // 根据操作类型执行相应的撤销逻辑
+      switch (operation.type) {
+        case "combine":
+          // 撤销组合操作
+          this.cards2.splice(this.step, 1);
+          this.arr.splice(this.arr.findIndex(a => this.first(a) == this.first(operation.combined)), 1, operation.left, operation.right);
+          break;
+      }
+    },
+  
+    // 重写clickCard方法，使用GameStateManager记录操作
+    clickCard(card, i) {
+      if (i == 0) {
+        return;
+      }
+      if (this.sign != 0) {
+        let left = this.arr[0];
+        let right = this.arr.splice(i, 1)[0];
+        let combined = [left, this.sign, right];
+        this.arr.splice(0, 1, combined);
+        this.sign = 0;
+        this.$set(this.cards2, this.step, combined);
+        this.recordOperation("combine", {
+          left: left,
+          right: right,
+          combined: combined
+        });
+      } else {
+        let temp = this.arr[0];
+        this.$set(this.arr, 0, this.arr[i]);
+        this.$set(this.arr, i, temp);
+      }
+    },
+  
+    // 重写stepFn方法
+    async stepFn() {
+      await this.gameManager.step(async () => {
+        if (this.step >= 3) {
+          return;
+        }
+        let temp = this.cards2[this.step];
+        this.sign = 0;
+        this.clickCard(temp[0], this.arr.indexOf(temp[0]));
+        await timeout(() => {}, 1000);
+        this.clickSign(temp[1]);
+        await timeout(() => {}, 1000);
+        this.clickCard(temp[2], this.arr.indexOf(temp[2]));
+      });
+    },
     autoCalc() {
+      if (this.step >= 3) {
+        if (this.calc(this.arr[0]) == 24) {
+          this.gameManager.setWin();
+        } else {
+          this.gameManager.setLose();
+        }
+        return;
+      }
       let step = this.step;
       let temp = [...this.arr];
-      process(temp, temp.length, 24);
+      let f = this.process(temp, temp.length, 24);
+      if (!f) {
+        this.gameManager.setLose();
+        return;
+      }
       this.cards2.splice(2, 1, temp[0]);
       if (step >= 2) {
         return;

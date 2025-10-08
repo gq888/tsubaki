@@ -73,88 +73,10 @@
 
 <script>
 import sum from "./sum.js";
-import GameResultModal from "./GameResultModal.vue";
-import GameControls from "./GameControls.vue";
-import GameStateManager from "../utils/gameStateManager.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-const componentConfig = {
-  ...sum,
-  components: {
-    ...sum.components, // 保留原来的组件
-    GameResultModal,
-    GameControls
-  },
-  data() {
-    return {
-      ...sum.data.call(this),
-      gameManager: new GameStateManager({
-        autoStepDelay: 1000 // 设置自动模式每步的延迟时间
-      })
-    };
-  },
-  created() {
-    // 创建游戏状态管理器实例
-    this.gameManager.init();
-
-    // 初始化游戏
-    this.init(this.cardsChg);
-  },
-  beforeUnmount() {
-    // 停止自动模式
-    this.gameManager.stopAuto();
-  },
-  computed: {
-    ...sum.computed,
-    // 使用GameStateManager的默认计算属性
-    ...GameStateManager.getDefaultComputedProperties()
-  },
-  methods: {
-    ...sum.methods,
-
-    // 重写pass方法
-    pass() {
-      this.gameManager.startAuto(() => {
-        return new Promise(resolve => {
-          this.compare();
-          setTimeout(resolve, 1000); // 保持原来的1秒间隔
-        });
-      });
-    },
-
-    // 重写compare方法
-    compare() {
-      if (this.score1 === this.score2) {
-        this.gameManager.setDraw();
-      } else if (this.score1 < this.score2) {
-        this.hit(this.cardsChg, this.arr1);
-      } else if (this.score1 > this.score2) {
-        this.gameManager.setLose();
-      }
-    },
-
-    // 重写goon方法
-    goon() {
-      this.gameManager.reset(() => {
-        this.cardsChg = [];
-        this.init(this.cardsChg);
-      });
-    }
-  },
-  watch: {
-    score2() {
-      if (this.score2 === 0) {
-        this.gameManager.setLose();
-      }
-    },
-    score1() {
-      if (this.score1 === 0) {
-        this.gameManager.setWin();
-      }
-    }
-  }
-};
-
-export default componentConfig;
+// 创建带有自定义逻辑的sum组件
+export default GameComponentPresets.strategyGame(sum, 1000);
 </script>
 
 <style scoped>

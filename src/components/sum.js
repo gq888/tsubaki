@@ -18,6 +18,8 @@ export default {
   component: [],
   methods: {
     init(cards) {
+      this.cardsChg = [];
+      cards = this.cardsChg;
       this.arr1.splice(0);
       this.arr2.splice(0);
       // this.getCards(this.cardsOrg)
@@ -80,6 +82,16 @@ export default {
         score = 0;
       }
       return score;
+    },
+
+    async stepFn() {
+      if (this.score1 === this.score2) {
+        this.gameManager.setDraw();
+      } else if (this.score1 < this.score2) {
+        this.hit(this.cardsChg, this.arr1);
+      } else if (this.score1 > this.score2) {
+        this.gameManager.setLose();
+      }
     }
   },
   computed: {
@@ -93,6 +105,15 @@ export default {
   },
   // watch属性现在由sum.vue重写
   watch: {
-    // 游戏状态监控现在由GameStateManager管理
+    score2() {
+      if (this.score2 === 0) {
+        this.gameManager.setLose();
+      }
+    },
+    score1() {
+      if (this.score1 === 0) {
+        this.gameManager.setWin();
+      }
+    }
   }
 };
