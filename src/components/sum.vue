@@ -1,11 +1,6 @@
 <template>
   <GameLayout
-    :title="title"
-    :game-controls-config="gameControlsConfig"
-    :winflag="winflag"
-    :loseflag="loseflag"
-    :drawflag="drawflag"
-    :step="step"
+    v-bind="gameLayoutProps"
     :win-buttons="[{ text: 'GO ON', callback: goon }]"
     :win-modal-style="{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }"
     :win-custom-class="'lose'"

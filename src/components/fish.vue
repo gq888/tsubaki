@@ -1,12 +1,7 @@
 <template>
   <GameLayout
-    :title="title"
+    v-bind="gameLayoutProps"
     :show-bottom-controls="true"
-    :game-controls-config="gameControlsConfig"
-    :winflag="winflag"
-    :loseflag="loseflag"
-    :drawflag="drawflag"
-    :step="step"
     @step="stepFn"
     @auto="pass"
     @goon="goon"

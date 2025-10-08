@@ -1,12 +1,7 @@
 <template>
   <GameLayout
-    :title="title"
+    v-bind="gameLayoutProps"
     :show-bottom-controls="true"
-    :game-controls-config="gameControlsConfig"
-    :winflag="winflag"
-    :loseflag="loseflag"
-    :drawflag="drawflag"
-    :step="step"
     :lose-subtitle="'NO EXP = 24'"
     @undo="undo"
     @goon="goon"

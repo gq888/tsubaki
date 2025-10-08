@@ -1,13 +1,8 @@
 <template>
   <GameLayout
-    :title="title"
+    v-bind="gameLayoutProps"
     :show-top-controls="true"
     :show-bottom-controls="true"
-    :game-controls-config="gameControlsConfig"
-    :winflag="winflag"
-    :loseflag="loseflag"
-    :drawflag="drawflag"
-    :step="step"
     :lose-subtitle="n + '/' + number * 4"
     :lose-buttons="[
       {

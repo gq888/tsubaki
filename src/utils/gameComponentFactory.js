@@ -1,5 +1,6 @@
 import GameResultModal from "../components/GameResultModal.vue";
 import GameControls from "../components/GameControls.vue";
+import GameLayout from "../components/GameLayout.vue";
 import GameStateManager from "./gameStateManager.js";
 
 /**
@@ -38,7 +39,8 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     components: {
       ...baseComponent.components,
       GameResultModal,
-      GameControls
+      GameControls,
+      GameLayout
     },
     
     // 扩展data函数
@@ -107,6 +109,19 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           autoDisabled: this.autoDisabled
         };
       },
+      
+      // GameLayout通用属性配置
+      gameLayoutProps() {
+        return {
+          title: this.title,
+          gameControlsConfig: this.gameControlsConfig,
+          winflag: this.winflag,
+          loseflag: this.loseflag,
+          drawflag: this.drawflag,
+          step: this.step
+        };
+      },
+      
       ...baseComponent.computed,
       ...computed
     },
@@ -141,6 +156,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     }
   };
 }
+
 
 /**
  * 快速创建游戏组件的便捷函数
@@ -407,6 +423,7 @@ export function generateGameTemplate(options = {}) {
   </div>
 </template>`;
 }
+
 
 /**
  * 使用示例：

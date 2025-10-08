@@ -1,14 +1,9 @@
 <template>
   <GameLayout
-    :title="title"
+    v-bind="gameLayoutProps"
     :container-style="{ width: '100%' }"
     :show-top-controls="true"
     :show-bottom-controls="true"
-    :game-controls-config="gameControlsConfig"
-    :winflag="winflag"
-    :loseflag="loseflag"
-    :drawflag="drawflag"
-    :step="step"
     @undo="undo"
     @goon="goon"
     @step="stepTwiceFn"
