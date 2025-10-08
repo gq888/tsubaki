@@ -24,7 +24,7 @@ export default {
   },
   mounted() {
     let enter = i => () => this.moveEnter(i);
-    if (!this.$refs) return;
+    if (!this.$refs.middleBox || !this.$refs.downBox) return;
     this.middleEnters = [];
     this.downEnters = [];
     for (let i = 0; i < 4; i++) {
@@ -40,7 +40,7 @@ export default {
   },
   beforeUnmount() {
     this.gameManager.off('stateChange');
-    if (!this.$refs) return;
+    if (!this.$refs.middleBox || !this.$refs.downBox) return;
     for (let i = 0; i < 4; i++) {
       let middle = this.$refs.middleBox[i];
       let down = this.$refs.downBox[i];
@@ -597,7 +597,7 @@ export default {
       );
     },
     cardWidth() {
-      return this.$refs.container.offsetWidth >> 2;
+      return this.$refs.container ? this.$refs.container.offsetWidth >> 2 : 500;
     }
   }
 };
