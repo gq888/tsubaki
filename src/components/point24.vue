@@ -1,100 +1,84 @@
 <template>
-  <div class="Sum">
-    <h1>{{ title }}</h1>
-    <div class="row center" style1="overflow:scroll">
-      <div class="flex-row center">
-        <ul class="cardsul flex-row center" style="padding-left: 0;">
-          <div class="flex-col center m-0">
-            <!-- <span class="vertical m-0">(</span> -->
-            <point24card :card="arr[0]"></point24card>
-            <div class="flex-row" v-show="step < 3">
-              <span
-                v-for="i in 4"
-                :key="i"
-                class="sign center"
-                :class="{ choose: sign == i }"
-                @click="hitflag && lockflag && clickSign(i)"
-                >{{ signs[i] }}</span
-              >
+  <GameLayout
+    :title="title"
+    :show-bottom-controls="true"
+    :game-controls-config="gameControlsConfig"
+    :winflag="winflag"
+    :loseflag="loseflag"
+    :drawflag="drawflag"
+    :step="step"
+    :lose-subtitle="'NO EXP = 24'"
+    @undo="undo"
+    @goon="goon"
+    @step="stepFn"
+    @auto="pass"
+  >
+    <template #game-content>
+      <div class="row center" style1="overflow:scroll">
+        <div class="flex-row center">
+          <ul class="cardsul flex-row center" style="padding-left: 0;">
+            <div class="flex-col center m-0">
+              <!-- <span class="vertical m-0">(</span> -->
+              <point24card :card="arr[0]"></point24card>
+              <div class="flex-row" v-show="step < 3">
+                <span
+                  v-for="i in 4"
+                  :key="i"
+                  class="sign center"
+                  :class="{ choose: sign == i }"
+                  @click="hitflag && lockflag && clickSign(i)"
+                  >{{ signs[i] }}</span
+                >
+              </div>
+              <div v-if="sign != 0" class="align-center">
+                <div class="card"><img :src="'./static/bg.jpg'" /></div>
+              </div>
+              <!-- <span class="vertical m-0">)</span> -->
+              <span class="vertical m-0">=</span>
+              <span class="m-0">{{ calc(arr[0]).toFixed(2) }}</span>
             </div>
-            <div v-if="sign != 0" class="align-center">
-              <div class="card"><img :src="'./static/bg.jpg'" /></div>
-            </div>
-            <!-- <span class="vertical m-0">)</span> -->
-            <span class="vertical m-0">=</span>
-            <span class="m-0">{{ calc(arr[0]).toFixed(2) }}</span>
-          </div>
-        </ul>
-        <ul
-          class="cardsul flex-row center"
-          style="padding-left: 0;margin-left: 20px;"
-        >
-          <div
-            v-for="(item, i) in arr"
-            :key="i"
-            class="align-center flex-wrap flex-row center"
+          </ul>
+          <ul
+            class="cardsul flex-row center"
+            style="padding-left: 0;margin-left: 20px;"
           >
-            <div v-if="i != 0" class="flex-row center m-0">
-              <span
-                class="sign center"
-                @click="hitflag && lockflag && clickCard(item, i)"
-                >{{ signs[sign] }}</span
-              >
-              <point24card
-                :card="item"
-                @click.native="hitflag && lockflag && clickCard(item, i)"
-              ></point24card>
+            <div
+              v-for="(item, i) in arr"
+              :key="i"
+              class="align-center flex-wrap flex-row center"
+            >
+              <div v-if="i != 0" class="flex-row center m-0">
+                <span
+                  class="sign center"
+                  @click="hitflag && lockflag && clickCard(item, i)"
+                  >{{ signs[sign] }}</span
+                >
+                <point24card
+                  :card="item"
+                  @click.native="hitflag && lockflag && clickCard(item, i)"
+                ></point24card>
+              </div>
             </div>
-          </div>
-        </ul>
+          </ul>
+        </div>
       </div>
-    </div>
-    <GameControls
-      v-bind="gameControlsConfig"
-      @undo="undo"
-      @goon="goon"
-      @step="stepFn"
-      @auto="pass"
-    />
-    <GameResultModal
-      v-if="loseflag"
-      title="U LOSE"
-      subtitle="NO EXP = 24"
-      :buttons="[
-        {
-          text: 'RESTART',
-          callback: goon,
-          disabled: false
-        },
-        {
-          text: 'UNDO',
-          callback: undo,
-          disabled: step <= 0
-        }
-      ]"
-      :modalStyle="{ backgroundColor: 'rgba(0,0,0,0.5)' }"
-    />
-
-    <GameResultModal
-      v-if="winflag"
-      title="U WIN!"
-      :buttons="[
-        {
-          text: 'GO ON',
-          callback: goon,
-          disabled: false
-        }
-      ]"
-    />
-  </div>
+    </template>
+  </GameLayout>
 </template>
 
 <script>
 import point24 from "./point24.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import GameLayout from "./GameLayout.vue";
 
 // 使用工厂函数创建增强的point24组件
-export default GameComponentPresets.puzzleGame(point24, 800);
+const point24Component = GameComponentPresets.puzzleGame(point24, 800);
+point24Component.components = {
+  ...point24Component.components,
+  GameLayout
+};
+
+export default point24Component;
 </script>
 
 <style scoped>

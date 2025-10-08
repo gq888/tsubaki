@@ -103,10 +103,6 @@ export default {
     };
   },
   computed: {
-    step() {
-      // 这个值现在由Chess.vue中的覆盖计算属性提供
-      return 0;
-    },
     validBoxes() {
       return this.getValidBoxes(this.sign);
     },

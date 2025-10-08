@@ -488,13 +488,11 @@ export default {
       if (add) {
         temp = this.gameManager.history.shift();
       }
-      if (temp) {
-        this.cards[temp[1]].splice(
-          temp[2],
-          0,
-          ...this.cards[temp[0]].splice(-temp[3])
-        );
-      }
+      this.cards[temp[1]].splice(
+        temp[2],
+        0,
+        ...this.cards[temp[0]].splice(-temp[3])
+      );
     },
     start(e) {
       let item = e.detail.vnode.key % this.number;

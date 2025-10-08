@@ -1,92 +1,84 @@
 <template>
   <div class="Sum" :style="containerStyle">
-    <!-- 游戏标题 -->
-    <h1 v-if="title">{{ title }}</h1>
+    <h1>{{ title }}</h1>
     
-    <!-- 顶部游戏控制按钮 -->
-    <GameControls
-      v-if="showTopControls"
-      v-bind="gameControlsProps"
-      v-on="gameControlsEvents"
-    />
-    
-    <!-- 游戏信息显示区域 -->
-    <div v-if="hasGameInfo" class="row">
-      <slot name="game-info">
-        <span v-if="time !== undefined">TIME: {{ time }}</span>
-        <br v-if="time !== undefined && step !== undefined" />
-        <span v-if="step !== undefined">STEP: {{ step }}</span>
-        <span v-if="score1 !== undefined || score2 !== undefined">
-          {{ score1 !== undefined ? score1 : '' }}
-          {{ score1 !== undefined && score2 !== undefined ? ' : ' : '' }}
-          {{ score2 !== undefined ? score2 : '' }}
-        </span>
-      </slot>
-    </div>
-    
-    <!-- 主游戏内容区域 -->
-    <div class="row">
-      <slot name="game-content"></slot>
-    </div>
-    
-    <!-- 底部游戏控制按钮 -->
-    <GameControls
-      v-if="showBottomControls"
-      v-bind="gameControlsProps"
-      v-on="gameControlsEvents"
-    />
-    
-    <!-- 底部按钮区域 -->
-    <div v-if="hasBottomButtons" class="btns">
-      <slot name="bottom-buttons">
-        <GameControls
-          v-bind="gameControlsProps"
-          v-on="gameControlsEvents"
-        />
-      </slot>
-    </div>
-    
-    <!-- 游戏结果模态框 -->
+    <!-- 顶部控制按钮插槽 -->
+    <slot name="top-controls">
+      <GameControls
+        v-if="showTopControls"
+        v-bind="gameControlsConfig"
+        @undo="$emit('undo')"
+        @goon="$emit('goon')"
+        @step="$emit('step')"
+        @auto="$emit('auto')"
+      />
+    </slot>
+
+    <!-- 主要游戏内容区域 -->
+    <slot name="game-content"></slot>
+
+    <!-- 底部控制按钮插槽 -->
+    <slot name="bottom-controls">
+      <GameControls
+        v-if="showBottomControls"
+        v-bind="gameControlsConfig"
+        @undo="$emit('undo')"
+        @goon="$emit('goon')"
+        @step="$emit('step')"
+        @auto="$emit('auto')"
+      />
+    </slot>
+
+    <!-- 游戏结果模态框插槽 -->
     <slot name="result-modals">
-      <!-- 胜利模态框 -->
+      <!-- Win Modal -->
       <GameResultModal
         v-if="winflag"
-        :title="winModal.title"
-        :subtitle="winModal.subtitle"
-        :buttons="winModal.buttons"
-        :modalStyle="winModal.modalStyle"
-        :customClass="winModal.customClass"
+        :title="winTitle || 'U WIN!'"
+        :subtitle="winSubtitle"
+        :buttons="winButtons || defaultWinButtons"
+        :modalStyle="winModalStyle"
+        :customClass="winCustomClass"
       >
-        <template v-if="winModal.content" v-slot:content>
-          <component :is="winModal.content" v-bind="winModal.contentProps" />
+        <template v-if="$slots['win-content']" v-slot:content>
+          <slot name="win-content"></slot>
+        </template>
+        <template v-if="$slots['win-cards']" v-slot:cards>
+          <slot name="win-cards"></slot>
         </template>
       </GameResultModal>
-      
-      <!-- 失败模态框 -->
+
+      <!-- Lose Modal -->
       <GameResultModal
         v-if="loseflag"
-        :title="loseModal.title"
-        :subtitle="loseModal.subtitle"
-        :buttons="loseModal.buttons"
-        :modalStyle="loseModal.modalStyle"
-        :customClass="loseModal.customClass"
+        :title="loseTitle || 'U LOSE'"
+        :subtitle="loseSubtitle"
+        :buttons="loseButtons || defaultLoseButtons"
+        :modalStyle="loseModalStyle || { backgroundColor: 'rgba(0,0,0,0.5)' }"
+        :customClass="loseCustomClass"
       >
-        <template v-if="loseModal.content" v-slot:content>
-          <component :is="loseModal.content" v-bind="loseModal.contentProps" />
+        <template v-if="$slots['lose-content']" v-slot:content>
+          <slot name="lose-content"></slot>
+        </template>
+        <template v-if="$slots['lose-cards']" v-slot:cards>
+          <slot name="lose-cards"></slot>
         </template>
       </GameResultModal>
-      
-      <!-- 平局模态框 -->
+
+      <!-- Draw Modal -->
       <GameResultModal
         v-if="drawflag"
-        :title="drawModal.title"
-        :subtitle="drawModal.subtitle"
-        :buttons="drawModal.buttons"
-        :modalStyle="drawModal.modalStyle"
-        :customClass="drawModal.customClass"
+        :title="drawTitle || 'DRAW GAME'"
+        :subtitle="drawSubtitle"
+        :buttons="drawButtons || defaultDrawButtons"
+        :modalStyle="drawModalStyle || { backgroundColor: 'rgba(0,0,0,0.5)' }"
+        :customClass="drawCustomClass"
       >
-        <template v-if="drawModal.content" v-slot:content>
-          <component :is="drawModal.content" v-bind="drawModal.contentProps" />
+        <template v-if="$slots['draw-content']" v-slot:content>
+          <slot name="draw-content"></slot>
+        </template>
+        <template v-if="$slots['draw-cards']" v-slot:cards>
+          <slot name="draw-cards"></slot>
         </template>
       </GameResultModal>
     </slot>
@@ -94,8 +86,8 @@
 </template>
 
 <script>
-import GameControls from './GameControls.vue';
-import GameResultModal from './GameResultModal.vue';
+import GameControls from './GameControls.vue'
+import GameResultModal from './GameResultModal.vue'
 
 export default {
   name: 'GameLayout',
@@ -104,76 +96,28 @@ export default {
     GameResultModal
   },
   props: {
-    // 基本配置
+    // 基础属性
     title: {
       type: String,
       default: ''
     },
     containerStyle: {
       type: Object,
-      default: () => ({})
+      default: () => ({ width: '100%' })
     },
     
-    // 游戏控制按钮配置
+    // 控制按钮相关
     showTopControls: {
       type: Boolean,
-      default: true
+      default: false
     },
     showBottomControls: {
       type: Boolean,
       default: false
     },
-    hasBottomButtons: {
-      type: Boolean,
-      default: false
-    },
-    
-    // 游戏控制按钮属性
-    showUndo: {
-      type: Boolean,
-      default: true
-    },
-    showRestart: {
-      type: Boolean,
-      default: true
-    },
-    undoDisabled: {
-      type: Boolean,
-      default: false
-    },
-    restartDisabled: {
-      type: Boolean,
-      default: false
-    },
-    stepDisabled: {
-      type: Boolean,
-      default: false
-    },
-    autoDisabled: {
-      type: Boolean,
-      default: false
-    },
-    
-    // 游戏信息显示
-    hasGameInfo: {
-      type: Boolean,
-      default: false
-    },
-    time: {
-      type: Number,
-      default: undefined
-    },
-    step: {
-      type: Number,
-      default: undefined
-    },
-    score1: {
-      type: Number,
-      default: undefined
-    },
-    score2: {
-      type: Number,
-      default: undefined
+    gameControlsConfig: {
+      type: Object,
+      default: () => ({})
     },
     
     // 游戏状态标志
@@ -190,50 +134,74 @@ export default {
       default: false
     },
     
-    // 模态框配置
-    winModal: {
-      type: Object,
-      default: () => ({
-        title: 'U WIN!',
-        buttons: []
-      })
-    },
-    loseModal: {
-      type: Object,
-      default: () => ({
-        title: 'U LOSE',
-        buttons: []
-      })
-    },
-    drawModal: {
-      type: Object,
-      default: () => ({
-        title: 'DRAW GAME',
-        buttons: []
-      })
+    // Win Modal 配置
+    winTitle: String,
+    winSubtitle: String,
+    winButtons: Array,
+    winModalStyle: Object,
+    winCustomClass: String,
+    
+    // Lose Modal 配置
+    loseTitle: String,
+    loseSubtitle: String,
+    loseButtons: Array,
+    loseModalStyle: Object,
+    loseCustomClass: String,
+    
+    // Draw Modal 配置
+    drawTitle: String,
+    drawSubtitle: String,
+    drawButtons: Array,
+    drawModalStyle: Object,
+    drawCustomClass: String,
+    
+    // 其他游戏相关属性
+    step: {
+      type: Number,
+      default: 0
     }
   },
   computed: {
-    gameControlsProps() {
-      return {
-        showUndo: this.showUndo,
-        showRestart: this.showRestart,
-        undoDisabled: this.undoDisabled,
-        restartDisabled: this.restartDisabled,
-        stepDisabled: this.stepDisabled,
-        autoDisabled: this.autoDisabled
-      };
+    defaultWinButtons() {
+      return [
+        {
+          text: 'GO ON',
+          callback: () => this.$emit('goon'),
+          disabled: false
+        }
+      ]
     },
-    gameControlsEvents() {
-      return {
-        undo: () => this.$emit('undo'),
-        goon: () => this.$emit('goon'),
-        step: () => this.$emit('step'),
-        auto: () => this.$emit('auto')
-      };
+    defaultLoseButtons() {
+      return [
+        {
+          text: 'RESTART',
+          callback: () => this.$emit('goon'),
+          disabled: false
+        },
+        {
+          text: 'UNDO',
+          callback: () => this.$emit('undo'),
+          disabled: this.step <= 0
+        }
+      ]
+    },
+    defaultDrawButtons() {
+      return [
+        {
+          text: 'RESTART',
+          callback: () => this.$emit('goon'),
+          disabled: false
+        },
+        {
+          text: 'UNDO',
+          callback: () => this.$emit('undo'),
+          disabled: this.step <= 0
+        }
+      ]
     }
-  }
-};
+  },
+  emits: ['undo', 'goon', 'step', 'auto']
+}
 </script>
 
 <style scoped>

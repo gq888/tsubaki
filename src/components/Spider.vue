@@ -1,13 +1,19 @@
 <template>
-  <div class="Sum">
-    <h1>{{ title }}</h1>
-    <GameControls
-      v-bind="gameControlsConfig"
-      @undo="undo"
-      @goon="goon"
-      @step="stepFn"
-      @auto="pass"
-    />
+  <GameLayout
+    :title="title"
+    :show-top-controls="true"
+    :show-bottom-controls="true"
+    :game-controls-config="gameControlsConfig"
+    :winflag="winflag"
+    :loseflag="loseflag"
+    :drawflag="drawflag"
+    :step="step"
+    @undo="undo"
+    @goon="goon"
+    @step="stepFn"
+    @auto="pass"
+  >
+    <template #game-content>
     <div class="row">
       <div calss="center">
         <ul
@@ -183,33 +189,23 @@
         </ul>
       </div>
     </div>
-    <GameControls
-      v-bind="gameControlsConfig"
-      @undo="undo"
-      @goon="goon"
-      @step="stepFn"
-      @auto="pass"
-    />    
-    <GameResultModal
-      v-if="winflag"
-      title="U WIN!"
-      :buttons="[
-        {
-          text: 'GO ON',
-          callback: goon,
-          disabled: false
-        }
-      ]"
-    />
-  </div>
+    </template>
+  </GameLayout>
 </template>
 
 <script>
 import Spider from "./Spider.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import GameLayout from "./GameLayout.vue";
 
 // 使用工厂函数创建增强的Spider组件
-export default GameComponentPresets.cardGame(Spider, 500);
+const spiderComponent = GameComponentPresets.cardGame(Spider, 500);
+spiderComponent.components = {
+  ...spiderComponent.components,
+  GameLayout
+};
+
+export default spiderComponent;
 </script>
 
 <style scoped>
