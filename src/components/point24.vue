@@ -64,15 +64,8 @@
 <script>
 import point24 from "./point24.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import GameLayout from "./GameLayout.vue";
-
 // 使用工厂函数创建增强的point24组件
 const point24Component = GameComponentPresets.puzzleGame(point24, 800);
-point24Component.components = {
-  ...point24Component.components,
-  GameLayout
-};
-
 export default point24Component;
 </script>
 

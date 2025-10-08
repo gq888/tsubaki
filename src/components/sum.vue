@@ -64,15 +64,8 @@
 <script>
 import sum from "./sum.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import GameLayout from "./GameLayout.vue";
-
 // 创建带有自定义逻辑的sum组件
 const sumComponent = GameComponentPresets.strategyGame(sum, 1000);
-sumComponent.components = {
-  ...sumComponent.components,
-  GameLayout
-};
-
 export default sumComponent;
 </script>
 

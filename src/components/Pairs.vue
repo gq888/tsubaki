@@ -47,15 +47,8 @@
 <script>
 import Pairs from "./Pairs.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import GameLayout from "./GameLayout.vue";
-
 // 使用工厂函数创建增强的Pairs组件
 const pairsComponent = GameComponentPresets.pairGame(Pairs, 500);
-pairsComponent.components = {
-  ...pairsComponent.components,
-  GameLayout
-};
-
 export default pairsComponent;
 </script>
 

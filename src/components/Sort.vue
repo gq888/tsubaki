@@ -60,15 +60,8 @@
 <script>
 import Sort from "./Sort.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import GameLayout from "./GameLayout.vue";
-
 // 使用工厂函数创建增强的Sort组件
 const sortComponent = GameComponentPresets.puzzleGame(Sort, 500);
-sortComponent.components = {
-  ...sortComponent.components,
-  GameLayout
-};
-
 export default sortComponent;
 </script>
 

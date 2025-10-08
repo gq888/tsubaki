@@ -191,15 +191,8 @@
 <script>
 import Spider from "./Spider.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import GameLayout from "./GameLayout.vue";
-
 // 使用工厂函数创建增强的Spider组件
 const spiderComponent = GameComponentPresets.cardGame(Spider, 500);
-spiderComponent.components = {
-  ...spiderComponent.components,
-  GameLayout
-};
-
 export default spiderComponent;
 </script>
 

@@ -75,15 +75,8 @@
 <script>
 import month from "./month.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import GameLayout from "./GameLayout.vue";
-
 // 使用工厂函数创建增强的month组件
 const monthComponent = GameComponentPresets.simpleGame(month, 1000);
-monthComponent.components = {
-  ...monthComponent.components,
-  GameLayout
-};
-
 export default monthComponent;
 </script>
 

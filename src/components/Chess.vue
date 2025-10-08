@@ -74,14 +74,7 @@
 <script>
 import Chess from "./Chess.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import GameLayout from "./GameLayout.vue";
-
 const chessComponent = GameComponentPresets.cardGame(Chess, 500);
-chessComponent.components = {
-  ...chessComponent.components,
-  GameLayout
-};
-
 export default chessComponent;
 </script>
 
