@@ -50,7 +50,7 @@
                 >
                 <point24card
                   :card="item"
-                  @click.native="hitflag && lockflag && clickCard(item, i)"
+                  @click="hitflag && lockflag && clickCard(item, i)"
                 ></point24card>
               </div>
             </div>

@@ -155,16 +155,12 @@ export default {
       switch (operation.type) {
         case "move":
           // 撤销移动操作
-          this.$set(this.cards1, operation.signIndex, operation.sign);
-          this.$set(
-            this.cards1,
-            operation.to,
-            operation.card >= 0 ? operation.card : -1
-          );
+          this.cards1.splice(operation.signIndex, 1, operation.sign);
+          this.cards1.splice(operation.to, 1, operation.card >= 0 ? operation.card : -1);
           break;
         case "flip":
           // 撤销翻转操作
-          this.$set(this.cards2, operation.card, false);
+          this.cards2.splice(operation.card, 1, false);
           break;
       }
     },
@@ -183,7 +179,7 @@ export default {
         this.grade = this.grades[card];
       }
       if (card >= 0 && !this.cards2[card]) {
-        this.$set(this.cards2, card, true);
+        this.cards2.splice(card, 1, true);
         this.recordFlip(card); // 使用GameStateManager记录操作
         this.sign = -1;
         if (!isAuto) {
@@ -209,8 +205,8 @@ export default {
         }
         if (this.validBoxes.indexOf(i) >= 0) {
           let signIndex = this.cards1.indexOf(this.sign);
-          this.$set(this.cards1, signIndex, -1);
-          this.$set(this.cards1, i, this.sign);
+          this.cards1.splice(signIndex, 1, -1);
+          this.cards1.splice(i, 1, this.sign);
           this.recordMove(signIndex, i, card, this.sign, signIndex); // 使用GameStateManager记录操作
           this.sign = -1;
           if (card >= 0) {

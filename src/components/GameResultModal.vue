@@ -1,6 +1,6 @@
 <template>
   <transition>
-    <div :class="['lose', customClass]" :style="modalStyle">
+    <div v-if="true" :class="['lose', customClass]" :style="modalStyle">
       <h1 v-if="title">{{ title }}</h1>
       <h1 v-if="subtitle" class="small">{{ subtitle }}</h1>
 

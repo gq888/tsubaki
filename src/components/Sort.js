@@ -21,7 +21,7 @@ export default {
       }
       shuffleCards(cards, this.number * 4);
       for (let i = 0; i < 4; i++) {
-        this.$set(cards, cards.indexOf(this.number * 4 - 1 - i), -1 - i);
+        cards.splice(cards.indexOf(this.number * 4 - 1 - i), 1, -1 - i);
       }
       for (let i = 0; i < 4; i++) {
         cards.splice(i * (this.number + 1), 0, this.number * 4 - 4 + i);
@@ -46,8 +46,8 @@ export default {
       switch (operation.type) {
         case "move":
           // 撤销移动操作
-          this.$set(this.cards1, operation.to, operation.sign);
-          this.$set(this.cards1, operation.from, operation.card);
+          this.cards1.splice(operation.to, 1, operation.sign);
+          this.cards1.splice(operation.from, 1, operation.card);
           break;
       }
     },
@@ -62,8 +62,8 @@ export default {
         if (this.cards1[index + 1] < 0) {
           let sign = this.cards1[index + 1];
           this.recordMove(i, index + 1, card, sign); // 使用GameStateManager记录操作
-          this.$set(this.cards1, i, sign);
-          this.$set(this.cards1, index + 1, card);
+          this.cards1.splice(i, 1, sign);
+          this.cards1.splice(index + 1, 1, card);
         }
       }
     },

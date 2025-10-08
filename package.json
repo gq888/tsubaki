@@ -2,7 +2,13 @@
   "name": "tsubaki-game-library",
   "version": "1.0.0",
   "description": "高效可复用的Vue游戏组件库，基于工厂函数模式实现极简开发体验",
-  "keywords": ["vue", "game", "components", "factory-pattern", "reusable"],
+  "keywords": [
+    "vue",
+    "game",
+    "components",
+    "factory-pattern",
+    "reusable"
+  ],
   "author": "Tsubaki Team",
   "license": "MIT",
   "private": true,
@@ -55,26 +61,26 @@
     "help": "node -e \"console.log('\\n🎮 Tsubaki游戏组件库\\n\\n常用命令:\\n  npm run dev        - 启动开发服务器\\n  npm run generate   - 创建新游戏组件\\n  npm run check:all  - 全面检查\\n  npm run docs       - 查看文档\\n  npm run welcome    - 显示欢迎指南\\n\\n更多命令请查看 package.json\\n')\""
   },
   "dependencies": {
+    "@vue/test-utils": "^2.4.1",
     "core-js": "^3.6.4",
-    "vue": "^2.6.11",
-    "vue-router": "^3.1.5",
-    "vuex": "^3.1.2"
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.2.0",
-    "@vue/cli-plugin-eslint": "~4.2.0",
-    "@vue/cli-plugin-router": "~4.2.0",
-    "@vue/cli-plugin-vuex": "~4.2.0",
-    "@vue/cli-service": "~4.2.0",
-    "@vue/eslint-config-prettier": "^6.0.0",
-    "babel-eslint": "^10.0.3",
-    "eslint": "^6.7.2",
-    "eslint-plugin-prettier": "^3.1.1",
-    "eslint-plugin-vue": "^6.1.2",
-    "prettier": "^1.19.1",
-    "vue-template-compiler": "^2.6.11",
-    "rimraf": "^3.0.2",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-plugin-router": "~5.0.8",
+    "@vue/cli-plugin-vuex": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
+    "@vue/eslint-config-prettier": "^8.0.0",
+    "@babel/eslint-parser": "^7.22.9",
     "cross-env": "^7.0.3",
+    "eslint": "^8.45.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-vue": "^9.15.1",
+    "prettier": "^3.0.0",
+    "rimraf": "^3.0.2",
     "webpack-bundle-analyzer": "^4.5.0"
   },
   "engines": {
@@ -87,12 +93,13 @@
       "node": true
     },
     "extends": [
-      "plugin:vue/essential",
+      "plugin:vue/vue3-essential",
       "eslint:recommended",
       "@vue/prettier"
     ],
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@babel/eslint-parser",
+      "requireConfigFile": false
     },
     "rules": {
       "no-console": "off",
@@ -117,7 +124,14 @@
     "tools": {
       "scripts": 15,
       "commands": 27,
-      "features": ["migration", "generation", "testing", "performance", "dependencies", "optimization"]
+      "features": [
+        "migration",
+        "generation",
+        "testing",
+        "performance",
+        "dependencies",
+        "optimization"
+      ]
     },
     "documentation": {
       "library": "COMPONENT_LIBRARY.md",

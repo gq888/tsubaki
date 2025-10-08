@@ -48,8 +48,8 @@ export default {
         return;
       }
       if (this.sign >> 2 == card >> 2) {
-        this.$set(this.cards2, card, true);
-        this.$set(this.cards2, this.sign, true);
+        this.cards2.splice(card, 1, true);
+        this.cards2.splice(this.sign, 1, true);
         this.sign = -1;
       }
       this.gameManager.hitflag = false;

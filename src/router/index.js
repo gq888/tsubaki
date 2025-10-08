@@ -1,5 +1,4 @@
-import Vue from "vue";
-import VueRouter from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import Sum from "@/components/sum.vue";
 import Fish from "@/components/fish.vue";
 import point24 from "@/components/point24.vue";
@@ -9,8 +8,6 @@ import Sort from "@/components/Sort.vue";
 import Pairs from "@/components/Pairs.vue";
 import Spider from "@/components/Spider.vue";
 import Chess from "@/components/Chess.vue";
-
-Vue.use(VueRouter);
 
 const routes = [
   {
@@ -55,7 +52,8 @@ const routes = [
   }
 ];
 
-const router = new VueRouter({
+const router = createRouter({
+  history: createWebHashHistory(),
   routes
 });
 

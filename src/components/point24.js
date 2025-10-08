@@ -115,7 +115,7 @@ export default {
         let combined = [left, this.sign, right];
         this.arr.splice(0, 1, combined);
         this.sign = 0;
-        this.$set(this.cards2, this.step, combined);
+        this.cards2.splice(this.step, 1, combined);
         this.recordOperation("combine", {
           left: left,
           right: right,
@@ -123,8 +123,8 @@ export default {
         });
       } else {
         let temp = this.arr[0];
-        this.$set(this.arr, 0, this.arr[i]);
-        this.$set(this.arr, i, temp);
+        this.arr.splice(0, 1, this.arr[i]);
+        this.arr.splice(i, 1, temp);
       }
     },
   
