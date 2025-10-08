@@ -1,6 +1,5 @@
 import { shuffleCards, wait, checkDeadForeach } from "../utils/help.js";
 import move from "../directives/move.js";
-import GameStateManager from "../utils/gameStateManager.js";
 
 export default {
   name: "Spider",
@@ -16,38 +15,60 @@ export default {
       enterItem: -99,
       turn: 1,
       types: ["♥", "♠", "♦", "♣"],
-      number: 52,
-      gameStateManager: new GameStateManager()
+      number: 52
     };
   },
   directives: { move },
   created: function() {
     this.setupGameStateListeners();
-    this.init();
   },
   mounted() {
     let enter = i => () => this.moveEnter(i);
+    if (!this.$refs) return;
+    this.middleEnters = [];
+    this.downEnters = [];
     for (let i = 0; i < 4; i++) {
       let middle = this.$refs.middleBox[i];
       let down = this.$refs.downBox[i];
-      let middleEnter = enter(i + 2);
-      let downEnter = enter(i + 6);
-      middle.addEventListener("mousemove", middleEnter);
-      middle.addEventListener("touchmove", middleEnter);
-      down.addEventListener("mousemove", downEnter);
-      down.addEventListener("touchmove", downEnter);
+      this.middleEnters[i] = enter(i + 2);
+      this.downEnters[i] = enter(i + 6);
+      middle.addEventListener("mousemove", this.middleEnters[i]);
+      middle.addEventListener("touchmove", this.middleEnters[i]);
+      down.addEventListener("mousemove", this.downEnters[i]);
+      down.addEventListener("touchmove", this.downEnters[i]);
+    }
+  },
+  beforeUnmount() {
+    this.gameManager.off('stateChange');
+    if (!this.$refs) return;
+    for (let i = 0; i < 4; i++) {
+      let middle = this.$refs.middleBox[i];
+      let down = this.$refs.downBox[i];
+      middle.removeEventListener("mousemove", this.middleEnters[i]);
+      middle.addEventListener("touchmove", this.middleEnters[i]);
+      down.addEventListener("mousemove", this.downEnters[i]);
+      down.addEventListener("touchmove", this.downEnters[i]);
     }
   },
   // 初始化
   methods: {
     setupGameStateListeners() {
       // 监听游戏状态变化
-      this.gameStateManager.on('stateChange', () => {
+      this.gameManager.on('stateChange', () => {
         this.$forceUpdate(); // 强制更新视图
       });
     },
     init() {
-      this.gameStateManager.init();
+      this.gameManager.init();
+      for (let i = 0; i < 10; i++) {
+        this.cards[i].splice(0);
+      }
+      this.fresh = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      this.turn = 1;
+      this.sign = -99;
+      this.dragItem = -99;
+      this.dragCard = -99;
+      this.enterItem = -99;
       let cards = this.cards[0];
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
@@ -188,7 +209,7 @@ export default {
       return this.checkDown(card) || this.checkUp(card);
     },
     async stepFn() {
-      await this.gameStateManager.step(async () => {
+      await this.gameManager.step(async () => {
       let next = false;
       for (let i = 6; i < 10; i++) {
         this.record = [];
@@ -196,7 +217,7 @@ export default {
         if (next) {
           if (
             !this.skipCheck &&
-            !checkDeadForeach(this.gameStateManager.history, [next[1], next[0]])
+            !checkDeadForeach(this.gameManager.history, [next[1], next[0]])
           )
             continue;
           break;
@@ -208,7 +229,7 @@ export default {
         (next = this.checkMove(this.cards[1][0]));
       if (
         !next ||
-        (!this.skipCheck && !checkDeadForeach(this.gameStateManager.history, [next[1], next[0]]))
+        (!this.skipCheck && !checkDeadForeach(this.gameManager.history, [next[1], next[0]]))
       ) {
         return this.clickCard(0);
       }
@@ -224,10 +245,10 @@ export default {
       for (let i = 6; i < 10; i++) {
         if (this.cards[i].length <= 0) {
           if (this.cards[1].length > 0) {
-            this.gameStateManager.recordOperation([i, 1, 0, 1], true);
+            this.gameManager.recordOperation([i, 1, 0, 1], true);
             this.cards[i].push(this.cards[1].splice(0, 1)[0]);
           } else if (this.cards[0].length > 0) {
-            this.gameStateManager.recordOperation([i, 0, this.cards[0].length - 1, 1], true);
+            this.gameManager.recordOperation([i, 0, this.cards[0].length - 1, 1], true);
             this.cards[i].push(this.cards[0].splice(-1)[0]);
           }
         }
@@ -248,7 +269,7 @@ export default {
             if (
               !next ||
               (!this.skipCheck &&
-                !checkDeadForeach(this.gameStateManager.history, [next[1], next[0]]))
+                !checkDeadForeach(this.gameManager.history, [next[1], next[0]]))
             ) {
               for (let j = 6; j < 10; j++) {
                 if (this.cards[j].length <= 0 || this.cards[j][0] >> 2 >= 12) {
@@ -259,7 +280,7 @@ export default {
                 if (next) {
                   if (
                     !this.skipCheck &&
-                    !checkDeadForeach(this.gameStateManager.history, [next[1], next[0]])
+                    !checkDeadForeach(this.gameManager.history, [next[1], next[0]])
                   ) {
                     next = false;
                     continue;
@@ -291,7 +312,7 @@ export default {
                     i
                   ];
                   this.cards[k].push(...this.cards[pos].splice(index + 1));
-                  this.gameStateManager.recordOperation(next, true);
+                  this.gameManager.recordOperation(next, true);
                   continue;
                 }
                 let l;
@@ -306,11 +327,11 @@ export default {
                   }
                   let next = [k, pos, index, this.cards[pos].length - index, l];
                   console.log(next);
-                  if (!checkDeadForeach(this.gameStateManager.history, next)) {
+                  if (!checkDeadForeach(this.gameManager.history, next)) {
                     continue;
                   }
                   this.cards[k].push(...this.cards[pos].splice(index));
-                  this.gameStateManager.recordOperation(next, true);
+                  this.gameManager.recordOperation(next, true);
                   break;
                 }
                 if (l < 52) {
@@ -319,11 +340,11 @@ export default {
                 for (l = 6; l < 10; l++) {
                   if (this.cards[l].length > 1) {
                     let next = [k, l, this.cards[l].length - 1, 1];
-                    if (!checkDeadForeach(this.gameStateManager.history, next)) {
+                    if (!checkDeadForeach(this.gameManager.history, next)) {
                       continue;
                     }
                     this.cards[k].push(this.cards[l].splice(-1)[0]);
-                    this.gameStateManager.recordOperation(next, true);
+                    this.gameManager.recordOperation(next, true);
                     break;
                   }
                 }
@@ -332,7 +353,7 @@ export default {
           }
         }
         this.sign = -99;
-        this.gameStateManager.setWin();
+        this.gameManager.setWin();
         this.lock = false;
       }
     },
@@ -340,20 +361,20 @@ export default {
       let len = this.cards[index].length;
       if (index == 0) {
         if (this.cards[0].length > 0) {
-          this.gameStateManager.recordOperation([1, 0, this.turn > 3 ? 1 : 4 - this.turn], true);
+          this.gameManager.recordOperation([1, 0, this.turn > 3 ? 1 : 4 - this.turn], true);
           this.cards[1].unshift(
             ...this.cards[0].splice(this.turn > 3 ? -1 : this.turn - 4)
           );
         } else {
-          for (let i = 0; i < this.gameStateManager.history.length; i++) {
-            let step = this.gameStateManager.history[i];
+          for (let i = 0; i < this.gameManager.history.length; i++) {
+            let step = this.gameManager.history[i];
             if (step[0] == 0 && step[1] == 1) {
               this.skipCheck = true;
             } else if (step[0] != 1 || step[1] != 0) {
               break;
             }
           }
-          this.gameStateManager.recordOperation([0, 1, this.cards[1].length], true);
+          this.gameManager.recordOperation([0, 1, this.cards[1].length], true);
           this.cards[0].unshift(...this.cards[1].splice(0));
           this.turn++;
         }
@@ -365,7 +386,7 @@ export default {
         }
       } else if (index < 6) {
         if (this.sign == index - 2 + len * 4) {
-          this.gameStateManager.recordOperation([
+          this.gameManager.recordOperation([
             index,
             this.index,
             this.cards[this.index].indexOf(this.sign),
@@ -398,7 +419,7 @@ export default {
             );
           })) >= 0
         ) {
-          this.gameStateManager.recordOperation([
+          this.gameManager.recordOperation([
             index,
             this.index,
             i,
@@ -414,7 +435,7 @@ export default {
           this.sign % 2 != top % 2 &&
           ((this.sign >> 2) + 1) % 13 == top >> 2
         ) {
-          this.gameStateManager.recordOperation([
+          this.gameManager.recordOperation([
             index,
             this.index,
             this.cards[this.index].indexOf(this.sign),
@@ -442,7 +463,7 @@ export default {
       if (this.step <= 0) {
         return;
       }
-      let temp = this.gameStateManager.history.shift(),
+      let temp = this.gameManager.history.shift(),
           add = false;
       if (temp[1] == 0) {
         if (temp[0] == 1)
@@ -465,7 +486,7 @@ export default {
         }
       }
       if (add) {
-        temp = this.gameStateManager.history.shift();
+        temp = this.gameManager.history.shift();
       }
       if (temp) {
         this.cards[temp[1]].splice(
@@ -477,7 +498,7 @@ export default {
     },
     start(e) {
       let item = e.detail.vnode.key % this.number;
-      if (!this.gameStateManager.hitflag || !this.gameStateManager.lockflag) {
+      if (!this.gameManager.hitflag || !this.gameManager.lockflag) {
         return false;
       }
       let drag = this.findPos(item);
@@ -496,7 +517,7 @@ export default {
     },
     async end(e) {
       let drag = this.dragItem;
-      if (!this.gameStateManager.hitflag || !this.gameStateManager.lockflag) {
+      if (!this.gameManager.hitflag || !this.gameManager.lockflag) {
         return;
       }
       if (drag == 1 && this.dragCard != this.cards[1][0]) {
@@ -537,7 +558,7 @@ export default {
       // this.moveflag = false
     },
     move(e) {
-      if (!this.gameStateManager.hitflag || !this.gameStateManager.lockflag) {
+      if (!this.gameManager.hitflag || !this.gameManager.lockflag) {
         return false;
       }
       if (this.dragItem == 1 && this.dragCard != this.cards[1][0]) {
@@ -568,31 +589,9 @@ export default {
             data.offsetY + data.offsetTop + (j - index - 1) * 30 + "px";
         }
       }
-    },
-    async pass() {
-      await this.gameStateManager.startAuto(async () => {
-        await this.stepFn();
-      });
-    },
-    goon() {
-      this.gameStateManager.reset(() => {
-        for (let i = 0; i < 10; i++) {
-          this.cards[i].splice(0);
-        }
-        this.fresh = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        this.turn = 1;
-        this.sign = -99;
-        this.dragItem = -99;
-        this.dragCard = -99;
-        this.enterItem = -99;
-        this.init();
-      });
     }
   },
   computed: {
-    // 使用GameStateManager的默认计算属性
-    ...GameStateManager.getDefaultComputedProperties(),
-    
     // 保留Spider特有的计算属性
     height() {
       return (

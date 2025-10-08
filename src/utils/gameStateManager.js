@@ -157,7 +157,6 @@ export default class GameStateManager {
    */
   setWin() {
     this.winflag = true;
-    this.hitflag = false;
     this.stopAuto();
     this.emit("win");
   }
@@ -167,7 +166,6 @@ export default class GameStateManager {
    */
   setLose() {
     this.loseflag = true;
-    this.hitflag = false;
     this.stopAuto();
     this.emit("lose");
   }
@@ -177,7 +175,6 @@ export default class GameStateManager {
    */
   setDraw() {
     this.drawflag = true;
-    this.hitflag = false;
     this.stopAuto();
     this.emit("draw");
   }

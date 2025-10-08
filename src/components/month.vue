@@ -2,10 +2,7 @@
   <div class="Sum">
     <h1>{{ title }}</h1>
     <GameControls
-      :showUndo="false"
-      :showRestart="false"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @step="stepFn"
       @auto="pass"
     />
@@ -45,10 +42,7 @@
       </div>
     </div>
     <GameControls
-      :showUndo="false"
-      :showRestart="false"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @step="stepFn"
       @auto="pass"
     />
@@ -85,74 +79,10 @@
 
 <script>
 import month from "./month.js";
-import GameResultModal from "./GameResultModal.vue";
-import GameControls from "./GameControls.vue";
-import GameStateManager from "../utils/gameStateManager.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-// 扩展month组件以包含GameResultModal和GameControls
-const monthWithModal = {
-  ...month,
-  components: {
-    ...month.components, // 保留原来的组件
-    GameResultModal,
-    GameControls
-  },
-  data() {
-    return {
-      ...month.data.call(this),
-      gameManager: new GameStateManager({
-        autoStepDelay: 1000
-      })
-    };
-  },
-  created() {
-    // 初始化GameStateManager
-    this.gameManager.init();
-    this.init();
-  },
-  beforeUnmount() {
-    // 停止自动模式
-    this.gameManager.stopAuto();
-  },
-  computed: {
-    ...month.computed,
-    // 使用GameStateManager的默认计算属性
-    ...GameStateManager.getDefaultComputedProperties()
-  },
-  methods: {
-    ...month.methods,
-    // 重写stepFn方法添加失败检测
-    async stepFn() {
-      // 检查失败条件
-      if (this.cards2[12] >= 4) {
-        this.gameManager.setLose();
-      }
-      await this.gameManager.step(async () => {
-        await month.methods.stepFn.call(this);
-      });
-    },
-    // 重写pass方法使用GameStateManager
-    pass() {
-      this.gameManager.startAuto(async () => {
-        if (!this.loseflag) {
-          await this.stepFn();
-        }
-      });
-    },
-    // 重写goon方法使用GameStateManager
-    goon() {
-      this.gameManager.reset(() => {
-        this.month = 12;
-        this.cards1.splice(0);
-        this.cards2.splice(0);
-        this.arr.splice(0);
-        this.init();
-      });
-    }
-  }
-};
-
-export default monthWithModal;
+// 使用工厂函数创建增强的month组件
+export default GameComponentPresets.simpleGame(month, 1000);
 </script>
 
 <style scoped>

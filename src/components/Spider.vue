@@ -2,10 +2,7 @@
   <div class="Sum">
     <h1>{{ title }}</h1>
     <GameControls
-      :undoDisabled="undoDisabled"
-      :restartDisabled="restartDisabled"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @undo="undo"
       @goon="goon"
       @step="stepFn"
@@ -80,7 +77,7 @@
           <li style="height: 30px; width: 100%"></li>
           <li
             v-for="i in 4"
-            :key="i"
+              :key="i"
             class="cards m-0 static center"
             style="width:25%; height: 150px;"
             :class="{ drag: dragItem == i + 1 }"
@@ -187,15 +184,12 @@
       </div>
     </div>
     <GameControls
-      :undoDisabled="undoDisabled"
-      :restartDisabled="restartDisabled"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @undo="undo"
       @goon="goon"
       @step="stepFn"
       @auto="pass"
-    />
+    />    
     <GameResultModal
       v-if="winflag"
       title="U WIN!"
@@ -212,20 +206,10 @@
 
 <script>
 import Spider from "./Spider.js";
-import GameResultModal from "./GameResultModal.vue";
-import GameControls from "./GameControls.vue";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-// 扩展Spider组件以包含GameResultModal和GameControls
-const spiderWithModal = {
-  ...Spider,
-  components: {
-    ...Spider.components, // 保留原来的组件
-    GameResultModal,
-    GameControls
-  }
-};
-
-export default spiderWithModal;
+// 使用工厂函数创建增强的Spider组件
+export default GameComponentPresets.cardGame(Spider, 500);
 </script>
 
 <style scoped>

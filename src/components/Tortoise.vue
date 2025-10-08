@@ -25,10 +25,7 @@
       </div>
     </div>
     <GameControls
-      :undoDisabled="undoDisabled"
-      :restartDisabled="restartDisabled"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @undo="undo"
       @goon="goon"
       @step="stepFn"
@@ -69,20 +66,10 @@
 
 <script>
 import Tortoise from "./Tortoise.js";
-import GameResultModal from "./GameResultModal.vue";
-import GameControls from "./GameControls.vue";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-// 扩展Tortoise组件以包含GameResultModal和GameControls
-const tortoiseWithModal = {
-  ...Tortoise,
-  components: {
-    ...Tortoise.components, // 保留原来的组件
-    GameResultModal,
-    GameControls
-  }
-};
-
-export default tortoiseWithModal;
+// 使用工厂函数创建增强的Tortoise组件
+export default GameComponentPresets.cardGame(Tortoise, 500);
 </script>
 
 <style scoped>

@@ -1,5 +1,4 @@
 import { shuffleCards } from "../utils/help.js";
-import GameStateManager from "../utils/gameStateManager.js";
 
 export default {
   name: "Tortoise",
@@ -10,7 +9,6 @@ export default {
       cards1: [],
       next: [],
       number: 54,
-      gameStateManager: new GameStateManager(),
       map: [
         { "z-index": 0, left: "10%", top: "75px", up: [16, 30] },
         { "z-index": 0, left: "30%", top: "75px", up: [16, 17, 31] },
@@ -69,20 +67,17 @@ export default {
       ]
     };
   },
-  created: function() {
-    this.setupGameStateListeners();
-    this.init();
-  },
   // 初始化
   methods: {
     setupGameStateListeners() {
       // 监听游戏状态变化
-      this.gameStateManager.on('stateChange', () => {
+      this.gameManager.on('stateChange', () => {
         this.$forceUpdate(); // 强制更新视图
       });
     },
     init() {
-      this.gameStateManager.init();
+      this.sign = -1;
+      this.cards1.splice(0);
       let cards = this.cards1;
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
@@ -90,11 +85,14 @@ export default {
       shuffleCards(cards, this.number);
       this.autoCalc();
     },
+    beforeUnmount() {
+      this.gameManager.off('stateChange');
+    },
     async stepFn() {
       if (this.step >= this.number) {
         return;
       }
-      await this.gameStateManager.step(async () => {
+      await this.gameManager.step(async () => {
       let next,
         next_i,
         max = -1;
@@ -134,7 +132,7 @@ export default {
       );
     },
     done(card) {
-      return this.gameStateManager.history.indexOf(card) >= 0;
+      return this.gameManager.history.indexOf(card) >= 0;
     },
     clickCard(card, i) {
       if (!this.check(i)) {
@@ -145,32 +143,20 @@ export default {
       } else if (this.sign >> 2 != card >> 2) {
         this.sign = card;
       } else {
-        this.gameStateManager.recordOperation(this.sign);
-        this.gameStateManager.recordOperation(card);
+        this.gameManager.recordOperation(this.sign);
+        this.gameManager.recordOperation(card);
         this.sign = -1;
       }
     },
     undo() {
       this.sign = -1;
-      this.gameStateManager.undo();
-      this.gameStateManager.undo();
-    },
-    async pass() {
-      await this.gameStateManager.startAuto(async () => {
-        await this.stepFn();
-      });
-    },
-    goon() {
-      this.gameStateManager.reset(() => {
-        this.sign = -1;
-        this.cards1.splice(0);
-        this.init();
-      });
+      this.gameManager.undo();
+      this.gameManager.undo();
     },
     autoCalc() {
       let step = this.step;
       if (step >= this.number) {
-        this.gameStateManager.setWin();
+        this.gameManager.setWin();
         return;
       }
       let temp = [],
@@ -207,7 +193,7 @@ export default {
         }
       }
       if (m < 0) {
-        this.gameStateManager.setLose();
+        this.gameManager.setLose();
       }
     }
   },
@@ -215,9 +201,5 @@ export default {
     step() {
       this.autoCalc();
     }
-  },
-  computed: {
-    // 使用GameStateManager的默认计算属性
-    ...GameStateManager.getDefaultComputedProperties()
   }
 };

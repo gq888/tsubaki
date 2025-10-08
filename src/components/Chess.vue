@@ -2,10 +2,7 @@
   <div class="Sum" style="width:100%;">
     <h1>{{ title }}</h1>
     <GameControls
-      :undoDisabled="undoDisabled"
-      :restartDisabled="restartDisabled"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @undo="undo"
       @goon="goon"
       @step="stepTwiceFn"
@@ -69,17 +66,14 @@
       <span class="m-0 scrore">{{ lowCount + " : " + highCount }}</span>
     </div>
     <GameControls
-      :undoDisabled="undoDisabled"
-      :restartDisabled="restartDisabled"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @undo="undo"
       @goon="goon"
       @step="stepTwiceFn"
       @auto="pass"
     />
     <GameResultModal
-      v-if="status == 3"
+      v-if="drawflag"
       title="DRAW GAME"
       :buttons="[
         {
@@ -97,7 +91,7 @@
     />
 
     <GameResultModal
-      v-if="status == 2"
+      v-if="loseflag"
       title="U LOSE"
       :buttons="[
         {
@@ -115,7 +109,7 @@
     />
 
     <GameResultModal
-      v-if="status == 1"
+      v-if="winflag"
       title="U WIN!"
       :buttons="[
         {
@@ -130,64 +124,18 @@
 
 <script>
 import Chess from "./Chess.js";
-import GameResultModal from "./GameResultModal.vue";
-import GameControls from "./GameControls.vue";
-import GameStateManager from "../utils/gameStateManager.js";
-
-// 扩展Chess组件以包含GameResultModal和GameControls
-const chessWithModal = {
-  ...Chess,
-  components: {
-    ...Chess.components, // 保留原来的组件
-    GameResultModal,
-    GameControls
-  },
-  data() {
-    return {
-      ...Chess.data.call(this),
-      gameManager: new GameStateManager({
-        autoStepDelay: 500 // 设置自动模式每步的延迟时间
-      })
-    };
-  },
-  created() {
-    // 创建游戏状态管理器实例
-    this.gameManager.init()
-
-    // 初始化游戏
-    this.init();
-
-    // 注册游戏状态管理器的事件监听器
-    this.gameManager.on("win", this.handleWin);
-    this.gameManager.on("lose", this.handleLose);
-    this.gameManager.on("draw", this.handleDraw);
+import { createEnhancedGameComponent } from "../utils/gameComponentFactory.js";
+export default createEnhancedGameComponent(Chess, {
+  autoStepDelay: 500,
+  hasUndo: true,
+  hasRestart: true,
+  customInit() {
     this.gameManager.on("undo", this.handleUndo);
-    this.gameManager.on("stateChange", this.handleStateChange);
   },
-  beforeUnmount() {
-    // 移除事件监听器，防止内存泄漏
-    this.gameManager.off("win", this.handleWin);
-    this.gameManager.off("lose", this.handleLose);
-    this.gameManager.off("draw", this.handleDraw);
+  customCleanup() {
     this.gameManager.off("undo", this.handleUndo);
-    this.gameManager.off("stateChange", this.handleStateChange);
-
-    // 停止自动模式
-    this.gameManager.stopAuto();
-  },
-  computed: {
-    ...Chess.computed,
-    // 使用GameStateManager的默认计算属性
-    ...GameStateManager.getDefaultComputedProperties(),
-    
-    // 覆盖默认的step计算属性，因为Chess游戏的step计算方式不同
-    step() {
-      return this.gameManager.getStepCount() / 2; // 原来的arr中每两步对应一个完整操作
-    }
   },
   methods: {
-    ...Chess.methods,
-
     // 记录移动操作
     recordMove(from, to, card, sign, signIndex) {
       this.gameManager.recordOperation({
@@ -210,21 +158,6 @@ const chessWithModal = {
       });
     },
 
-    // 处理游戏胜利
-    handleWin() {
-      this.status = 1;
-    },
-
-    // 处理游戏失败
-    handleLose() {
-      this.status = 2;
-    },
-
-    // 处理游戏平局
-    handleDraw() {
-      this.status = 3;
-    },
-
     // 处理撤销操作
     handleUndo(operation) {
       // 根据操作类型执行相应的撤销逻辑
@@ -243,12 +176,7 @@ const chessWithModal = {
           this.$set(this.cards2, operation.card, false);
           break;
       }
-      this.status = 0;
     },
-
-    // 处理游戏状态变化
-    // handleStateChange(state) {
-    // },
 
     // 重写undo方法
     undo() {
@@ -268,10 +196,10 @@ const chessWithModal = {
         this.recordFlip(card); // 使用GameStateManager记录操作
         this.sign = -1;
         if (!isAuto) {
-          this.gameManager.hitflag = false;
-          await Chess.methods.wait(500);
-          await this.stepFn();
-          this.gameManager.hitflag = true;
+          this.gameManager.step(async () => {
+            await Chess.methods.wait(500);
+            await this.stepFn();
+          });
         }
         return;
       }
@@ -313,11 +241,11 @@ const chessWithModal = {
               this.gameManager.setDraw();
             }
           }
-          if (!isAuto && this.status <= 0) {
-            this.gameManager.hitflag = false;
-            await Chess.methods.wait(500);
-            await this.stepFn();
-            this.gameManager.hitflag = true;
+          if (!isAuto) {
+            this.gameManager.step(async () => {
+              await Chess.methods.wait(500);
+              await this.stepFn();
+            });
           }
           return;
         }
@@ -332,33 +260,9 @@ const chessWithModal = {
         await Chess.methods.wait(500);
         await this.stepFn();
       });
-    },
-
-    // 重写pass方法（自动模式）
-    pass() {
-      this.gameManager.startAuto(async () => {
-        if (this.status <= 0) {
-          await this.stepFn();
-          await Chess.methods.wait(500);
-        }
-      });
-    },
-
-    // 重写goon方法（重置游戏）
-    goon() {
-      this.gameManager.reset(() => {
-        this.sign = -1;
-        this.grade = -1;
-        this.cards1.splice(0);
-        this.cards2.splice(0);
-        this.status = 0;
-        this.init();
-      });
     }
   }
-};
-
-export default chessWithModal;
+});
 </script>
 
 <style scoped>

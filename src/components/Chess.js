@@ -21,10 +21,6 @@ export default {
       // arr: [],
       sign: -1,
       sign2: -2,
-      status: 0,
-      // 移除hitflag和lockflag，现在由GameStateManager管理
-      // hitflag: true,
-      // lockflag: true,
       number: 36,
       n: 0,
       grade: -1,
@@ -127,8 +123,11 @@ export default {
     wait: wait,
 
     init() {
-      let cards = this.cards1;
+      this.sign = -1;
+      this.grade = -1;
+      this.cards1.splice(0);
       this.cards2.splice(0);
+      let cards = this.cards1;
       // return cards.splice(0, 0, ...this.modes)
       for (let i = 0; i < this.number; i++) {
         cards.push(i);

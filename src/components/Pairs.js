@@ -19,6 +19,11 @@ export default {
   methods: {
     wait,
     init() {
+      this.time = 0;
+      clearInterval(this.timer);
+      this.timer = 0;
+      this.sign = -1;
+      this.sign2 = -1;
       this.cards1.splice(0);
       this.arr.splice(0);
       this.cards2.splice(0);

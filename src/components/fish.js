@@ -26,12 +26,13 @@ export default {
       timer: ""
     };
   },
-  created: function() {
-    this.init(this.cards1);
-  },
   // 初始化
   methods: {
     init() {
+      this.cards1.splice(0);
+      this.cards2.splice(0);
+      this.cards3.splice(0);
+      this.cards4.splice(0);
       let cards = this.cards1;
       this.arr.splice(0);
       for (let i = 0; i < 54; i++) {

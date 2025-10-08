@@ -12,12 +12,13 @@ export default {
       number: 52
     };
   },
-  created: function() {
-    this.init(this.cards1);
-  },
   // 初始化
   methods: {
     init() {
+      this.month = 12;
+      this.cards1.splice(0);
+      this.cards2.splice(0);
+      this.arr.splice(0);
       let cards = this.cards1;
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
@@ -27,9 +28,6 @@ export default {
         this.cards2.push(0);
         this.arr.push(cards.splice(0, 4));
       }
-    },
-    async stepFn() {
-      await this.hit();
     },
     async push(arr, item) {
       arr.push(item);

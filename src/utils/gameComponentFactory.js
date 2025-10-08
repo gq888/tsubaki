@@ -21,6 +21,8 @@ import GameStateManager from "./gameStateManager.js";
  */
 export function createEnhancedGameComponent(baseComponent, options = {}) {
   const {
+    computed = {},
+    methods = {},
     autoStepDelay = 500,
     hasUndo = true,
     hasRestart = true,
@@ -89,7 +91,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     
     // 扩展computed属性
     computed: {
-      ...baseComponent.computed,
       // 使用GameStateManager的默认计算属性
       ...GameStateManager.getDefaultComputedProperties(),
       
@@ -103,13 +104,13 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           stepDisabled: this.stepDisabled,
           autoDisabled: this.autoDisabled
         };
-      }
+      },
+      ...baseComponent.computed,
+      ...computed
     },
     
     // 扩展methods
     methods: {
-      ...baseComponent.methods,
-      
       // 统一的撤销方法
       undo() {
         this.gameManager.undo();
@@ -131,7 +132,10 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
             this.init();
           }
         });
-      }
+      },
+
+      ...baseComponent.methods,
+      ...methods
     }
   };
 }
@@ -154,22 +158,190 @@ export const GameComponentPresets = {
     createEnhancedGameComponent(baseComponent, {
       autoStepDelay,
       hasUndo: false,
-      hasRestart: false
+      hasRestart: false,
+      customInit() {
+        // 为fish游戏添加特殊的stepFn和goon方法
+        if (this.title && this.title.includes("FISHING")) {
+          this.stepFn = async () => {
+            await this.gameManager.step(async () => {
+              let cards = this["cards" + ((this.step % 4) + 1)];
+              while (cards.length <= 0) {
+                this.gameManager.recordOperation();
+                cards = this["cards" + ((this.step % 4) + 1)];
+              }
+              await this.hit(cards, this.arr);
+              // 检查胜利条件
+              let i;
+              for (i = 1; i <= 4; i++) {
+                if ((this.step % 4) + 1 != i && this["cards" + i].length > 0) {
+                  break;
+                }
+              }
+              if (i > 4) {
+                this.gameManager.setWin();
+              }
+              this.gameManager.recordOperation();
+            });
+          };
+        }
+        
+        // 为month游戏添加特殊的stepFn和goon方法
+        if (this.title && this.title === "Month") {
+          this.stepFn = async () => {
+            // 检查失败条件
+            if (this.cards2[12] >= 4) {
+              this.gameManager.setLose();
+            }
+            await this.gameManager.step(async () => {
+              await this.hit();
+            });
+          };
+        }
+      }
     }),
   
   // 配对游戏预设
-  pairGame: (baseComponent, autoStepDelay = 500) => 
+  pairGame: (baseComponent, autoStepDelay = 500, methods = {}) => 
     createEnhancedGameComponent(baseComponent, {
       autoStepDelay,
       hasUndo: false,
       hasRestart: true,
+      methods,
       customCleanup() {
         // 清理定时器
         if (this.timer) {
           clearInterval(this.timer);
         }
       }
-    })
+    }),
+
+  // 益智游戏预设
+  puzzleGame: (baseComponent, autoStepDelay = 800) => 
+    createEnhancedGameComponent(baseComponent, {
+      autoStepDelay,
+      hasUndo: true,
+      hasRestart: true,
+      customInit() {
+        // 为益智游戏添加特殊功能
+        if (this.title && (this.title.includes("24") || this.title.includes("PUZZLE"))) {
+          // 添加提示功能
+          this.showHint = function() {
+            // 实现提示逻辑
+            console.log("显示提示");
+          };
+        }
+      }
+    }),
+
+  // 策略游戏预设  
+  strategyGame: (baseComponent, autoStepDelay = 1200) =>
+    createEnhancedGameComponent(baseComponent, {
+      autoStepDelay,
+      hasUndo: true,
+      hasRestart: true,
+      customInit() {
+        // 为策略游戏添加特殊功能
+        this.difficulty = 'normal';
+        this.setDifficulty = function(level) {
+          this.difficulty = level;
+          this.gameManager.setAutoStepDelay(
+            level === 'easy' ? 1500 : level === 'hard' ? 800 : 1200
+          );
+        };
+      }
+    }),
+
+  // 动作游戏预设
+  actionGame: (baseComponent, autoStepDelay = 300) =>
+    createEnhancedGameComponent(baseComponent, {
+      autoStepDelay,
+      hasUndo: false,
+      hasRestart: true,
+      customInit() {
+        // 为动作游戏添加特殊功能
+        this.score = 0;
+        this.combo = 0;
+        this.addScore = function(points) {
+          this.score += points * (this.combo + 1);
+          this.combo++;
+        };
+        this.resetCombo = function() {
+          this.combo = 0;
+        };
+      }
+    }),
+
+  // 自定义游戏预设
+  customGame: (baseComponent, config = {}) => {
+    const {
+      autoStepDelay = 500,
+      hasUndo = true,
+      hasRestart = true,
+      features = [],
+      customLogic = null
+    } = config;
+
+    return createEnhancedGameComponent(baseComponent, {
+      autoStepDelay,
+      hasUndo,
+      hasRestart,
+      customInit() {
+        // 应用自定义功能
+        features.forEach(feature => {
+          switch (feature) {
+            case 'timer':
+              this.gameTime = 0;
+              this.gameTimer = null;
+              this.startTimer = function() {
+                this.gameTimer = setInterval(() => {
+                  this.gameTime++;
+                }, 1000);
+              };
+              this.stopTimer = function() {
+                if (this.gameTimer) {
+                  clearInterval(this.gameTimer);
+                  this.gameTimer = null;
+                }
+              };
+              break;
+              
+            case 'score':
+              this.score = 0;
+              this.highScore = parseInt(localStorage.getItem(`${this.title}_highScore`) || '0');
+              this.updateScore = function(points) {
+                this.score += points;
+                if (this.score > this.highScore) {
+                  this.highScore = this.score;
+                  localStorage.setItem(`${this.title}_highScore`, this.highScore.toString());
+                }
+              };
+              break;
+              
+            case 'difficulty':
+              this.difficulty = 'normal';
+              this.setDifficulty = function(level) {
+                this.difficulty = level;
+                // 根据难度调整游戏参数
+                const delays = { easy: 800, normal: 500, hard: 300 };
+                this.gameManager.setAutoStepDelay(delays[level] || 500);
+              };
+              break;
+          }
+        });
+
+        // 应用自定义逻辑
+        if (customLogic && typeof customLogic === 'function') {
+          customLogic.call(this);
+        }
+      },
+      customCleanup() {
+        // 清理定时器
+        if (this.gameTimer) {
+          clearInterval(this.gameTimer);
+        }
+      }
+    });
+  }
 };
 
 /**
