@@ -50,10 +50,7 @@
       </div>
     </div>
     <GameControls
-      :undoDisabled="undoDisabled"
-      :restartDisabled="restartDisabled"
-      :stepDisabled="stepDisabled"
-      :autoDisabled="autoDisabled"
+      v-bind="gameControlsConfig"
       @undo="undo"
       @goon="goon"
       @step="stepFn"
@@ -94,163 +91,92 @@
 
 <script>
 import point24 from "./point24.js";
-import GameResultModal from "./GameResultModal.vue";
-import GameControls from "./GameControls.vue";
-import GameStateManager from "../utils/gameStateManager.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { timeout } from "../utils/help.js";
 
-// 扩展point24组件以包含GameResultModal和GameControls，同时保留原有的point24card组件
-const point24WithModal = {
-  ...point24,
-  components: {
-    ...point24.components, // 保留原来的组件
-    GameResultModal, // 添加弹窗组件
-    GameControls // 添加控制按钮组件
+// 使用工厂函数创建增强的point24组件
+export default GameComponentPresets.puzzleGame(point24, 800, {
+  // 记录操作
+  recordOperation(type, data) {
+    this.gameManager.recordOperation({
+      type: type,
+      ...data,
+      timestamp: Date.now()
+    });
   },
-  data() {
-    return {
-      ...point24.data.call(this),
-      gameManager: new GameStateManager({
-        autoStepDelay: 500 // 设置自动模式每步的延迟时间
-      })
-    };
-  },
-  created() {
-    // 创建游戏状态管理器实例
-    this.gameManager.init()
 
-    // 初始化游戏
-    this.init();
-
-    // 注册游戏状态管理器的事件监听器
-    this.gameManager.on("undo", this.handleUndo);
-  },
-  beforeUnmount() {
-    // 移除事件监听器，防止内存泄漏
-    this.gameManager.off("undo", this.handleUndo);
-
-    // 停止自动模式
-    this.gameManager.stopAuto();
-  },
-  computed: {
-    ...point24.computed,
-    // 使用GameStateManager的默认计算属性
-    ...GameStateManager.getDefaultComputedProperties()
-  },
-  methods: {
-    ...point24.methods,
-
-    // 记录操作
-    recordOperation(type, data) {
-      this.gameManager.recordOperation({
-        type: type,
-        ...data,
-        timestamp: Date.now()
-      });
-    },
-
-    // 处理撤销操作
-    handleUndo(operation) {
-      // 根据操作类型执行相应的撤销逻辑
-      switch (operation.type) {
-        case "combine":
-          // 撤销组合操作
-          this.cards2.splice(this.step, 1);
-          this.arr.splice(this.arr.findIndex(a => this.first(a) == this.first(operation.combined)), 1, operation.left, operation.right);
-          break;
-      }
-    },
-
-    // 重写undo方法
-    undo() {
-      this.gameManager.undo();
-    },
-
-    // 重写clickCard方法，使用GameStateManager记录操作
-    clickCard(card, i) {
-      if (i == 0) {
-        return;
-      }
-      if (this.sign != 0) {
-        let left = this.arr[0];
-        let right = this.arr.splice(i, 1)[0];
-        let combined = [left, this.sign, right];
-        this.arr.splice(0, 1, combined);
-        this.sign = 0;
-        this.$set(this.cards2, this.step, combined);
-        this.recordOperation("combine", {
-          left: left,
-          right: right,
-          combined: combined
-        });
-      } else {
-        let temp = this.arr[0];
-        this.$set(this.arr, 0, this.arr[i]);
-        this.$set(this.arr, i, temp);
-      }
-    },
-
-    // 重写stepFn方法
-    async stepFn() {
-      await this.gameManager.step(async () => {
-        if (this.step >= 3) {
-          return;
-        }
-        let temp = this.cards2[this.step];
-        this.sign = 0;
-        this.clickCard(temp[0], this.arr.indexOf(temp[0]));
-        await timeout(() => {}, 1000);
-        this.clickSign(temp[1]);
-        await timeout(() => {}, 1000);
-        this.clickCard(temp[2], this.arr.indexOf(temp[2]));
-      });
-    },
-
-    // 重写pass方法（自动模式）
-    pass() {
-      this.gameManager.startAuto(async () => {
-        if (!this.gameManager.winflag) {
-          await this.stepFn();
-          await timeout(() => {}, 1000);
-        }
-      });
-    },
-
-    // 重写goon方法（重置游戏）
-    goon() {
-      this.gameManager.reset(() => {
-        this.sign = 0;
-        this.cards1.splice(0);
-        this.arr.splice(0);
-        this.init();
-      });
-    },
-
-    // 覆盖point24.js中的autoCalc方法，使用GameStateManager设置游戏结果
-    autoCalc() {
-      if (this.step >= 3) {
-        if (this.calc(this.arr[0]) == 24) {
-          this.gameManager.setWin();
-        } else {
-          this.gameManager.setLose();
-        }
-        return;
-      }
-      let temp = [...this.arr];
-      let f = this.process(temp, temp.length, 24);
-      if (!f) {
-        this.gameManager.setLose();
-        return;
-      }
-
-      point24.methods.autoCalc.call(this);
+  // 处理撤销操作
+  handleUndo(operation) {
+    // 根据操作类型执行相应的撤销逻辑
+    switch (operation.type) {
+      case "combine":
+        // 撤销组合操作
+        this.cards2.splice(this.step, 1);
+        this.arr.splice(this.arr.findIndex(a => this.first(a) == this.first(operation.combined)), 1, operation.left, operation.right);
+        break;
     }
+  },
+
+  // 重写clickCard方法，使用GameStateManager记录操作
+  clickCard(card, i) {
+    if (i == 0) {
+      return;
+    }
+    if (this.sign != 0) {
+      let left = this.arr[0];
+      let right = this.arr.splice(i, 1)[0];
+      let combined = [left, this.sign, right];
+      this.arr.splice(0, 1, combined);
+      this.sign = 0;
+      this.$set(this.cards2, this.step, combined);
+      this.recordOperation("combine", {
+        left: left,
+        right: right,
+        combined: combined
+      });
+    } else {
+      let temp = this.arr[0];
+      this.$set(this.arr, 0, this.arr[i]);
+      this.$set(this.arr, i, temp);
+    }
+  },
+
+  // 重写stepFn方法
+  async stepFn() {
+    await this.gameManager.step(async () => {
+      if (this.step >= 3) {
+        return;
+      }
+      let temp = this.cards2[this.step];
+      this.sign = 0;
+      this.clickCard(temp[0], this.arr.indexOf(temp[0]));
+      await timeout(() => {}, 1000);
+      this.clickSign(temp[1]);
+      await timeout(() => {}, 1000);
+      this.clickCard(temp[2], this.arr.indexOf(temp[2]));
+    });
+  },
+
+  // 覆盖point24.js中的autoCalc方法，使用GameStateManager设置游戏结果
+  autoCalc() {
+    if (this.step >= 3) {
+      if (this.calc(this.arr[0]) == 24) {
+        this.gameManager.setWin();
+      } else {
+        this.gameManager.setLose();
+      }
+      return;
+    }
+    let temp = [...this.arr];
+    let f = this.process(temp, temp.length, 24);
+    if (!f) {
+      this.gameManager.setLose();
+      return;
+    }
+
+    point24.methods.autoCalc.call(this);
   }
-};
-
-// 导入原point24.js中的工具函数
-    import { timeout } from "../utils/help.js";
-
-export default point24WithModal;
+});
 </script>
 
 <style scoped>

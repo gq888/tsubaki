@@ -63,12 +63,12 @@ export default {
       number: 52
     };
   },
-  created: function() {
-    this.init();
-  },
   // 初始化
   methods: {
     init() {
+      this.sign = 0;
+      this.cards1.splice(0);
+      this.arr.splice(0);
       let cards = this.cards1;
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
@@ -82,16 +82,6 @@ export default {
     process,
     clickSign(sign) {
       this.sign = this.sign == sign ? 0 : sign;
-    },
-    pass() {
-      this.lockflag = false;
-      if (!this.winflag) {
-        this.stepFn().then(() => {
-          setTimeout(this.pass, 1000);
-        });
-      } else {
-        // this.lockflag = true
-      }
     },
     autoCalc() {
       let step = this.step;

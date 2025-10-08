@@ -69,12 +69,6 @@ export default {
   },
   // 初始化
   methods: {
-    setupGameStateListeners() {
-      // 监听游戏状态变化
-      this.gameManager.on('stateChange', () => {
-        this.$forceUpdate(); // 强制更新视图
-      });
-    },
     init() {
       this.sign = -1;
       this.cards1.splice(0);
@@ -84,9 +78,6 @@ export default {
       }
       shuffleCards(cards, this.number);
       this.autoCalc();
-    },
-    beforeUnmount() {
-      this.gameManager.off('stateChange');
     },
     async stepFn() {
       if (this.step >= this.number) {

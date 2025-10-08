@@ -56,6 +56,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     created() {
       // 初始化GameStateManager
       this.gameManager.init();
+      this.handleUndo && this.gameManager.on("undo", this.handleUndo);
       
       // 调用自定义初始化函数
       if (customInit) {
@@ -77,6 +78,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     beforeUnmount() {
       // 停止自动模式
       this.gameManager.stopAuto();
+      this.gameManager.off("undo");
       
       // 调用自定义清理函数
       if (customCleanup) {
@@ -216,11 +218,12 @@ export const GameComponentPresets = {
     }),
 
   // 益智游戏预设
-  puzzleGame: (baseComponent, autoStepDelay = 800) => 
+  puzzleGame: (baseComponent, autoStepDelay = 800, methods = {}) => 
     createEnhancedGameComponent(baseComponent, {
       autoStepDelay,
       hasUndo: true,
       hasRestart: true,
+      methods,
       customInit() {
         // 为益智游戏添加特殊功能
         if (this.title && (this.title.includes("24") || this.title.includes("PUZZLE"))) {

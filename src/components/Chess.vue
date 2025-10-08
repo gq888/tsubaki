@@ -129,12 +129,6 @@ export default createEnhancedGameComponent(Chess, {
   autoStepDelay: 500,
   hasUndo: true,
   hasRestart: true,
-  customInit() {
-    this.gameManager.on("undo", this.handleUndo);
-  },
-  customCleanup() {
-    this.gameManager.off("undo", this.handleUndo);
-  },
   methods: {
     // 记录移动操作
     recordMove(from, to, card, sign, signIndex) {

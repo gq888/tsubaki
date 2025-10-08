@@ -6,7 +6,6 @@ export default {
     return {
       title: "Sort",
       cards1: [],
-      cards2: [],
       types: ["♥", "♠", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
       number: 12,
@@ -17,9 +16,9 @@ export default {
   methods: {
     wait,
     init() {
+      this.cards1.splice(0);
       let cards = this.cards1;
       this.state = 0;
-      this.cards2.splice(0);
       for (let i = 0; i < this.number * 4; i++) {
         cards.push(i);
       }
@@ -229,10 +228,5 @@ export default {
     step () {
       this.autoCalc()
     },
-  },
-  computed: {
-    step() {
-      return this.cards2.length;
-    }
   }
 };
