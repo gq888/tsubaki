@@ -1,7 +1,8 @@
 import { shuffleCards, wait, checkDeadForeach } from "../utils/help.js";
 import move from "../directives/move.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-export default {
+const Spider = {
   name: "Spider",
   data() {
     return {
@@ -610,3 +611,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的Spider组件并导出
+export default GameComponentPresets.cardGame(Spider, 500);

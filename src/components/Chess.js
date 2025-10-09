@@ -1,4 +1,5 @@
 import { shuffleCards, wait } from "../utils/help.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
 let _modes = [
   [1, 0],
@@ -10,7 +11,7 @@ let _modes = [
   [3, 3],
 ];
 
-export default {
+const Chess = {
   name: "Chess",
   data() {
     return {
@@ -340,3 +341,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的Chess组件并导出
+export default GameComponentPresets.cardGame(Chess, 500);

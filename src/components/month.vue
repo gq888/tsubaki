@@ -78,11 +78,8 @@
 </template>
 
 <script>
-import month from "./month.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 使用工厂函数创建增强的month组件
-const monthComponent = GameComponentPresets.simpleGame(month, 1000);
-export default monthComponent;
+import MonthComponent from "./month.js";
+export default MonthComponent;
 </script>
 
 <style scoped>

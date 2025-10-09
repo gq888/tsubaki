@@ -1,4 +1,6 @@
-export default {
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+
+const Sum = {
   name: "Sum",
   data() {
     return {
@@ -117,3 +119,6 @@ export default {
     },
   },
 };
+
+// 创建带有自定义逻辑的sum组件并导出
+export default GameComponentPresets.strategyGame(Sum, 1000);

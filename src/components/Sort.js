@@ -1,6 +1,7 @@
 import { shuffleCards, wait, checkDeadForeach } from "../utils/help.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-export default {
+const Sort = {
   name: "Sort",
   data() {
     return {
@@ -275,3 +276,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的Sort组件并导出
+export default GameComponentPresets.puzzleGame(Sort, 500);

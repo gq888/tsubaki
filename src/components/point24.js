@@ -1,5 +1,6 @@
 import { shuffleCards, timeout } from "../utils/help.js";
 import point24card from "./point24card.vue";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
 var opts = [1, 3, 2, 2, 4, 4];
 
@@ -47,7 +48,7 @@ function first(i) {
   return Number.isFinite(i) ? i : first(i[0]);
 }
 
-export default {
+const Point24 = {
   name: "point24",
   components: {
     point24card,
@@ -212,3 +213,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的point24组件并导出
+export default GameComponentPresets.puzzleGame(Point24, 800);

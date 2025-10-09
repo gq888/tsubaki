@@ -48,11 +48,8 @@
 </template>
 
 <script>
-import Pairs from "./Pairs.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 使用工厂函数创建增强的Pairs组件
-const pairsComponent = GameComponentPresets.pairGame(Pairs, 500);
-export default pairsComponent;
+import PairsComponent from "./Pairs.js";
+export default PairsComponent;
 </script>
 
 <style scoped>

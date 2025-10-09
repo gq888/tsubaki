@@ -62,11 +62,8 @@
 </template>
 
 <script>
-import sum from "./sum.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 创建带有自定义逻辑的sum组件
-const sumComponent = GameComponentPresets.strategyGame(sum, 1000);
-export default sumComponent;
+import SumComponent from "./sum.js";
+export default SumComponent;
 </script>
 
 <style scoped>

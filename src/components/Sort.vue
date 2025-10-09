@@ -64,11 +64,8 @@
 </template>
 
 <script>
-import Sort from "./Sort.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 使用工厂函数创建增强的Sort组件
-const sortComponent = GameComponentPresets.puzzleGame(Sort, 500);
-export default sortComponent;
+import SortComponent from "./Sort.js";
+export default SortComponent;
 </script>
 
 <style scoped>

@@ -95,11 +95,8 @@
 </template>
 
 <script>
-import fish from "./fish.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 使用工厂函数创建增强的fish组件
-const fishComponent = GameComponentPresets.simpleGame(fish, 1000);
-export default fishComponent;
+import FishComponent from "./fish.js";
+export default FishComponent;
 </script>
 
 <style scoped>

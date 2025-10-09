@@ -1,6 +1,7 @@
 import message from "./message.vue";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-export default {
+const Fish = {
   name: "Fish",
   components: {
     message,
@@ -143,3 +144,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的fish组件并导出
+export default GameComponentPresets.simpleGame(Fish, 1000);

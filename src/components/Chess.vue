@@ -85,10 +85,8 @@
 </template>
 
 <script>
-import Chess from "./Chess.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-const chessComponent = GameComponentPresets.cardGame(Chess, 500);
-export default chessComponent;
+import ChessComponent from "./Chess.js";
+export default ChessComponent;
 </script>
 
 <style scoped>

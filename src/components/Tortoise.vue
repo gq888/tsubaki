@@ -43,11 +43,8 @@
 </template>
 
 <script>
-import Tortoise from "./Tortoise.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 使用工厂函数创建增强的Tortoise组件
-const tortoiseComponent = GameComponentPresets.cardGame(Tortoise, 500);
-export default tortoiseComponent;
+import TortoiseComponent from "./Tortoise.js";
+export default TortoiseComponent;
 </script>
 
 <style scoped>

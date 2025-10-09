@@ -1,5 +1,7 @@
 import { shuffleCards } from "../utils/help.js";
-export default {
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+
+const Month = {
   name: "Month",
   data() {
     return {
@@ -42,3 +44,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的month组件并导出
+export default GameComponentPresets.simpleGame(Month, 1000);

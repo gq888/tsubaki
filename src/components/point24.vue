@@ -62,11 +62,8 @@
 </template>
 
 <script>
-import point24 from "./point24.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 使用工厂函数创建增强的point24组件
-const point24Component = GameComponentPresets.puzzleGame(point24, 800);
-export default point24Component;
+import Point24Component from "./point24.js";
+export default Point24Component;
 </script>
 
 <style scoped>

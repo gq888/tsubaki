@@ -1,6 +1,7 @@
 import { shuffleCards } from "../utils/help.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-export default {
+const Tortoise = {
   name: "Tortoise",
   data() {
     return {
@@ -194,3 +195,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的Tortoise组件并导出
+export default GameComponentPresets.cardGame(Tortoise, 500);

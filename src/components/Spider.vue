@@ -189,11 +189,8 @@
 </template>
 
 <script>
-import Spider from "./Spider.js";
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-// 使用工厂函数创建增强的Spider组件
-const spiderComponent = GameComponentPresets.cardGame(Spider, 500);
-export default spiderComponent;
+import SpiderComponent from "./Spider.js";
+export default SpiderComponent;
 </script>
 
 <style scoped>

@@ -1,6 +1,7 @@
 import { shuffleCards, wait } from "../utils/help.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
-export default {
+const Pairs = {
   name: "Pairs",
   data() {
     return {
@@ -106,3 +107,6 @@ export default {
     },
   },
 };
+
+// 使用工厂函数创建增强的Pairs组件并导出
+export default GameComponentPresets.pairGame(Pairs, 500);
