@@ -72,7 +72,7 @@ export default {
     async stepFn() {
       await this.gameManager.step(async () => {
         this.clickSign(this.next[1]);
-        await wait(1000);
+        await wait(this.gameManager.autoStepDelay);
         this.clickCard(this.next[0]);
       });
     },

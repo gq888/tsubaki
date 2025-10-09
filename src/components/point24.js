@@ -144,9 +144,9 @@ export default {
         let temp = this.cards2[this.step];
         this.sign = 0;
         this.clickCard(temp[0], this.arr.indexOf(temp[0]));
-        await timeout(() => {}, 1000);
+        await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickSign(temp[1]);
-        await timeout(() => {}, 1000);
+        await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickCard(temp[2], this.arr.indexOf(temp[2]));
       });
     },

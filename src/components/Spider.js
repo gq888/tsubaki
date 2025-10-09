@@ -238,7 +238,7 @@ export default {
         this.sign = -99;
         await this.clickCard(next[0] < 0 ? 1 : next[0]);
         console.log(next, this.sign);
-        await wait(1000);
+        await wait(this.gameManager.autoStepDelay);
         await this.clickCard(next[1]);
       });
     },
@@ -304,7 +304,7 @@ export default {
             console.log(next);
             this.sign = -99;
             await this.clickCard(next[0]);
-            await wait(500);
+            await wait(this.gameManager.autoStepDelay);
             await this.clickCard(next[1]);
             for (let k = 6; k < 10; k++) {
               if (this.cards[k].length <= 0) {

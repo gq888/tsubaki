@@ -29,6 +29,7 @@ export default {
       let cards = this.cards1;
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
+        this.cards2.push(false);
       }
       shuffleCards(cards, this.number);
     },
@@ -54,7 +55,7 @@ export default {
       }
       this.gameManager.hitflag = false;
       this.sign2 = card;
-      await wait(500);
+      await wait(this.gameManager.autoStepDelay);
       this.sign = -1;
       this.sign2 = -1;
       this.gameManager.hitflag = true;

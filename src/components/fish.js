@@ -87,7 +87,7 @@ export default {
               );
           }
           // arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(0, currentCard == 53 ? 5 : 3))
-        }, 1000);
+        }, this.gameManager.autoStepDelay);
       }
       var index = value == 10 ? 0 : arr.findIndex((item) => item >> 2 == value);
       this.push(arr, currentCard);
@@ -98,7 +98,7 @@ export default {
       await this.time(() => {
         this.ssArr.splice(0);
         cards.push(...arr.splice(index));
-      }, 1000);
+      }, this.gameManager.autoStepDelay);
     },
   },
   computed: {
@@ -121,25 +121,25 @@ export default {
       this.diff4 = val - old;
       this.time(() => {
         this.diff4 = 0;
-      }, 800);
+      }, this.gameManager.autoStepDelay);
     },
     score3(val, old) {
       this.diff3 = val - old;
       this.time(() => {
         this.diff3 = 0;
-      }, 800);
+      }, this.gameManager.autoStepDelay);
     },
     score2(val, old) {
       this.diff2 = val - old;
       this.time(() => {
         this.diff2 = 0;
-      }, 800);
+      }, this.gameManager.autoStepDelay);
     },
     score1(val, old) {
       this.diff1 = val - old;
       this.time(() => {
         this.diff1 = 0;
-      }, 800);
+      }, this.gameManager.autoStepDelay);
     },
   },
 };

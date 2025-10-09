@@ -120,7 +120,7 @@ export default {
         this.sign = -1;
         if (!isAuto) {
           this.gameManager.step(async () => {
-            await wait(500);
+            await wait(this.gameManager.autoStepDelay);
             await this.stepFn();
           });
         }
@@ -166,7 +166,7 @@ export default {
           }
           if (!isAuto) {
             this.gameManager.step(async () => {
-              await wait(500);
+              await wait(this.gameManager.autoStepDelay);
               await this.stepFn();
             });
           }
@@ -180,7 +180,7 @@ export default {
     async stepTwiceFn() {
       await this.gameManager.step(async () => {
         await this.stepFn();
-        await wait(500);
+        await wait(this.gameManager.autoStepDelay);
         await this.stepFn();
       });
     },
@@ -223,7 +223,7 @@ export default {
         console.log(from, to);
         _this.sign = -1;
         await _this.clickCard(from, true);
-        await wait(1000);
+        await wait(_this.gameManager.autoStepDelay);
         await _this.clickCard(to, true);
       };
       for (let i = 0; i < this.cards1.length; i++) {
