@@ -5,9 +5,13 @@
  * 提供热重载优化、构建优化和开发体验改进
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class DevOptimizer {
   constructor() {
@@ -574,7 +578,7 @@ if (require.main === module) {
       break;
       
     default:
-      console.log(\`
+      console.log(`
 🚀 开发优化工具
 
 用法:
@@ -583,8 +587,8 @@ if (require.main === module) {
   node dev-optimizer.js vue       # 优化Vue配置
   node dev-optimizer.js babel     # 优化Babel配置
   node dev-optimizer.js eslint    # 优化ESLint配置
-      \`);
+      `);
   }
 }
 
-module.exports = DevOptimizer;
+export default DevOptimizer;

@@ -5,9 +5,13 @@
  * 分析组件性能、内存使用和渲染效率
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class PerformanceMonitor {
   constructor() {
@@ -432,7 +436,7 @@ class PerformanceMonitor {
 }
 
 // 命令行接口
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const monitor = new PerformanceMonitor();
   const args = process.argv.slice(2);
   
@@ -466,4 +470,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = PerformanceMonitor;
+export default PerformanceMonitor;

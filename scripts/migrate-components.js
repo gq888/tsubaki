@@ -5,8 +5,12 @@
  * 用于逐步将原组件替换为重构后的组件
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 组件映射配置
 const COMPONENT_MAPPING = {
