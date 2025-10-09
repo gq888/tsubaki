@@ -3,7 +3,7 @@ import message from "./message.vue";
 export default {
   name: "Fish",
   components: {
-    message
+    message,
   },
   data() {
     return {
@@ -23,7 +23,7 @@ export default {
       flyout2: [],
       cardsIndex: "",
       arr: [],
-      timer: ""
+      timer: "",
     };
   },
   // 初始化
@@ -56,7 +56,7 @@ export default {
       return cards;
     },
     time(handle, time) {
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         setTimeout(() => {
           resolve();
           handle();
@@ -83,13 +83,13 @@ export default {
           for (let i = 1; i <= 4; i++) {
             i != (this.step % 4) + 1 &&
               arr.push(
-                ...this["cards" + i].splice(0, currentCard == 53 ? 5 : 3)
+                ...this["cards" + i].splice(0, currentCard == 53 ? 5 : 3),
               );
           }
           // arr.push(...((this.step % 2) == 0 ? this.cards2 : this.cards1).splice(0, currentCard == 53 ? 5 : 3))
         }, 1000);
       }
-      var index = value == 10 ? 0 : arr.findIndex(item => item >> 2 == value);
+      var index = value == 10 ? 0 : arr.findIndex((item) => item >> 2 == value);
       this.push(arr, currentCard);
       if (index < 0) {
         return;
@@ -99,22 +99,22 @@ export default {
         this.ssArr.splice(0);
         cards.push(...arr.splice(index));
       }, 1000);
-    }
+    },
   },
   computed: {
     // 监听点数
-    score1: function() {
+    score1: function () {
       return this.cards1.length;
     },
-    score2: function() {
+    score2: function () {
       return this.cards2.length;
     },
-    score3: function() {
+    score3: function () {
       return this.cards3.length;
     },
-    score4: function() {
+    score4: function () {
       return this.cards4.length;
-    }
+    },
   },
   watch: {
     score4(val, old) {
@@ -140,6 +140,6 @@ export default {
       this.time(() => {
         this.diff1 = 0;
       }, 800);
-    }
-  }
+    },
+  },
 };

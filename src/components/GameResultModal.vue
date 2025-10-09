@@ -31,25 +31,25 @@ export default {
   props: {
     title: {
       type: String,
-      default: ""
+      default: "",
     },
     subtitle: {
       type: String,
-      default: ""
+      default: "",
     },
     buttons: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     modalStyle: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     customClass: {
       type: String,
-      default: ""
-    }
-  }
+      default: "",
+    },
+  },
 };
 </script>
 

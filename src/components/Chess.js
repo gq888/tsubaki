@@ -7,7 +7,7 @@ let _modes = [
   [2, 2],
   [3, 1],
   [3, 2],
-  [3, 3]
+  [3, 3],
 ];
 
 export default {
@@ -25,81 +25,13 @@ export default {
       n: 0,
       grade: -1,
       modes: [
-        0,
-        1,
-        3,
-        6,
-        10,
-        15,
-        2,
-        5,
-        7,
-        13,
-        18,
-        21,
-        4,
-        8,
-        14,
-        17,
-        24,
-        27,
-        9,
-        12,
-        20,
-        25,
-        26,
-        31,
-        11,
-        19,
-        23,
-        29,
-        30,
-        35,
-        16,
-        22,
-        28,
-        32,
-        34,
-        33
+        0, 1, 3, 6, 10, 15, 2, 5, 7, 13, 18, 21, 4, 8, 14, 17, 24, 27, 9, 12,
+        20, 25, 26, 31, 11, 19, 23, 29, 30, 35, 16, 22, 28, 32, 34, 33,
       ],
       grades: [
-        1,
-        0,
-        0,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        1,
-        0,
-        1,
-        1,
-        0,
-        1,
-        0,
-        0,
-        1,
-        1,
-        0,
-        0,
-        1,
-        1,
-        1
-      ]
+        1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1,
+        1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1,
+      ],
     };
   },
   computed: {
@@ -107,11 +39,11 @@ export default {
       return this.getValidBoxes(this.sign);
     },
     lowCount() {
-      return this.cards1.filter(item => this.grades[item] === 0).length;
+      return this.cards1.filter((item) => this.grades[item] === 0).length;
     },
     highCount() {
-      return this.cards1.filter(item => this.grades[item] === 1).length;
-    }
+      return this.cards1.filter((item) => this.grades[item] === 1).length;
+    },
   },
   // 初始化
   methods: {
@@ -136,7 +68,7 @@ export default {
         card: card,
         sign: sign,
         signIndex: signIndex,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     },
 
@@ -145,7 +77,7 @@ export default {
       this.gameManager.recordOperation({
         type: "flip",
         card: card,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     },
 
@@ -156,7 +88,11 @@ export default {
         case "move":
           // 撤销移动操作
           this.cards1.splice(operation.signIndex, 1, operation.sign);
-          this.cards1.splice(operation.to, 1, operation.card >= 0 ? operation.card : -1);
+          this.cards1.splice(
+            operation.to,
+            1,
+            operation.card >= 0 ? operation.card : -1,
+          );
           break;
         case "flip":
           // 撤销翻转操作
@@ -283,7 +219,7 @@ export default {
         friends = [];
       let grade = this.step % 2 == 0 ? this.grade : !this.grade;
       let _this = this;
-      let moveFn = async function(from, to) {
+      let moveFn = async function (from, to) {
         console.log(from, to);
         _this.sign = -1;
         await _this.clickCard(from, true);
@@ -401,6 +337,6 @@ export default {
       } else {
         console.log("unkown error");
       }
-    }
-  }
+    },
+  },
 };

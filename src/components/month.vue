@@ -8,8 +8,8 @@
       {
         text: 'GO ON',
         callback: goon,
-        disabled: false
-      }
+        disabled: false,
+      },
     ]"
     :lose-modal-style="{ backgroundColor: 'rgba(0,0,0,0.8)' }"
     @step="stepFn"
@@ -21,7 +21,12 @@
         <div class="center">
           <ul
             class="cardsul"
-            style="padding-left: 0; max-width: 690px; justify-content: space-between; margin-top: 180px;"
+            style="
+              padding-left: 0;
+              max-width: 690px;
+              justify-content: space-between;
+              margin-top: 180px;
+            "
           >
             <li
               v-for="(item, i) in arr"
@@ -36,28 +41,28 @@
                 :style="{ top: (month == i ? j : 1 + j) * 30 + 'px', left: 0 }"
                 :src="
                   './static/' +
-                    (cards2[i] > j ||
-                    (month == i && ((month == 12 && j == 3) || j == 4))
-                      ? card
-                      : 'bg') +
-                    '.jpg'
+                  (cards2[i] > j ||
+                  (month == i && ((month == 12 && j == 3) || j == 4))
+                    ? card
+                    : 'bg') +
+                  '.jpg'
                 "
               />
               <div
                 v-show="i == 12 && month != i"
                 class="m-0 card"
-                style="background-color: #719192;"
+                style="background-color: #719192"
               ></div>
             </li>
           </ul>
         </div>
       </div>
     </template>
-    
+
     <template #lose-cards>
-      <div class1="row" style="margin-top: 10px;">
+      <div class1="row" style="margin-top: 10px">
         <div>
-          <ul class="cardsul" style="padding-left: 0; max-width: 740px;">
+          <ul class="cardsul" style="padding-left: 0; max-width: 740px">
             <div v-for="(item, i) in cards2" :key="i">
               <img
                 v-if="item >= 4 && i < 12"

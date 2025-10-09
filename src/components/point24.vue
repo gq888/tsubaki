@@ -11,7 +11,7 @@
     <template #game-content>
       <div class="row center" style1="overflow:scroll">
         <div class="flex-row center">
-          <ul class="cardsul flex-row center" style="padding-left: 0;">
+          <ul class="cardsul flex-row center" style="padding-left: 0">
             <div class="flex-col center m-0">
               <!-- <span class="vertical m-0">(</span> -->
               <point24card :card="arr[0]"></point24card>
@@ -35,7 +35,7 @@
           </ul>
           <ul
             class="cardsul flex-row center"
-            style="padding-left: 0;margin-left: 20px;"
+            style="padding-left: 0; margin-left: 20px"
           >
             <div
               v-for="(item, i) in arr"

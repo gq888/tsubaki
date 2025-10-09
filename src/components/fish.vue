@@ -9,10 +9,13 @@
     <template #game-content>
       <div
         class="row flex-row"
-        style="padding-top: 10px; justify-content: space-around;"
+        style="padding-top: 10px; justify-content: space-around"
       >
-        <div class="flex-col center rela" style="max-width: 25%;">
-          <message class="abso" style="top: 70px;left: 0px;width: 100%;" show1="1"
+        <div class="flex-col center rela" style="max-width: 25%">
+          <message
+            class="abso"
+            style="top: 70px; left: 0px; width: 100%"
+            show1="1"
             >1</message
           >
           <img class="avatar" :src="'./static/avatar/32.png'" />
@@ -21,8 +24,8 @@
           >
           <span class="scrore">{{ score1 }}</span>
         </div>
-        <div class="flex-col center rela" style="max-width: 25%;">
-          <message class="abso" style="top: 70px;left: 0px;width: 100%;"
+        <div class="flex-col center rela" style="max-width: 25%">
+          <message class="abso" style="top: 70px; left: 0px; width: 100%"
             >asfasfasdfasfdasdfasdfas</message
           >
           <img class="avatar" :src="'./static/avatar/31.png'" />
@@ -31,8 +34,8 @@
           >
           <span class="scrore">{{ score2 }}</span>
         </div>
-        <div class="flex-col center rela" style="max-width: 25%;">
-          <message class="abso" style="top: 70px;left: 0px;width: 100%;"
+        <div class="flex-col center rela" style="max-width: 25%">
+          <message class="abso" style="top: 70px; left: 0px; width: 100%"
             >1</message
           >
           <img class="avatar" :src="'./static/avatar/29.png'" />
@@ -41,8 +44,8 @@
           >
           <span class="scrore">{{ score3 }}</span>
         </div>
-        <div class="flex-col center rela" style="max-width: 25%;">
-          <message class="abso" style="top: 70px;left: 0px;width: 100%;"
+        <div class="flex-col center rela" style="max-width: 25%">
+          <message class="abso" style="top: 70px; left: 0px; width: 100%"
             >1</message
           >
           <img class="avatar" :src="'./static/avatar/30.png'" />
@@ -56,13 +59,13 @@
         <div>
           <ul
             class="cardsul"
-            style="padding-left: 0; margin: 0; min-height: 150px;"
+            style="padding-left: 0; margin: 0; min-height: 150px"
           >
             <li
               v-for="item in arr"
               :key="item"
               class="card m-0"
-              style="max-width: 25%;"
+              style="max-width: 25%"
             >
               <img
                 :class="{
@@ -70,7 +73,7 @@
                   flyin1: flyin1.indexOf(item) >= 0,
                   flyin2: flyin2.indexOf(item) >= 0,
                   flyout1: flyout1.indexOf(item) >= 0,
-                  flyout2: flyout2.indexOf(item) >= 0
+                  flyout2: flyout2.indexOf(item) >= 0,
                 }"
                 :src="'./static/' + item + '.jpg'"
               />
@@ -79,7 +82,7 @@
         </div>
       </div>
     </template>
-    
+
     <template #win-content>
       <h1>
         <img

@@ -228,7 +228,7 @@ export default class GameStateManager {
     if (!this.listeners[event]) {
       return;
     }
-    this.listeners[event].forEach(listener => {
+    this.listeners[event].forEach((listener) => {
       try {
         listener(data);
       } catch (error) {
@@ -249,7 +249,7 @@ export default class GameStateManager {
       loseflag: this.loseflag,
       drawflag: this.drawflag,
       step: this.getStepCount(),
-      isAutoRunning: this.isAutoRunning
+      isAutoRunning: this.isAutoRunning,
     };
   }
 
@@ -274,72 +274,74 @@ export default class GameStateManager {
         const manager = this.gameManager;
         return manager ? manager.hitflag : true;
       },
-      
+
       lockflag() {
         const manager = this.gameManager;
         return manager ? manager.lockflag : true;
       },
-      
+
       winflag() {
         const manager = this.gameManager;
         return manager ? manager.winflag : false;
       },
-      
+
       loseflag() {
         const manager = this.gameManager;
         return manager ? manager.loseflag : false;
       },
-      
+
       drawflag() {
         const manager = this.gameManager;
         return manager ? manager.drawflag : false;
       },
-      
+
       // 步数计算属性
       step() {
         const manager = this.gameManager;
         return manager ? manager.getStepCount() : 0;
       },
-      
+
       // 按钮禁用状态计算属性
       undoDisabled() {
         const manager = this.gameManager;
         return !manager || !manager.canUndo();
       },
-      
+
       restartDisabled() {
         const manager = this.gameManager;
-        return !manager || 
-               !manager.hitflag || 
-               !manager.lockflag;
+        return !manager || !manager.hitflag || !manager.lockflag;
       },
-      
+
       stepDisabled() {
         const manager = this.gameManager;
-        return !manager ||
-               !manager.hitflag ||
-               !manager.lockflag ||
-               manager.winflag ||
-               manager.loseflag ||
-               manager.drawflag;
+        return (
+          !manager ||
+          !manager.hitflag ||
+          !manager.lockflag ||
+          manager.winflag ||
+          manager.loseflag ||
+          manager.drawflag
+        );
       },
-      
+
       autoDisabled() {
         const manager = this.gameManager;
-        return !manager ||
-               !manager.hitflag ||
-               !manager.lockflag ||
-               manager.winflag ||
-               manager.loseflag ||
-               manager.drawflag ||
-               manager.isAutoRunning;
+        return (
+          !manager ||
+          !manager.hitflag ||
+          !manager.lockflag ||
+          manager.winflag ||
+          manager.loseflag ||
+          manager.drawflag ||
+          manager.isAutoRunning
+        );
       },
-      
+
       // 游戏状态
       gameState() {
         const manager = this.gameManager;
         return manager ? manager.getState() : {};
-      }
+      },
     };
   }
 }

@@ -12,49 +12,49 @@ import Chess from "@/components/Chess.vue";
 const routes = [
   {
     path: "/",
-    redirect: "/month"
+    redirect: "/month",
   },
   {
     path: "/month",
-    component: Month
+    component: Month,
   },
   {
     path: "/fish",
-    component: Fish
+    component: Fish,
   },
   {
     path: "/point24",
-    component: point24
+    component: point24,
   },
   {
     path: "/blackjack",
-    component: Sum
+    component: Sum,
   },
   {
     path: "/Tortoise",
-    component: Tortoise
+    component: Tortoise,
   },
   {
     path: "/Sort",
-    component: Sort
+    component: Sort,
   },
   {
     path: "/Pairs",
-    component: Pairs
+    component: Pairs,
   },
   {
     path: "/Spider",
-    component: Spider
+    component: Spider,
   },
   {
     path: "/Chess",
-    component: Chess
-  }
+    component: Chess,
+  },
 ];
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes
+  routes,
 });
 
 export default router;

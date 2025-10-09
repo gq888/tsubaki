@@ -9,7 +9,7 @@ export default {
       cards2: [],
       arr: [],
       timer: "",
-      number: 52
+      number: 52,
     };
   },
   // 初始化
@@ -39,6 +39,6 @@ export default {
       this.arr[value].unshift(currentCard);
       this.month = value;
       this.cards2[value]++;
-    }
-  }
+    },
+  },
 };

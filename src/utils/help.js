@@ -11,7 +11,7 @@ export function shuffleCards(cards, num) {
 }
 
 export function timeout(handle, time) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve();
       handle();
@@ -20,21 +20,21 @@ export function timeout(handle, time) {
 }
 
 export function wait(time) {
-  return new Promise(r => setTimeout(r, time));
+  return new Promise((r) => setTimeout(r, time));
 }
 
 export function preload(cb) {
   let arr = [];
   for (let i = 0; i < 54; i++) {
     arr.push(
-      new Promise(resolve => {
+      new Promise((resolve) => {
         let img = new Image();
         img.src = "./static/" + i + ".jpg";
         img.onload = () => {
           cb && cb(img, i);
           resolve(img);
         };
-      })
+      }),
     );
   }
   return Promise.all(arr);

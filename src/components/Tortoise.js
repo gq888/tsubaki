@@ -63,8 +63,8 @@ export default {
         { "z-index": 3, left: "80%", top: "525px", up: [] },
         { "z-index": 3, left: "50%", top: "600px", up: [] },
         { "z-index": 3, left: "10%", top: "600px", up: [] },
-        { "z-index": 3, left: "0", top: "375px", up: [] }
-      ]
+        { "z-index": 3, left: "0", top: "375px", up: [] },
+      ],
     };
   },
   // 初始化
@@ -84,42 +84,42 @@ export default {
         return;
       }
       await this.gameManager.step(async () => {
-      let next,
-        next_i,
-        max = -1;
-      let fn = temp => {
-        if (temp == this.sign) {
-          return;
+        let next,
+          next_i,
+          max = -1;
+        let fn = (temp) => {
+          if (temp == this.sign) {
+            return;
+          }
+          if (this.done(temp)) {
+            return;
+          }
+          let index = this.cards1.indexOf(temp);
+          if (this.check(index) && this.map[index]["z-index"] > max) {
+            next = temp;
+            next_i = index;
+            max = this.map[index]["z-index"];
+          }
+        };
+        if (this.sign != -1 && this.sign << 2 != this.next[0] << 2) {
+          let card = this.sign >> 2;
+          for (let i = 0; i < 4; i++) {
+            let temp = card * 4 + i;
+            fn(temp);
+          }
         }
-        if (this.done(temp)) {
-          return;
+        if (max < 0) {
+          for (let temp of this.next) {
+            fn(temp);
+          }
         }
-        let index = this.cards1.indexOf(temp);
-        if (this.check(index) && this.map[index]["z-index"] > max) {
-          next = temp;
-          next_i = index;
-          max = this.map[index]["z-index"];
-        }
-      };
-      if (this.sign != -1 && this.sign << 2 != this.next[0] << 2) {
-        let card = this.sign >> 2;
-        for (let i = 0; i < 4; i++) {
-          let temp = card * 4 + i;
-          fn(temp);
-        }
-      }
-      if (max < 0) {
-        for (let temp of this.next) {
-          fn(temp);
-        }
-      }
-      this.clickCard(next, next_i);
+        this.clickCard(next, next_i);
       });
     },
     check(i) {
       return (
         this.map[i] &&
-        this.map[i].up.findIndex(up => !this.done(this.cards1[up])) < 0
+        this.map[i].up.findIndex((up) => !this.done(this.cards1[up])) < 0
       );
     },
     done(card) {
@@ -186,11 +186,11 @@ export default {
       if (m < 0) {
         this.gameManager.setLose();
       }
-    }
+    },
   },
   watch: {
     step() {
       this.autoCalc();
-    }
-  }
+    },
+  },
 };

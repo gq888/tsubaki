@@ -13,7 +13,13 @@
         <div>
           <ul
             class="cardsul cards"
-            style="padding-left: 0; width: 100%; height: 750px; max-width: 500px; margin: auto"
+            style="
+              padding-left: 0;
+              width: 100%;
+              height: 750px;
+              max-width: 500px;
+              margin: auto;
+            "
           >
             <li
               v-for="(item, i) in cards1"
@@ -21,7 +27,7 @@
               v-show="!done(item)"
               class="card abso"
               :style="map[i]"
-              style="width:20%; height: 150px; margin: 0"
+              style="width: 20%; height: 150px; margin: 0"
             >
               <img
                 :src="'./static/' + (check(i) ? item : 'bg') + '.jpg'"

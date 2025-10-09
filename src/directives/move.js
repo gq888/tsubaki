@@ -1,17 +1,17 @@
 var move = {};
-var getPosition = function(e, isTouch) {
+var getPosition = function (e, isTouch) {
   if (isTouch) {
     e = e.touches[0];
   }
   return [e.clientX, e.clientY];
 };
-var updateMoveData = function(vnode, e, isTouch) {
+var updateMoveData = function (vnode, e, isTouch) {
   const data = vnode._moveData;
   data.position = getPosition(e, isTouch);
   data.offsetX = data.position[0] - data.startPosition[0];
   data.offsetY = data.position[1] - data.startPosition[1];
 };
-var prevent = function(e, bubbles) {
+var prevent = function (e, bubbles) {
   e.cancelable && e.preventDefault();
   !bubbles && e.stopPropagation();
   return false;
@@ -22,8 +22,8 @@ var emit = (vnode, name, detail, bubbles, cancelable) => {
     new CustomEvent(name, {
       detail,
       bubbles,
-      cancelable
-    })
+      cancelable,
+    }),
   );
 };
 move.emit = emit;
@@ -34,7 +34,7 @@ var listenEvents = (el, events, handles = {}) => {
   }
 };
 move.listenEvents = listenEvents;
-move.mounted = function(el, binding, vnode) {
+move.mounted = function (el, binding, vnode) {
   if (vnode._isInitMove) {
     return;
   }
@@ -77,7 +77,7 @@ move.mounted = function(el, binding, vnode) {
     emit(vnode, "start", {
       el,
       binding,
-      vnode
+      vnode,
     });
     return prevent(e, bubbles);
   }
@@ -87,7 +87,7 @@ move.mounted = function(el, binding, vnode) {
     emit(vnode, "move", {
       el,
       binding,
-      vnode
+      vnode,
     });
     isMove = true;
     return prevent(e, bubbles);
@@ -103,7 +103,7 @@ move.mounted = function(el, binding, vnode) {
     emit(vnode, "end", {
       el,
       binding,
-      vnode
+      vnode,
     });
     emit(vnode, "cancel");
     return prevent(e, bubbles);
@@ -112,7 +112,7 @@ move.mounted = function(el, binding, vnode) {
   el.addEventListener("mousedown", _start);
 };
 move.bind = move.mounted;
-move.install = function(Vue) {
+move.install = function (Vue) {
   Vue.directive("move", move);
 };
 export default move;

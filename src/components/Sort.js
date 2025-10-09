@@ -9,7 +9,7 @@ export default {
       types: ["♥", "♠", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
       number: 12,
-      n: 0
+      n: 0,
     };
   },
   methods: {
@@ -36,10 +36,10 @@ export default {
         to: to,
         card: card,
         sign: sign,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     },
-  
+
     // 处理撤销操作
     handleUndo(operation) {
       // 根据操作类型执行相应的撤销逻辑
@@ -51,7 +51,7 @@ export default {
           break;
       }
     },
-  
+
     // 重写clickCard方法，使用GameStateManager记录操作
     clickCard(card, i) {
       if (!Number.isFinite(i)) {
@@ -98,7 +98,7 @@ export default {
           card: card,
           priority: 0,
           _in: 0,
-          able: true
+          able: true,
         };
       }
       for (let id = -4; id < 0; id++) {
@@ -197,7 +197,7 @@ export default {
         } else {
           this.gameManager.setLose();
         }
-        return
+        return;
       }
       let signs = [-1, -2, -3, -4];
       while (signs.length > 0) {
@@ -223,7 +223,7 @@ export default {
         } else {
           let road = [signs[0]];
           while (prior.length > 0) {
-            let p = prior.findIndex(t => t[1] == road[0]);
+            let p = prior.findIndex((t) => t[1] == road[0]);
             let index = road.indexOf(prior[p][0]);
             if (index >= 0) {
               temp[prior[p][1]]._in--;
@@ -259,7 +259,7 @@ export default {
           Math.abs(
             ((t.card - 4) >> 2) -
               (this.number - 1) +
-              ((t.index % this.number) + 1)
+              ((t.index % this.number) + 1),
           );
         if (t.priority > max || (t.priority == max && diff < min)) {
           this.next = [t.card - 4, t.index];
@@ -267,11 +267,11 @@ export default {
           max = t.priority;
         }
       }
-    }
+    },
   },
   watch: {
-    step () {
-      this.autoCalc()
+    step() {
+      this.autoCalc();
     },
-  }
+  },
 };

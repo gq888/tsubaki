@@ -13,8 +13,8 @@ export default {
       gameData: [],
       // 创建游戏状态管理器实例
       gameManager: new GameStateManager({
-        autoStepDelay: 1000 // 设置自动模式每步的延迟时间
-      })
+        autoStepDelay: 1000, // 设置自动模式每步的延迟时间
+      }),
     };
   },
 
@@ -50,7 +50,7 @@ export default {
         this.gameManager.loseflag ||
         this.gameManager.isAutoRunning
       );
-    }
+    },
   },
 
   created() {
@@ -135,7 +135,7 @@ export default {
         from: from,
         to: to,
         card: card,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     },
 
@@ -144,7 +144,7 @@ export default {
       this.gameManager.recordOperation({
         type: "flip",
         card: card,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     },
 
@@ -227,7 +227,7 @@ export default {
     async executeAIStep() {
       // 实现AI的决策逻辑
       // 返回一个Promise，表示操作是否完成
-      return new Promise(resolve => {
+      return new Promise((resolve) => {
         // 模拟AI思考和执行操作的延迟
         setTimeout(() => {
           // 这里实现AI的具体决策和操作逻辑
@@ -250,6 +250,6 @@ export default {
     isDraw() {
       // 判断是否平局的逻辑
       return false;
-    }
-  }
+    },
+  },
 };

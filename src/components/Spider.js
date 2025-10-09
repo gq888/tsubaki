@@ -15,15 +15,15 @@ export default {
       enterItem: -99,
       turn: 1,
       types: ["♥", "♠", "♦", "♣"],
-      number: 52
+      number: 52,
     };
   },
   directives: { move },
-  created: function() {
+  created: function () {
     this.setupGameStateListeners();
   },
   mounted() {
-    let enter = i => () => this.moveEnter(i);
+    let enter = (i) => () => this.moveEnter(i);
     if (!this.$refs.middleBox || !this.$refs.downBox) return;
     this.middleEnters = [];
     this.downEnters = [];
@@ -39,7 +39,7 @@ export default {
     }
   },
   beforeUnmount() {
-    this.gameManager.off('stateChange');
+    this.gameManager.off("stateChange");
     if (!this.$refs.middleBox || !this.$refs.downBox) return;
     for (let i = 0; i < 4; i++) {
       let middle = this.$refs.middleBox[i];
@@ -54,7 +54,7 @@ export default {
   methods: {
     setupGameStateListeners() {
       // 监听游戏状态变化
-      this.gameManager.on('stateChange', () => {
+      this.gameManager.on("stateChange", () => {
         this.$forceUpdate(); // 强制更新视图
       });
     },
@@ -210,35 +210,36 @@ export default {
     },
     async stepFn() {
       await this.gameManager.step(async () => {
-      let next = false;
-      for (let i = 6; i < 10; i++) {
-        this.record = [];
-        next = this.checkMove(this.cards[i][0]);
-        if (next) {
-          if (
-            !this.skipCheck &&
-            !checkDeadForeach(this.gameManager.history, [next[1], next[0]])
-          )
-            continue;
-          break;
+        let next = false;
+        for (let i = 6; i < 10; i++) {
+          this.record = [];
+          next = this.checkMove(this.cards[i][0]);
+          if (next) {
+            if (
+              !this.skipCheck &&
+              !checkDeadForeach(this.gameManager.history, [next[1], next[0]])
+            )
+              continue;
+            break;
+          }
         }
-      }
-      this.record = [];
-      !next &&
-        this.cards[1].length > 0 &&
-        (next = this.checkMove(this.cards[1][0]));
-      if (
-        !next ||
-        (!this.skipCheck && !checkDeadForeach(this.gameManager.history, [next[1], next[0]]))
-      ) {
-        return this.clickCard(0);
-      }
-      this.skipCheck = false;
-      this.sign = -99;
-      await this.clickCard(next[0] < 0 ? 1 : next[0]);
-      console.log(next, this.sign);
-      await wait(1000);
-      await this.clickCard(next[1]);
+        this.record = [];
+        !next &&
+          this.cards[1].length > 0 &&
+          (next = this.checkMove(this.cards[1][0]));
+        if (
+          !next ||
+          (!this.skipCheck &&
+            !checkDeadForeach(this.gameManager.history, [next[1], next[0]]))
+        ) {
+          return this.clickCard(0);
+        }
+        this.skipCheck = false;
+        this.sign = -99;
+        await this.clickCard(next[0] < 0 ? 1 : next[0]);
+        console.log(next, this.sign);
+        await wait(1000);
+        await this.clickCard(next[1]);
       });
     },
     async addCard() {
@@ -248,7 +249,10 @@ export default {
             this.gameManager.recordOperation([i, 1, 0, 1], true);
             this.cards[i].push(this.cards[1].splice(0, 1)[0]);
           } else if (this.cards[0].length > 0) {
-            this.gameManager.recordOperation([i, 0, this.cards[0].length - 1, 1], true);
+            this.gameManager.recordOperation(
+              [i, 0, this.cards[0].length - 1, 1],
+              true,
+            );
             this.cards[i].push(this.cards[0].splice(-1)[0]);
           }
         }
@@ -280,7 +284,10 @@ export default {
                 if (next) {
                   if (
                     !this.skipCheck &&
-                    !checkDeadForeach(this.gameManager.history, [next[1], next[0]])
+                    !checkDeadForeach(this.gameManager.history, [
+                      next[1],
+                      next[0],
+                    ])
                   ) {
                     next = false;
                     continue;
@@ -309,7 +316,7 @@ export default {
                     pos,
                     index + 1,
                     this.cards[pos].length - index - 1,
-                    i
+                    i,
                   ];
                   this.cards[k].push(...this.cards[pos].splice(index + 1));
                   this.gameManager.recordOperation(next, true);
@@ -361,9 +368,12 @@ export default {
       let len = this.cards[index].length;
       if (index == 0) {
         if (this.cards[0].length > 0) {
-          this.gameManager.recordOperation([1, 0, this.turn > 3 ? 1 : 4 - this.turn], true);
+          this.gameManager.recordOperation(
+            [1, 0, this.turn > 3 ? 1 : 4 - this.turn],
+            true,
+          );
           this.cards[1].unshift(
-            ...this.cards[0].splice(this.turn > 3 ? -1 : this.turn - 4)
+            ...this.cards[0].splice(this.turn > 3 ? -1 : this.turn - 4),
           );
         } else {
           for (let i = 0; i < this.gameManager.history.length; i++) {
@@ -386,17 +396,15 @@ export default {
         }
       } else if (index < 6) {
         if (this.sign == index - 2 + len * 4) {
-          this.gameManager.recordOperation([
-            index,
-            this.index,
-            this.cards[this.index].indexOf(this.sign),
-            1
-          ], true);
+          this.gameManager.recordOperation(
+            [index, this.index, this.cards[this.index].indexOf(this.sign), 1],
+            true,
+          );
           this.cards[index].push(
             this.cards[this.index].splice(
               this.cards[this.index].indexOf(this.sign),
-              1
-            )[0]
+              1,
+            )[0],
           );
           this.sign = -99;
         } else {
@@ -411,7 +419,7 @@ export default {
         if (
           this.sign >= 0 &&
           this.index >= 6 &&
-          (i = this.cards[this.index].findIndex(card => {
+          (i = this.cards[this.index].findIndex((card) => {
             return (
               card >> 2 < 13 &&
               card % 2 != top % 2 &&
@@ -419,13 +427,10 @@ export default {
             );
           })) >= 0
         ) {
-          this.gameManager.recordOperation([
-            index,
-            this.index,
-            i,
-            this.cards[this.index].length - i,
-            top
-          ], true);
+          this.gameManager.recordOperation(
+            [index, this.index, i, this.cards[this.index].length - i, top],
+            true,
+          );
           this.cards[index].push(...this.cards[this.index].splice(i));
           this.sign = -99;
         } else if (
@@ -435,18 +440,21 @@ export default {
           this.sign % 2 != top % 2 &&
           ((this.sign >> 2) + 1) % 13 == top >> 2
         ) {
-          this.gameManager.recordOperation([
-            index,
-            this.index,
-            this.cards[this.index].indexOf(this.sign),
-            1,
-            top
-          ], true);
+          this.gameManager.recordOperation(
+            [
+              index,
+              this.index,
+              this.cards[this.index].indexOf(this.sign),
+              1,
+              top,
+            ],
+            true,
+          );
           this.cards[index].push(
             this.cards[this.index].splice(
               this.cards[this.index].indexOf(this.sign),
-              1
-            )[0]
+              1,
+            )[0],
           );
           this.sign = -99;
         } else if (len > 0) {
@@ -464,7 +472,7 @@ export default {
         return;
       }
       let temp = this.gameManager.history.shift(),
-          add = false;
+        add = false;
       if (temp[1] == 0) {
         if (temp[0] == 1)
           return this.cards[0].push(...this.cards[1].splice(0, temp[2]));
@@ -491,7 +499,7 @@ export default {
       this.cards[temp[1]].splice(
         temp[2],
         0,
-        ...this.cards[temp[0]].splice(-temp[3])
+        ...this.cards[temp[0]].splice(-temp[3]),
       );
     },
     start(e) {
@@ -587,17 +595,18 @@ export default {
             data.offsetY + data.offsetTop + (j - index - 1) * 30 + "px";
         }
       }
-    }
+    },
   },
   computed: {
     // 保留Spider特有的计算属性
     height() {
       return (
-        Math.max(...this.cards.slice(-4).map(cards => cards.length)) * 30 + 480
+        Math.max(...this.cards.slice(-4).map((cards) => cards.length)) * 30 +
+        480
       );
     },
     cardWidth() {
       return this.$refs.container ? this.$refs.container.offsetWidth >> 2 : 500;
-    }
-  }
+    },
+  },
 };

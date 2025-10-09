@@ -26,7 +26,7 @@
           </ul>
         </div>
       </div>
-      <div class="row" style="margin-top: 10px;">
+      <div class="row" style="margin-top: 10px">
         <div>
           <ul class="cardsul reverse">
             <li v-for="item in arr2" :key="item.id" class="card">
@@ -46,13 +46,13 @@
           {
             label: 'HIT',
             action: 'hitBtn',
-            disabled: !hitflag
+            disabled: !hitflag,
           },
           {
             label: 'PASS',
             action: 'passBtn',
-            disabled: !hitflag
-          }
+            disabled: !hitflag,
+          },
         ]"
         @hitBtn="hit(cardsChg, arr2)"
         @passBtn="pass"

@@ -8,13 +8,13 @@
       {
         text: 'RESTART',
         callback: goon,
-        disabled: false
+        disabled: false,
       },
       {
         text: 'UNDO',
         callback: undo,
-        disabled: undoDisabled
-      }
+        disabled: undoDisabled,
+      },
     ]"
     @undo="undo"
     @goon="goon"
@@ -27,13 +27,19 @@
           <ul
             class="cardsul flex-col"
             :style="{ height: 150 * (number + 1) + 'px' }"
-            style="padding-left: 0; width: 100%; max-width: 500px; margin: 0 auto; position: static"
+            style="
+              padding-left: 0;
+              width: 100%;
+              max-width: 500px;
+              margin: 0 auto;
+              position: static;
+            "
           >
             <div
               v-for="(item, i) in cards1"
               :key="i"
               class="card m-0"
-              style="width:25%; height: 150px"
+              style="width: 25%; height: 150px"
             >
               <img
                 :src="'./static/' + item + '.jpg'"

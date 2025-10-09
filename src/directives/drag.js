@@ -9,8 +9,11 @@ var dragHandle = ({ detail: { el, vnode } }) => {
   vnode._moveData.offsetHeight = el.offsetHeight || 0;
 };
 var dragMoveXHandle = ({ detail: { el, binding, vnode } }) => {
-  var { left, right, width = vnode._moveData.offsetWidth } =
-    binding.value || {};
+  var {
+    left,
+    right,
+    width = vnode._moveData.offsetWidth,
+  } = binding.value || {};
   let l = vnode._moveData.offsetLeft + vnode._moveData.offsetX;
   if (l <= left) {
     l = left;
@@ -22,8 +25,11 @@ var dragMoveXHandle = ({ detail: { el, binding, vnode } }) => {
   el.style.left = l + "px";
 };
 var dragMoveYHandle = ({ detail: { el, binding, vnode } }) => {
-  var { top, bottom, height = vnode._moveData.offsetHeight } =
-    binding.value || {};
+  var {
+    top,
+    bottom,
+    height = vnode._moveData.offsetHeight,
+  } = binding.value || {};
   let t = vnode._moveData.offsetTop + vnode._moveData.offsetY;
   if (t <= top) {
     t = top;
@@ -34,7 +40,7 @@ var dragMoveYHandle = ({ detail: { el, binding, vnode } }) => {
   }
   el.style.top = t + "px";
 };
-drag.mounted = function(el, binding, vnode) {
+drag.mounted = function (el, binding, vnode) {
   move.mounted(el, binding, vnode);
   var { dragX, dragY, dragL, dragD } = binding.modifiers;
   if (!dragX && !dragY) {
@@ -45,7 +51,7 @@ drag.mounted = function(el, binding, vnode) {
     doublelong.mounted(el, binding, vnode);
   }
   const dragMode = dragL ? (dragD ? "doublelong" : "long") : "start";
-  var cancel = function() {
+  var cancel = function () {
     if (dragX) {
       el.removeEventListener("move", dragMoveXHandle);
     }
@@ -54,7 +60,7 @@ drag.mounted = function(el, binding, vnode) {
     }
     el.removeEventListener("cancel", cancel);
   };
-  var _dragHandle = function() {
+  var _dragHandle = function () {
     if (dragX) {
       el.addEventListener("move", dragMoveXHandle);
     }
@@ -67,7 +73,7 @@ drag.mounted = function(el, binding, vnode) {
   el.addEventListener(dragMode, _dragHandle);
 };
 drag.bind = drag.mounted;
-drag.install = function(Vue) {
+drag.install = function (Vue) {
   Vue.directive("drag", drag);
 };
 export default drag;

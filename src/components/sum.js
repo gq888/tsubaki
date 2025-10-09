@@ -12,7 +12,7 @@ export default {
       types: ["♠", "♥", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
       arr1: [],
-      arr2: []
+      arr2: [],
     };
   },
   component: [],
@@ -92,16 +92,16 @@ export default {
       } else if (this.score1 > this.score2) {
         this.gameManager.setLose();
       }
-    }
+    },
   },
   computed: {
     // 监听点数
-    score1: function() {
+    score1: function () {
       return this.getScore(this.arr1, this.score);
     },
-    score2: function() {
+    score2: function () {
       return this.getScore(this.arr2, this.score);
-    }
+    },
   },
   // watch属性现在由sum.vue重写
   watch: {
@@ -114,6 +114,6 @@ export default {
       if (this.score1 === 0) {
         this.gameManager.setWin();
       }
-    }
-  }
+    },
+  },
 };

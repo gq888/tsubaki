@@ -25,43 +25,43 @@ export default {
     // 使用数组定义按钮配置，优先级高于单独的show属性
     buttons: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
 
     // 以下属性保持向后兼容性
     showUndo: {
       type: Boolean,
-      default: true
+      default: true,
     },
     showRestart: {
       type: Boolean,
-      default: true
+      default: true,
     },
     showStep: {
       type: Boolean,
-      default: true
+      default: true,
     },
     showAuto: {
       type: Boolean,
-      default: true
+      default: true,
     },
 
     undoDisabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     restartDisabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     stepDisabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     autoDisabled: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   computed: {
     // 根据buttons数组或单独的show属性生成要显示的按钮列表
@@ -78,7 +78,7 @@ export default {
         defaultButtons.push({
           label: "UNDO",
           action: "undo",
-          disabled: this.undoDisabled
+          disabled: this.undoDisabled,
         });
       }
 
@@ -86,7 +86,7 @@ export default {
         defaultButtons.push({
           label: "RESTART",
           action: "goon",
-          disabled: this.restartDisabled
+          disabled: this.restartDisabled,
         });
       }
 
@@ -94,7 +94,7 @@ export default {
         defaultButtons.push({
           label: "STEP",
           action: "step",
-          disabled: this.stepDisabled
+          disabled: this.stepDisabled,
         });
       }
 
@@ -102,12 +102,12 @@ export default {
         defaultButtons.push({
           label: "AUTO",
           action: "auto",
-          disabled: this.autoDisabled
+          disabled: this.autoDisabled,
         });
       }
 
       return defaultButtons;
-    }
+    },
   },
   methods: {
     // 统一的按钮点击事件处理
@@ -127,8 +127,8 @@ export default {
     },
     pass() {
       this.$emit("auto");
-    }
-  }
+    },
+  },
 };
 </script>
 

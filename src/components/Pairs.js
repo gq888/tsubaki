@@ -13,7 +13,7 @@ export default {
       time: 0,
       timer: 0,
       number: 48,
-      n: 0
+      n: 0,
     };
   },
   methods: {
@@ -58,7 +58,7 @@ export default {
       this.sign = -1;
       this.sign2 = -1;
       this.gameManager.hitflag = true;
-  
+
       // 检查游戏是否结束
       let gameOver = true;
       for (let i = 0; i < this.number; i++) {
@@ -67,7 +67,7 @@ export default {
           break;
         }
       }
-  
+
       if (gameOver) {
         this.gameManager.setWin();
         clearInterval(this.timer);
@@ -102,6 +102,6 @@ export default {
           return await this.clickCard(c);
         }
       }
-    }
-  }
+    },
+  },
 };

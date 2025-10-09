@@ -1,7 +1,7 @@
 <template>
   <div class="Sum" :style="containerStyle">
     <h1>{{ title }}</h1>
-    
+
     <!-- 顶部控制按钮插槽 -->
     <slot name="top-controls">
       <GameControls
@@ -86,122 +86,122 @@
 </template>
 
 <script>
-import GameControls from './GameControls.vue'
-import GameResultModal from './GameResultModal.vue'
+import GameControls from "./GameControls.vue";
+import GameResultModal from "./GameResultModal.vue";
 
 export default {
-  name: 'GameLayout',
+  name: "GameLayout",
   components: {
     GameControls,
-    GameResultModal
+    GameResultModal,
   },
   props: {
     // 基础属性
     title: {
       type: String,
-      default: ''
+      default: "",
     },
     containerStyle: {
       type: Object,
-      default: () => ({ width: '100%' })
+      default: () => ({ width: "100%" }),
     },
-    
+
     // 控制按钮相关
     showTopControls: {
       type: Boolean,
-      default: false
+      default: false,
     },
     showBottomControls: {
       type: Boolean,
-      default: false
+      default: false,
     },
     gameControlsConfig: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
-    
+
     // 游戏状态标志
     winflag: {
       type: Boolean,
-      default: false
+      default: false,
     },
     loseflag: {
       type: Boolean,
-      default: false
+      default: false,
     },
     drawflag: {
       type: Boolean,
-      default: false
+      default: false,
     },
-    
+
     // Win Modal 配置
     winTitle: String,
     winSubtitle: String,
     winButtons: Array,
     winModalStyle: Object,
     winCustomClass: String,
-    
+
     // Lose Modal 配置
     loseTitle: String,
     loseSubtitle: String,
     loseButtons: Array,
     loseModalStyle: Object,
     loseCustomClass: String,
-    
+
     // Draw Modal 配置
     drawTitle: String,
     drawSubtitle: String,
     drawButtons: Array,
     drawModalStyle: Object,
     drawCustomClass: String,
-    
+
     // 其他游戏相关属性
     step: {
       type: Number,
-      default: 0
-    }
+      default: 0,
+    },
   },
   computed: {
     defaultWinButtons() {
       return [
         {
-          text: 'GO ON',
-          callback: () => this.$emit('goon'),
-          disabled: false
-        }
-      ]
+          text: "GO ON",
+          callback: () => this.$emit("goon"),
+          disabled: false,
+        },
+      ];
     },
     defaultLoseButtons() {
       return [
         {
-          text: 'RESTART',
-          callback: () => this.$emit('goon'),
-          disabled: false
+          text: "RESTART",
+          callback: () => this.$emit("goon"),
+          disabled: false,
         },
         {
-          text: 'UNDO',
-          callback: () => this.$emit('undo'),
-          disabled: this.step <= 0
-        }
-      ]
+          text: "UNDO",
+          callback: () => this.$emit("undo"),
+          disabled: this.step <= 0,
+        },
+      ];
     },
     defaultDrawButtons() {
       return [
         {
-          text: 'RESTART',
-          callback: () => this.$emit('goon'),
-          disabled: false
+          text: "RESTART",
+          callback: () => this.$emit("goon"),
+          disabled: false,
         },
         {
-          text: 'UNDO',
-          callback: () => this.$emit('undo'),
-          disabled: this.step <= 0
-        }
-      ]
-    }
+          text: "UNDO",
+          callback: () => this.$emit("undo"),
+          disabled: this.step <= 0,
+        },
+      ];
+    },
   },
-  emits: ['undo', 'goon', 'step', 'auto']
-}
+  emits: ["undo", "goon", "step", "auto"],
+};
 </script>
 
 <style scoped>

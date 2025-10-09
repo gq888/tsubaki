@@ -1,7 +1,7 @@
 import move from "./move.js";
 var doublelong = {};
 var emit = move.emit;
-doublelong.mounted = function(el, binding, vnode) {
+doublelong.mounted = function (el, binding, vnode) {
   if (vnode._isInitDoubleLong) {
     return;
   }
@@ -10,7 +10,7 @@ doublelong.mounted = function(el, binding, vnode) {
   move.listenEvents(
     el,
     ["single", "double", "long", "doublelong"],
-    binding.value
+    binding.value,
   );
   var { cancel = false } = binding.modifiers;
   var handle = false;
@@ -29,7 +29,7 @@ doublelong.mounted = function(el, binding, vnode) {
       emit(vnode, isLong ? (isDouble ? "doublelong" : "long") : "single", {
         el,
         binding,
-        vnode
+        vnode,
       });
       isDouble = false;
       cancel && emit(vnode, "cancel");
@@ -63,14 +63,14 @@ doublelong.mounted = function(el, binding, vnode) {
       emit(vnode, "double", {
         el,
         binding,
-        vnode
+        vnode,
       });
     }
   }
   el.addEventListener("start", start);
 };
 doublelong.bind = doublelong.mounted;
-doublelong.install = function(Vue) {
+doublelong.install = function (Vue) {
   Vue.directive("doublelong", doublelong);
 };
 export default doublelong;

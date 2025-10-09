@@ -28,7 +28,7 @@ let fns = [
   (a, b) => a + b,
   (a, b) => a - b,
   (a, b) => a * b,
-  (a, b) => a / b
+  (a, b) => a / b,
 ];
 
 function calc(a) {
@@ -50,7 +50,7 @@ function first(i) {
 export default {
   name: "point24",
   components: {
-    point24card
+    point24card,
   },
   data() {
     return {
@@ -60,7 +60,7 @@ export default {
       cards2: [0, 0, 0],
       signs: ["UP", "+", "-", "X", "/"],
       arr: [],
-      number: 52
+      number: 52,
     };
   },
   // 初始化
@@ -88,10 +88,10 @@ export default {
       this.gameManager.recordOperation({
         type: type,
         ...data,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     },
-  
+
     // 处理撤销操作
     handleUndo(operation) {
       // 根据操作类型执行相应的撤销逻辑
@@ -99,11 +99,18 @@ export default {
         case "combine":
           // 撤销组合操作
           this.cards2.splice(this.step, 1);
-          this.arr.splice(this.arr.findIndex(a => this.first(a) == this.first(operation.combined)), 1, operation.left, operation.right);
+          this.arr.splice(
+            this.arr.findIndex(
+              (a) => this.first(a) == this.first(operation.combined),
+            ),
+            1,
+            operation.left,
+            operation.right,
+          );
           break;
       }
     },
-  
+
     // 重写clickCard方法，使用GameStateManager记录操作
     clickCard(card, i) {
       if (i == 0) {
@@ -119,7 +126,7 @@ export default {
         this.recordOperation("combine", {
           left: left,
           right: right,
-          combined: combined
+          combined: combined,
         });
       } else {
         let temp = this.arr[0];
@@ -127,7 +134,7 @@ export default {
         this.arr.splice(i, 1, temp);
       }
     },
-  
+
     // 重写stepFn方法
     async stepFn() {
       await this.gameManager.step(async () => {
@@ -174,10 +181,10 @@ export default {
         l
           ? temp02
           : r
-          ? temp[0][0]
-          : first(temp00) == first(this.cards2[0])
-          ? temp02
-          : temp00
+            ? temp[0][0]
+            : first(temp00) == first(this.cards2[0])
+              ? temp02
+              : temp00,
       );
       if (step >= 1) {
         return;
@@ -191,17 +198,17 @@ export default {
             ? temp02[2]
             : temp02[0]
           : r
-          ? Number.isFinite(temp00[0])
-            ? temp00[2]
-            : temp00[0]
-          : temp00
+            ? Number.isFinite(temp00[0])
+              ? temp00[2]
+              : temp00[0]
+            : temp00,
       );
       console.log(this.cards2);
-    }
+    },
   },
   watch: {
     step() {
       this.autoCalc();
-    }
-  }
+    },
+  },
 };
