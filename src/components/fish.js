@@ -1,4 +1,7 @@
-import message from "./message.vue";
+// 条件编译：在Node.js环境中使用模拟组件
+const message = typeof window === 'undefined' 
+  ? { name: 'message', template: '<div>Mock message</div>' }
+  : (await import("./message.vue")).default;
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
 const Fish = {

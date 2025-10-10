@@ -1,6 +1,16 @@
-import GameResultModal from "../components/GameResultModal.vue";
-import GameControls from "../components/GameControls.vue";
-import GameLayout from "../components/GameLayout.vue";
+// 条件编译：在Node.js环境中使用模拟组件
+const GameResultModal = typeof window === 'undefined' 
+  ? { name: 'GameResultModal', template: '<div>Mock GameResultModal</div>' }
+  : (await import("../components/GameResultModal.vue")).default;
+
+const GameControls = typeof window === 'undefined'
+  ? { name: 'GameControls', template: '<div>Mock GameControls</div>' }
+  : (await import("../components/GameControls.vue")).default;
+
+const GameLayout = typeof window === 'undefined'
+  ? { name: 'GameLayout', template: '<div><slot></slot></div>' }
+  : (await import("../components/GameLayout.vue")).default;
+
 import GameStateManager from "./gameStateManager.js";
 
 /**
@@ -134,8 +144,8 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       },
 
       // 统一的自动模式方法
-      pass() {
-        this.gameManager.startAuto(async () => {
+      async pass() {
+        await this.gameManager.startAuto(async () => {
           if (!this.winflag && !this.loseflag && !this.drawflag) {
             await this.stepFn();
           }

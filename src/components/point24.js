@@ -1,5 +1,8 @@
 import { shuffleCards, timeout } from "../utils/help.js";
-import point24card from "./point24card.vue";
+// 条件编译：在Node.js环境中使用模拟组件
+const point24card = typeof window === 'undefined' 
+  ? { name: 'point24card', template: '<div>Mock point24card</div>' }
+  : (await import("./point24card.vue")).default;
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
 var opts = [1, 3, 2, 2, 4, 4];
