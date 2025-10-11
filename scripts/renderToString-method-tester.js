@@ -147,40 +147,38 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         }
         
         console.log('=== 方法执行完成 ===');
-      },
-      // 修改模板为纯JSON输出
-      template: `
-        <pre>{{ JSON.stringify({
-          methodName: '${methodName}',
-          args: ${JSON.stringify(args)},
-          result: _testCapture.result,
-          error: _testCapture.error,
-          before: _testCapture.before,
-          after: _testCapture.after,
+        
+        // 直接打印测试结果，而不是通过模板
+        const testResult = {
+          methodName: methodName,
+          args: args,
+          result: this._testCapture.result,
+          error: this._testCapture.error,
+          before: this._testCapture.before,
+          after: this._testCapture.after,
           gameFlags: {
-            winflag: _testCapture.after ? _testCapture.after.winflag : false,
-            loseflag: _testCapture.after ? _testCapture.after.loseflag : false,
-            drawflag: _testCapture.after ? _testCapture.after.drawflag : false
+            winflag: this._testCapture.after ? this._testCapture.after.winflag : false,
+            loseflag: this._testCapture.after ? this._testCapture.after.loseflag : false,
+            drawflag: this._testCapture.after ? this._testCapture.after.drawflag : false
           },
-          testSuccess: (_testCapture.after && (_testCapture.after.winflag || _testCapture.after.loseflag || _testCapture.after.drawflag))
-        }, null, 2) }}</pre>
-      `
+          testSuccess: (this._testCapture.after && (this._testCapture.after.winflag || this._testCapture.after.loseflag || this._testCapture.after.drawflag))
+        };
+        
+        console.log('\n=== 测试结果 ===');
+        console.log(JSON.stringify(testResult, null, 2));
+      },
+      // 简单的模板，不输出任何内容
+      template: '<div>Test completed</div>'
     };
     
     // 创建SSR应用并渲染
     const app = createSSRApp(modifiedComponent);
     const html = await renderToString(app);
     
-    // 从HTML中提取状态信息（这里简化处理，实际可以通过DOM解析）
+    // 不需要返回详细信息，因为结果已经在created生命周期中打印了
     return {
       success: true,
-      html,
-      htmlLength: html.length,
-      methodName,
-      args,
-      // 注意：这里我们依赖created中的副作用来捕获状态
-      // 实际的状态信息已经嵌入在HTML中
-      note: "状态信息已嵌入在渲染的HTML中，通过created生命周期捕获"
+      note: "测试结果已通过console.log输出"
     };
     
   } catch (error) {
@@ -217,9 +215,8 @@ async function main() {
     }
   });
   
-  const result = await executeMethodWithRenderToString(componentPath, methodName, {}, parsedArgs);
-  console.log('\n=== 测试结果 ===');
-  console.log(JSON.stringify(result, null, 2));
+  await executeMethodWithRenderToString(componentPath, methodName, {}, parsedArgs);
+  process.exit(0);
 }
 
 // 直接调用main函数
