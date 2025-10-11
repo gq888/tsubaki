@@ -8,7 +8,7 @@ ul {
 }
 li {
   display: inline-block;
-  margin: 0 10px;
+  margin: 0 0.625rem;
 }
 
 * {
@@ -28,7 +28,7 @@ li {
 }
 
 .row {
-  /* height: 300px; */
+  /* height: 18.75rem; */
   background-color: #3c4245;
 }
 .bg-fff {
@@ -40,7 +40,7 @@ li {
   align-items: center;
 }
 .mt-30 {
-  margin-top: 30px;
+  margin-top: 1.875rem;
 }
 .m-0 {
   margin: 0 !important;
@@ -60,24 +60,24 @@ li {
   transform: rotate(90deg);
 }
 h1 {
-  padding-top: 30px;
-  margin: 30px  auto;
+  padding-top: 1.875rem;
+  margin: 1.875rem  auto;
   width: 100%;
 }
 span {
-  margin-top: 10px;
+  margin-top: 0.625rem;
   /* float: left; */
-  font-size: 40px;
-  margin-left: 20px;
+  font-size: 2.5rem;
+  margin-left: 1.25rem;
 }
 input {
-  margin: 20px auto;
+  margin: 1.25rem auto;
   color: #3c4245;
-  padding: 0 10px;
+  padding: 0 0.625rem;
 }
 
 .cardsul {
-  padding-left: 50px;
+  padding-left: 3.125rem;
   display: flex;
   position: relative;
   flex-wrap: wrap;
@@ -87,8 +87,8 @@ input {
 }
 .cards {
   position: relative;
-  width: 100px;
-  height: 300px;
+  width: 6.25rem;
+  height: 18.75rem;
 }
 .abso {
   position: absolute;
@@ -101,18 +101,18 @@ input {
 }
 .card {
   /* float: left; */
-  margin: 10px 10px ;
-  margin-top: 30px;
-  width: 100px;
-  height: 150px;
-  max-width: 100px;
-  max-height: 150px;
-  line-height: 150px;
-  font-size: 50px;
+  margin: 0.625rem 0.625rem ;
+  margin-top: 1.875rem;
+  width: 6.25rem;
+  height: 9.375rem;
+  max-width: 6.25rem;
+  max-height: 9.375rem;
+  line-height: 9.375rem;
+  font-size: 3.125rem;
   background-color: #719192;
 }
 .card.radius {
-  border-radius: 5px;
+  border-radius: 0.3125rem;
   overflow: hidden;
 }
 .card img {
@@ -121,22 +121,22 @@ input {
 }
 .scrore {
   /* float: right; */
-  margin: 10px 10px;
-  width: 100px;
-  /* height: 150px; */
-  line-height: 70px;
-  font-size: 50px;
+  margin: 0.625rem 0.625rem;
+  width: 6.25rem;
+  /* height: 9.375rem; */
+  line-height: 4.375rem;
+  font-size: 3.125rem;
   font-weight: 700;
   color: #dfcdc3;
 }
 .sign {
-  margin: 5px 0 0 5px;
-  width: 30px;
-  height: 30px;
-  font-size: 20px;
-  border-radius: 5px;
+  margin: 0.3125rem 0 0 0.3125rem;
+  width: 1.875rem;
+  height: 1.875rem;
+  font-size: 1.25rem;
+  border-radius: 0.3125rem;
   color: #dfcdc3;
-  border: 1px solid #dfcdc3;
+  border: 0.0625rem solid #dfcdc3;
 }
 .choose {
   color: #719192;
@@ -144,9 +144,9 @@ input {
 }
 .diff {
   text-align: center;
-  width: 60px;
-  font-size: 20px;
-  line-height: 20px;
+  width: 3.75rem;
+  font-size: 1.25rem;
+  line-height: 1.25rem;
   margin: 0;
 }
 .lose {
@@ -165,31 +165,31 @@ input {
 
 .lose h1 {
   /* position: absolute;
-  top: 200px; */
-  font-size: 100px;
+  top: 12.5rem; */
+  font-size: 6.25rem;
 
 }
 
 .lose h1.small {
   /* position: absolute;
-  top: 200px; */
-  font-size: 50px;
+  top: 12.5rem; */
+  font-size: 3.125rem;
 
 }
 
 /* .draw h1 {
   position: absolute;
-  top: 100px;
-  font-size: 200px;
+  top: 6.25rem;
+  font-size: 12.5rem;
 }
 .lose input {
   position: absolute;
-  bottom: 100px;
-  margin-left: -60px;
+  bottom: 6.25rem;
+  margin-left: -3.75rem;
 
 } */
 .avatar {
-  width: 50px;
+  width: 3.125rem;
 }
   .v-enter,
   .v-leave-to {

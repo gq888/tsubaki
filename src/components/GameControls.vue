@@ -140,18 +140,18 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px 0;
+  padding: 0.625rem 0;
 }
 
 /* 覆盖原有input样式以确保按钮一致性 */
 .btns input {
-  margin: 20px 0;
+  margin: 1.25rem 0;
   color: #3c4245;
-  padding: 5px 15px;
-  border: 1px solid #dfcdc3;
+  padding: 0.3125rem 0.9375rem;
+  border: 0.0625rem solid #dfcdc3;
   background-color: #dfcdc3;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .btns input:disabled {

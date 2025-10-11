@@ -9,12 +9,12 @@
     <template #game-content>
       <div
         class="row flex-row"
-        style="padding-top: 10px; justify-content: space-around"
+        style="padding-top: 0.625rem; justify-content: space-around"
       >
         <div class="flex-col center rela" style="max-width: 25%">
           <message
             class="abso"
-            style="top: 70px; left: 0px; width: 100%"
+            style="top: 4.375rem; left: 0; width: 100%"
             show1="1"
             >1</message
           >
@@ -25,7 +25,7 @@
           <span class="scrore">{{ score1 }}</span>
         </div>
         <div class="flex-col center rela" style="max-width: 25%">
-          <message class="abso" style="top: 70px; left: 0px; width: 100%"
+          <message class="abso" style="top: 4.375rem; left: 0; width: 100%"
             >asfasfasdfasfdasdfasdfas</message
           >
           <img class="avatar" :src="'./static/avatar/31.png'" />
@@ -35,7 +35,7 @@
           <span class="scrore">{{ score2 }}</span>
         </div>
         <div class="flex-col center rela" style="max-width: 25%">
-          <message class="abso" style="top: 70px; left: 0px; width: 100%"
+          <message class="abso" style="top: 4.375rem; left: 0; width: 100%"
             >1</message
           >
           <img class="avatar" :src="'./static/avatar/29.png'" />
@@ -45,7 +45,7 @@
           <span class="scrore">{{ score3 }}</span>
         </div>
         <div class="flex-col center rela" style="max-width: 25%">
-          <message class="abso" style="top: 70px; left: 0px; width: 100%"
+          <message class="abso" style="top: 4.375rem; left: 0; width: 100%"
             >1</message
           >
           <img class="avatar" :src="'./static/avatar/30.png'" />
@@ -59,7 +59,7 @@
         <div>
           <ul
             class="cardsul"
-            style="padding-left: 0; margin: 0; min-height: 150px"
+            style="padding-left: 0; margin: 0; min-height: 9.375rem"
           >
             <li
               v-for="item in arr"

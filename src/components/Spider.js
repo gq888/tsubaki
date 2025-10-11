@@ -581,8 +581,8 @@ const Spider = {
       } else {
         this.enterItem = -99;
       }
-      e.detail.el.style.left = left + "px";
-      e.detail.el.style.top = top + "px";
+      e.detail.el.style.left = left / 16 + "rem";
+      e.detail.el.style.top = top / 16 + "rem";
       if (this.dragItem >= 6) {
         let index = this.cards[this.dragItem].indexOf(this.dragCard);
         let j = 0;
@@ -591,9 +591,9 @@ const Spider = {
           if (!res || ++j <= index) {
             continue;
           }
-          down.style.left = data.offsetX + data.offsetLeft + "px";
+          down.style.left = (data.offsetX + data.offsetLeft) / 16 + "rem";
           down.style.top =
-            data.offsetY + data.offsetTop + (j - index - 1) * 30 + "px";
+            (data.offsetY + data.offsetTop + (j - index - 1) * 30) / 16 + "rem";
         }
       }
     },

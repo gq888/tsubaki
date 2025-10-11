@@ -22,7 +22,7 @@ var dragMoveXHandle = ({ detail: { el, binding, vnode } }) => {
     l = right - width;
     emit(vnode, "dragtoright", undefined, true);
   }
-  el.style.left = l + "px";
+  el.style.left = l / 16 + "rem";
 };
 var dragMoveYHandle = ({ detail: { el, binding, vnode } }) => {
   var {
@@ -38,7 +38,7 @@ var dragMoveYHandle = ({ detail: { el, binding, vnode } }) => {
     t = bottom - height;
     emit(vnode, "dragtobottom", undefined, true);
   }
-  el.style.top = t + "px";
+  el.style.top = t / 16 + "rem";
 };
 drag.mounted = function (el, binding, vnode) {
   move.mounted(el, binding, vnode);

@@ -14,12 +14,12 @@
           <ul
             ref="container"
             class="cardsul rela center"
-            style="padding-left: 0; max-width: 500px; margin: auto"
-            :style="{ height: height + 'px' }"
+            style="padding-left: 0; max-width: 31.25rem; margin: auto"
+            :style="{ height: height / 16 + 'rem' }"
           >
             <li
               class="m-0 static"
-              style="max-width: 100px; width: 25%; height: 150px; z-index: 0"
+              style="max-width: 6.25rem; width: 25%; height: 9.375rem; z-index: 0"
               @click="hitflag && lockflag && clickCard(0)"
             >
               <img
@@ -36,7 +36,7 @@
             </li>
             <li
               class="cards m-0 static"
-              style="width: 50%; height: 150px"
+              style="width: 50%; height: 9.375rem"
               :style="{ zIndex: dragItem == 1 ? 10 : 0 }"
               :class="{ drag: dragItem == 1 }"
             >
@@ -67,7 +67,7 @@
             </li>
             <li
               class="m-0 center"
-              style="width: 25%; max-width: 100px; height: 150px"
+              style="width: 25%; max-width: 6.25rem; height: 9.375rem"
             >
               <span
                 class="m-0"
@@ -75,12 +75,12 @@
                 >{{ turn }}</span
               ><span class="m-0">/3</span>
             </li>
-            <li style="height: 30px; width: 100%"></li>
+            <li style="height: 1.875rem; width: 100%"></li>
             <li
               v-for="i in 4"
               :key="i"
               class="cards m-0 static center"
-              style="width: 25%; height: 150px"
+              style="width: 25%; height: 9.375rem"
               :class="{ drag: dragItem == i + 1 }"
               ref="middleBox"
               :style="{ zIndex: dragItem == i + 1 ? 10 : 1 }"
@@ -91,7 +91,7 @@
             >
               <div
                 class="card m-0 abso"
-                style="top: 180px; width: 25%"
+                style="top: 11.25rem; width: 25%"
                 @click="hitflag && lockflag && clickCard(i + 1)"
                 :style="{
                   zIndex: dragItem == i + 1 ? 10 : 1,
@@ -104,7 +104,7 @@
                 v-for="item in cards[i + 1]"
                 :key="item + (fresh[i + 1] * 3 + 2) * number"
                 class="card m-0 abso"
-                style="top: 180px; width: 25%"
+                style="top: 11.25rem; width: 25%"
                 v-move="{ start, end, move }"
                 :style="{ left: (i - 1) * 25 + '%' }"
                 :class="{ drag: dragItem == i + 1 }"
@@ -123,10 +123,10 @@
                 :style="{ left: (i - 1) * 25 + '%' }"
                 class="card m-0 abso"
                 v-show="dragCard >= 0 && enterItem == i + 1"
-                style="width: 25%; height: 150px; top: 180px"
+                style="width: 25%; height: 9.375rem; top: 11.25rem"
               />
             </li>
-            <li style="height: 30px; width: 100%"></li>
+            <li style="height: 1.875rem; width: 100%"></li>
             <li
               v-for="i in 4"
               :key="i + 4"
@@ -134,7 +134,7 @@
               style="width: 25%"
               :class="{ drag: dragItem == i + 5 }"
               :style="{
-                height: cards[i + 5].length * 30 + 120 + 'px',
+                height: (cards[i + 5].length * 30 + 120) / 16 + 'rem',
                 zIndex: dragItem == i + 5 ? 10 : 1,
               }"
               ref="downBox"
@@ -147,8 +147,8 @@
                 class="m-0 card abso"
                 v-for="(item, j) in cards[i + 5]"
                 :key="item + (fresh[i + 5] * 3 + 3) * number"
-                style="width: 25%; height: 150px"
-                :style="{ top: j * 30 + 360 + 'px', left: (i - 1) * 25 + '%' }"
+                style="width: 25%; height: 9.375rem"
+                :style="{ top: (j * 30 + 360) / 16 + 'rem', left: (i - 1) * 25 + '%' }"
                 :class="{
                   drag: dragItem == i + 5,
                   opa0: dragItem == i + 5 && dragCard >= item && enterItem >= 0,
@@ -167,10 +167,10 @@
                 :src="'./static/' + item + '.jpg'"
                 :style="{
                   top:
-                    cards[i + 5].length * 30 +
+                    (cards[i + 5].length * 30 +
                     (j - cards[dragItem].indexOf(dragCard)) * 30 +
-                    360 +
-                    'px',
+                    360) / 16 +
+                    'rem',
                   left: (i - 1) * 25 + '%',
                 }"
                 class="card m-0 abso"
@@ -178,7 +178,7 @@
                   enterItem == i + 5 &&
                   ((dragItem >= 6 && dragCard >= item) || dragCard == item)
                 "
-                style="width: 25%; height: 150px"
+                style="width: 25%; height: 9.375rem"
               />
             </li>
           </ul>

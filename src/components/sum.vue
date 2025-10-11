@@ -26,7 +26,7 @@
           </ul>
         </div>
       </div>
-      <div class="row" style="margin-top: 10px">
+      <div class="row" style="margin-top: 0.625rem">
         <div>
           <ul class="cardsul reverse">
             <li v-for="item in arr2" :key="item.id" class="card">

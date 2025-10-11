@@ -16,8 +16,8 @@
             style="
               padding-left: 0;
               width: 100%;
-              height: 750px;
-              max-width: 500px;
+              height: 46.875rem;
+              max-width: 31.25rem;
               margin: auto;
             "
           >
@@ -27,7 +27,7 @@
               v-show="!done(item)"
               class="card abso"
               :style="map[i]"
-              style="width: 20%; height: 150px; margin: 0"
+              style="width: 20%; height: 9.375rem; margin: 0"
             >
               <img
                 :src="'./static/' + (check(i) ? item : 'bg') + '.jpg'"

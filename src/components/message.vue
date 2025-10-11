@@ -25,20 +25,20 @@ export default {
 <style>
 @import url("./sum.css");
 .corner {
-  width: 10px;
-  height: 10px;
+  width: 0.625rem;
+  height: 0.625rem;
 }
 .bubble2 {
-  width: 6px;
-  height: 6px;
-  top: -4px;
-  left: 1px;
+  width: 0.375rem;
+  height: 0.375rem;
+  top: -0.25rem;
+  left: 0.0625rem;
 }
 .bubble3 {
-  width: 4px;
-  height: 4px;
-  top: -9px;
-  left: 1px;
+  width: 0.25rem;
+  height: 0.25rem;
+  top: -0.5625rem;
+  left: 0.0625rem;
 }
 .arrow .bubble {
   display: none;
@@ -48,18 +48,18 @@ export default {
 }
 .bubble {
   border-radius: 100%;
-  margin-top: -1px;
+  margin-top: -0.0625rem;
 }
 .direction1 {
-  margin-left: -5px;
-  top: -5px;
+  margin-left: -0.3125rem;
+  top: -0.3125rem;
   left: 50%;
 }
 .message {
-  /* border: 1px solid #2C3E50; */
-  border-radius: 5px;
-  padding: 5px;
-  font-size: 16px;
+  /* border: 0.0625rem solid #2C3E50; */
+  border-radius: 0.3125rem;
+  padding: 0.3125rem;
+  font-size: 1rem;
   color: black;
   /* width: 100%; */
   opacity: 0.7;

@@ -35,7 +35,7 @@
           </ul>
           <ul
             class="cardsul flex-row center"
-            style="padding-left: 0; margin-left: 20px"
+            style="padding-left: 0; margin-left: 1.25rem"
           >
             <div
               v-for="(item, i) in arr"

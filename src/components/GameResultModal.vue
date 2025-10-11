@@ -58,7 +58,7 @@ export default {
 
 .modal-buttons {
   display: flex;
-  gap: 16px;
+  gap: 1rem;
   justify-content: center;
 }
 

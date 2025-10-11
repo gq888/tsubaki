@@ -26,11 +26,11 @@
         <div>
           <ul
             class="cardsul flex-col"
-            :style="{ height: 150 * (number + 1) + 'px' }"
+            :style="{ height: (150 * (number + 1)) / 16 + 'rem' }"
             style="
               padding-left: 0;
               width: 100%;
-              max-width: 500px;
+              max-width: 31.25rem;
               margin: 0 auto;
               position: static;
             "
@@ -39,7 +39,7 @@
               v-for="(item, i) in cards1"
               :key="i"
               class="card m-0"
-              style="width: 25%; height: 150px"
+              style="width: 25%; height: 9.375rem"
             >
               <img
                 :src="'./static/' + item + '.jpg'"

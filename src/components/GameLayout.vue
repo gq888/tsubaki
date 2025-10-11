@@ -43,7 +43,7 @@
         v-show="isHeaderExpanded" 
         ref="gameHeader" 
         class="game-header"
-        :style="{ top: navHeight + 'px' }"
+        :style="{ top: navHeight / 16 + 'rem' }"
       >
         <h1>{{ title }}</h1>
         
@@ -237,8 +237,8 @@ export default {
       
       return {
         ...this.containerStyle,
-        paddingTop: `${topPadding}px`,
-        paddingBottom: `${bottomPadding}px`,
+        paddingTop: `${topPadding / 16}rem`,
+        paddingBottom: `${bottomPadding / 16}rem`,
       };
     },
     defaultWinButtons() {
@@ -348,9 +348,9 @@ export default {
   top: 0;
   left: 0;
   right: 0;
-  padding: 15px 30px;
+  padding: 0.9375rem 1.875rem;
   background: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 0.0625rem solid #e0e0e0;
   z-index: 1000;
   text-align: center;
 }
@@ -370,36 +370,36 @@ export default {
   position: fixed;
   left: 0;
   right: 0;
-  padding: 20px;
+  padding: 1.25rem;
   background: #fff;
   z-index: 999;
   text-align: center;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 0.0625rem solid #f0f0f0;
   transition: top 0.3s ease;
 }
 
 .game-header h1 {
-  margin: 0 0 10px 0;
+  margin: 0 0 0.625rem 0;
 }
 
 /* 切换按钮 */
 .toggle-header-btn {
   position: fixed;
-  top: 10px;
-  left: 10px;
-  width: 36px;
-  height: 36px;
+  top: 0.625rem;
+  left: 0.625rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   background: #42b983;
   color: white;
   border: none;
   cursor: pointer;
   z-index: 1001;
-  font-size: 16px;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
 }
 
@@ -430,9 +430,9 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 15px;
+  padding: 0.9375rem;
   background: #fff;
-  border-top: 1px solid #f0f0f0;
+  border-top: 0.0625rem solid #f0f0f0;
   z-index: 999;
   text-align: center;
 }
@@ -445,11 +445,11 @@ export default {
 
 .slide-down-enter-from {
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateY(-1.25rem);
 }
 
 .slide-down-leave-to {
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateY(-1.25rem);
 }
 </style>

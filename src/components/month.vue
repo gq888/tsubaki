@@ -23,9 +23,9 @@
             class="cardsul"
             style="
               padding-left: 0;
-              max-width: 690px;
+              max-width: 43.125rem;
               justify-content: space-between;
-              margin-top: 180px;
+              margin-top: 11.25rem;
             "
           >
             <li
@@ -38,7 +38,7 @@
                 v-for="(card, j) in item"
                 :key="card"
                 class="m-0 card abso"
-                :style="{ top: (month == i ? j : 1 + j) * 30 + 'px', left: 0 }"
+                :style="{ top: ((month == i ? j : 1 + j) * 30) / 16 + 'rem', left: 0 }"
                 :src="
                   './static/' +
                   (cards2[i] > j ||
@@ -60,9 +60,9 @@
     </template>
 
     <template #lose-cards>
-      <div class1="row" style="margin-top: 10px">
+      <div class1="row" style="margin-top: 0.625rem">
         <div>
-          <ul class="cardsul" style="padding-left: 0; max-width: 740px">
+          <ul class="cardsul" style="padding-left: 0; max-width: 46.25rem">
             <div v-for="(item, i) in cards2" :key="i">
               <img
                 v-if="item >= 4 && i < 12"
@@ -91,11 +91,11 @@ export default MonthComponent;
 
 .cards12 {
   position: absolute;
-  top: -180px;
-  height: 150px;
-  min-width: 400px;
+  top: -11.25rem;
+  height: 9.375rem;
+  min-width: 25rem;
   width: 100%;
-  height: 150px;
+  height: 9.375rem;
   display: flex;
   flex-direction: row;
   justify-content: space-around;

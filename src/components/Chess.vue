@@ -18,9 +18,9 @@
               padding-left: 0;
               margin: 0;
               width: 100%;
-              max-width: 600px;
+              max-width: 37.5rem;
               background-color: #719192;
-              padding: 5px 0;
+              padding: 0.3125rem 0;
             "
           >
             <div
