@@ -109,13 +109,30 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         // 执行目标方法
         try {
           if (this[methodName] && typeof this[methodName] === 'function') {
-            this._testCapture.result = await this[methodName].apply(this, args);
+            console.log(`开始执行${methodName}方法，当前游戏状态: win=${this.gameManager?.winflag}, lose=${this.gameManager?.loseflag}, draw=${this.gameManager?.drawflag}`);
+            console.log(`游戏步数: ${this.gameManager?.getStepCount()}, 自动运行状态: ${this.gameManager?.isAutoRunning}`);
+            
+            // 添加超时控制
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('方法执行超时（150秒）')), 150000);
+            });
+            
+            const methodPromise = this[methodName].apply(this, args);
+            
+            this._testCapture.result = await Promise.race([methodPromise, timeoutPromise]);
+            console.log(`${methodName}方法执行完成，最终游戏状态: win=${this.gameManager?.winflag}, lose=${this.gameManager?.loseflag}, draw=${this.gameManager?.drawflag}`);
+            console.log(`最终游戏步数: ${this.gameManager?.getStepCount()}, 自动运行状态: ${this.gameManager?.isAutoRunning}`);
           } else {
             throw new Error(`方法 ${methodName} 不存在`);
           }
         } catch (error) {
           this._testCapture.error = error.message;
           console.error('方法执行错误:', error);
+          // 如果是超时错误，强制停止自动模式
+          if (error.message.includes('超时') && this.gameManager) {
+            console.log('强制停止自动模式...');
+            this.gameManager.stopAuto();
+          }
         }
         
         // 捕获执行后状态

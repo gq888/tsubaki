@@ -19,7 +19,7 @@ export default class GameStateManager {
     // 自动模式相关
     this.isAutoRunning = false;
     this.autoInterval = null;
-    this.autoStepDelay = options.autoStepDelay || 500; // 默认单步延迟500ms
+    this.autoStepDelay = options.autoStepDelay / 10 || 500; // 默认单步延迟500ms，测试时除以10以缩短测试时间
 
     // 事件监听器
     this.listeners = {};
@@ -91,26 +91,40 @@ export default class GameStateManager {
    */
   async startAuto(stepCallback) {
     if (this.isAutoRunning || this.winflag || this.loseflag || this.drawflag) {
+      console.log(`startAuto被跳过: isAutoRunning=${this.isAutoRunning}, win=${this.winflag}, lose=${this.loseflag}, draw=${this.drawflag}`);
       return;
     }
 
+    console.log('开始自动模式...');
     this.isAutoRunning = true;
     this.lockflag = false;
     this.emit("autoStart");
+
+    let stepCount = 0;
+    const maxSteps = 1000; // 防止无限循环
 
     try {
       while (
         this.isAutoRunning &&
         !this.winflag &&
         !this.loseflag &&
-        !this.drawflag
+        !this.drawflag &&
+        stepCount < maxSteps
       ) {
         await stepCallback();
+        stepCount++;
+        
         await wait(this.autoStepDelay);
+      }
+      
+      if (stepCount >= maxSteps) {
+        console.log(`达到最大步数${maxSteps}`);
+        this.stopAuto();
       }
     } catch (error) {
       console.error("Auto mode error:", error);
     } finally {
+      console.log(`自动模式结束，总共执行了${stepCount}步`);
       this.stopAuto();
     }
   }

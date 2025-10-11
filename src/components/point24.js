@@ -141,25 +141,40 @@ const Point24 = {
 
     // 重写stepFn方法
     async stepFn() {
+      console.log(`point24 stepFn被调用，当前步数: ${this.step}, 数组长度: ${this.arr.length}`);
       await this.gameManager.step(async () => {
         if (this.step >= 3) {
+          console.log(`步数已达到3，检查游戏结果...`);
+          // this.autoCalc(); // 调用autoCalc来检查游戏结果
           return;
         }
         let temp = this.cards2[this.step];
+        console.log(`执行第${this.step}步操作:`, temp);
         this.sign = 0;
         this.clickCard(temp[0], this.arr.indexOf(temp[0]));
         await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickSign(temp[1]);
         await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickCard(temp[2], this.arr.indexOf(temp[2]));
+        console.log(`第${this.step}步操作完成，当前数组:`, this.arr);
       });
     },
     autoCalc() {
+      console.log(`autoCalc被调用，步数: ${this.step}, 数组:`, this.arr);
       if (this.step >= 3) {
-        if (this.calc(this.arr[0]) == 24) {
-          this.gameManager.setWin();
-        } else {
-          this.gameManager.setLose();
+        try {
+          const result = this.calc(this.arr[0]);
+          console.log(`计算结果: ${result}, 目标: 24`);
+          if (result == 24) {
+            console.log('游戏胜利！');
+            this.gameManager.setWin();
+          } else {
+            console.log('游戏失败！');
+            this.gameManager.setLose();
+          }
+        } catch (error) {
+          console.log('计算过程出错:', error.message);
+          this.gameManager.stopAuto();
         }
         return;
       }
