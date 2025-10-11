@@ -7,7 +7,6 @@ const Sum = {
       title: "BlackJack",
       arrCard: [],
       sum: 0,
-      score: 0,
       cardsOrg: [],
       cardsChg: [],
       cardsIndex: "",
@@ -70,11 +69,13 @@ const Sum = {
       this.gameManager.recordOperation();
     },
     // 计算点数
-    getScore(ary, score) {
+    getScore(player) {
+      let score = 0;
+      let arr = this["arr" + player]
       let flag = false;
-      for (let i = 0; i < ary.length; i++) {
-        score += ary[i].value;
-        if (ary[i].value === 1) {
+      for (let i = 0; i < arr.length; i++) {
+        score += arr[i].value;
+        if (arr[i].value === 1) {
           flag = true;
         }
       }
@@ -83,6 +84,7 @@ const Sum = {
         score += 10;
       } else if (score > 21) {
         score = 0;
+        player == 2 ? this.gameManager.setLose() : this.gameManager.setWin()
       }
       return score;
     },
@@ -96,25 +98,14 @@ const Sum = {
         this.gameManager.setLose();
       }
     },
-    
-    // 处理历史更新事件
-    handleHistoryUpdate() {
-      // 处理score监听逻辑
-      if (this.score2 === 0) {
-        this.gameManager.setLose();
-      }
-      if (this.score1 === 0) {
-        this.gameManager.setWin();
-      }
-    },
   },
   computed: {
     // 监听点数
     score1: function () {
-      return this.getScore(this.arr1, this.score);
+      return this.getScore(1);
     },
     score2: function () {
-      return this.getScore(this.arr2, this.score);
+      return this.getScore(2);
     },
   },
 };

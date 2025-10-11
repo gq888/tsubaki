@@ -85,10 +85,6 @@ export default MonthComponent;
 <style scoped>
 @import url("./sum.css");
 
-.cards12,
-.cards12 .card {
-}
-
 .cards12 {
   position: absolute;
   top: -11.25rem;
