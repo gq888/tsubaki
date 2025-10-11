@@ -26,14 +26,6 @@ li {
   display: flex;
   flex-direction: column;
 }
-.Sum {
-  position: relative;
-  width: 90%;
-  /* height: 800px; */
-  color: #dfcdc3;
-  margin: 100px auto;
-  background-color: #5f6769;
-}
 
 .row {
   /* height: 300px; */

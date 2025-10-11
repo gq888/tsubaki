@@ -1,25 +1,5 @@
 <template>
   <div id="app">
-    <div id="nav">
-      GAMES: &nbsp;
-      <router-link to="/month">🌛</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/fish">🐟</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/blackjack">♠️</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/point24">24</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/Tortoise">🐢</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/Sort">🐗</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/Pairs">🐰</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/Spider">🕷️</router-link>
-      &nbsp; / &nbsp;
-      <router-link to="/Chess">♟️</router-link>
-    </div>
     <router-view />
   </div>
 </template>
@@ -31,18 +11,10 @@
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 </style>

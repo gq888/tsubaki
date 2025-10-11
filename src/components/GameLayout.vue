@@ -1,33 +1,62 @@
 <template>
-  <div class="Sum" :style="containerStyle">
-    <h1>{{ title }}</h1>
+  <div class="game-layout-container">
+    <!-- Fixed 导航栏 -->
+    <div class="game-nav">
+      GAMES: &nbsp;
+      <router-link to="/month">🌛</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/fish">🐟</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/blackjack">♠️</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/point24">24</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/Tortoise">🐢</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/Sort">🐗</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/Pairs">🐰</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/Spider">🕷️</router-link>
+      &nbsp; / &nbsp;
+      <router-link to="/Chess">♟️</router-link>
+    </div>
 
-    <!-- 顶部控制按钮插槽 -->
-    <slot name="top-controls">
-      <GameControls
-        v-if="showTopControls"
-        v-bind="gameControlsConfig"
-        @undo="$emit('undo')"
-        @goon="$emit('goon')"
-        @step="$emit('step')"
-        @auto="$emit('auto')"
-      />
-    </slot>
+    <!-- Fixed 标题和顶部控制区 -->
+    <div class="game-header">
+      <h1>{{ title }}</h1>
+      
+      <!-- 顶部控制按钮插槽 -->
+      <slot name="top-controls">
+        <GameControls
+          v-if="showTopControls"
+          v-bind="gameControlsConfig"
+          @undo="$emit('undo')"
+          @goon="$emit('goon')"
+          @step="$emit('step')"
+          @auto="$emit('auto')"
+        />
+      </slot>
+    </div>
 
-    <!-- 主要游戏内容区域 -->
-    <slot name="game-content"></slot>
+    <!-- 可滚动的游戏内容区域 -->
+    <div class="game-content-wrapper" :style="containerStyle">
+      <slot name="game-content"></slot>
+    </div>
 
-    <!-- 底部控制按钮插槽 -->
-    <slot name="bottom-controls">
-      <GameControls
-        v-if="showBottomControls"
-        v-bind="gameControlsConfig"
-        @undo="$emit('undo')"
-        @goon="$emit('goon')"
-        @step="$emit('step')"
-        @auto="$emit('auto')"
-      />
-    </slot>
+    <!-- Fixed 底部控制按钮 -->
+    <div class="game-footer" v-if="showBottomControls || $slots['bottom-controls']">
+      <slot name="bottom-controls">
+        <GameControls
+          v-if="showBottomControls"
+          v-bind="gameControlsConfig"
+          @undo="$emit('undo')"
+          @goon="$emit('goon')"
+          @step="$emit('step')"
+          @auto="$emit('auto')"
+        />
+      </slot>
+    </div>
 
     <!-- 游戏结果模态框插槽 -->
     <slot name="result-modals">
@@ -206,4 +235,77 @@ export default {
 
 <style scoped>
 @import url("./sum.css");
+
+/* 布局容器 */
+.game-layout-container {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Fixed 导航栏 */
+.game-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 15px 30px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  z-index: 1000;
+  text-align: center;
+}
+
+.game-nav a {
+  font-weight: bold;
+  color: #2c3e50;
+  text-decoration: none;
+}
+
+.game-nav a.router-link-exact-active {
+  color: #42b983;
+}
+
+/* Fixed 标题和顶部控制区 */
+.game-header {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: #fff;
+  z-index: 999;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.game-header h1 {
+  margin: 0 0 10px 0;
+}
+
+/* 可滚动的游戏内容区域 */
+.game-content-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-top: 180px;
+  padding-bottom: 100px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Fixed 底部控制区 */
+.game-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 15px;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  z-index: 999;
+  text-align: center;
+}
 </style>
