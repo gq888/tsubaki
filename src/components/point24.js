@@ -1,10 +1,13 @@
 import { shuffleCards, timeout } from "../utils/help.js";
-// 条件编译：在Node.js环境中使用模拟组件
-const point24card =
-  typeof window === "undefined"
-    ? { name: "point24card", template: "<div>Mock point24card</div>" }
-    : (await import("./point24card.vue")).default;
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { defineAsyncComponent } from "vue";
+
+/**
+ * point24card 组件 - 根据环境选择
+ */
+const point24card = typeof window === "undefined"
+  ? { name: "point24card", template: "<div>Mock point24card</div>" }
+  : defineAsyncComponent(() => import("./point24card.vue"));
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
 var opts = [1, 3, 2, 2, 4, 4];
 
@@ -54,9 +57,7 @@ function first(i) {
 
 const Point24 = {
   name: "point24",
-  components: {
-    point24card,
-  },
+  components: { point24card },
   data() {
     return {
       title: "Point24",

@@ -1,15 +1,16 @@
-// 条件编译：在Node.js环境中使用模拟组件
-const message =
-  typeof window === "undefined"
-    ? { name: "message", template: "<div>Mock message</div>" }
-    : (await import("./message.vue")).default;
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { defineAsyncComponent } from "vue";
+
+/**
+ * message 组件 - 根据环境选择
+ */
+const message = typeof window === "undefined"
+  ? { name: "message", template: "<div>Mock message</div>" }
+  : defineAsyncComponent(() => import("./message.vue"));
 
 const Fish = {
   name: "Fish",
-  components: {
-    message,
-  },
+  components: { message },
   data() {
     return {
       title: "FISHING CONTEST OF DOG TEAM",

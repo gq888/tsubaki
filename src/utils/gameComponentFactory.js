@@ -1,20 +1,34 @@
-// 条件编译：在Node.js环境中使用模拟组件
-const GameResultModal =
-  typeof window === "undefined"
-    ? { name: "GameResultModal", template: "<div>Mock GameResultModal</div>" }
-    : (await import("../components/GameResultModal.vue")).default;
-
-const GameControls =
-  typeof window === "undefined"
-    ? { name: "GameControls", template: "<div>Mock GameControls</div>" }
-    : (await import("../components/GameControls.vue")).default;
-
-const GameLayout =
-  typeof window === "undefined"
-    ? { name: "GameLayout", template: "<div><slot></slot></div>" }
-    : (await import("../components/GameLayout.vue")).default;
-
 import GameStateManager from "./gameStateManager.js";
+import { defineAsyncComponent } from "vue";
+
+/**
+ * 组件定义 - 根据环境选择 Mock 或真实组件
+ */
+let GameResultModal, GameControls, GameLayout;
+
+if (typeof window === "undefined") {
+  // Node.js 环境：直接使用 Mock 组件
+  GameResultModal = { 
+    name: "GameResultModal", 
+    template: "<div>Mock GameResultModal</div>",
+    props: ["title", "subtitle", "buttons", "show"]
+  };
+  GameControls = { 
+    name: "GameControls", 
+    template: "<div>Mock GameControls</div>",
+    props: ["canUndo", "canGoon", "canRestart", "canAuto", "canStep"]
+  };
+  GameLayout = { 
+    name: "GameLayout", 
+    template: "<div><slot name='game-content'></slot></div>",
+    props: ["title", "winflag", "loseflag", "drawflag"]
+  };
+} else {
+  // 浏览器环境：使用 Vue 3 异步组件
+  GameResultModal = defineAsyncComponent(() => import("../components/GameResultModal.vue"));
+  GameControls = defineAsyncComponent(() => import("../components/GameControls.vue"));
+  GameLayout = defineAsyncComponent(() => import("../components/GameLayout.vue"));
+}
 
 /**
  * 游戏组件工厂函数
@@ -23,7 +37,7 @@ import GameStateManager from "./gameStateManager.js";
  */
 
 /**
- * 创建增强的游戏组件
+ * 创建增强的游戏组件（同步版本）
  * @param {Object} baseComponent - 基础游戏组件 (.js文件导出的组件)
  * @param {Object} options - 配置选项
  * @param {number} options.autoStepDelay - 自动模式延迟时间
