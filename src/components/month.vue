@@ -38,7 +38,10 @@
                 v-for="(card, j) in item"
                 :key="card"
                 class="m-0 card abso"
-                :style="{ top: ((month == i ? j : 1 + j) * 30) / 16 + 'rem', left: 0 }"
+                :style="{
+                  top: ((month == i ? j : 1 + j) * 30) / 16 + 'rem',
+                  left: 0,
+                }"
                 :src="
                   './static/' +
                   (cards2[i] > j ||

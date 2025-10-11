@@ -1,8 +1,9 @@
 import { shuffleCards, timeout } from "../utils/help.js";
 // 条件编译：在Node.js环境中使用模拟组件
-const point24card = typeof window === 'undefined' 
-  ? { name: 'point24card', template: '<div>Mock point24card</div>' }
-  : (await import("./point24card.vue")).default;
+const point24card =
+  typeof window === "undefined"
+    ? { name: "point24card", template: "<div>Mock point24card</div>" }
+    : (await import("./point24card.vue")).default;
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
 var opts = [1, 3, 2, 2, 4, 4];
@@ -79,9 +80,9 @@ const Point24 = {
       }
       shuffleCards(cards, this.number);
       this.arr.push(...cards.splice(0, 4));
-      console.log('初始化后的数组:', this.arr);
+      console.log("初始化后的数组:", this.arr);
       this.autoCalc(); // 恢复autoCalc调用
-      console.log('autoCalc执行后的cards2:', this.cards2);
+      console.log("autoCalc执行后的cards2:", this.cards2);
     },
     calc,
     first,
@@ -130,7 +131,6 @@ const Point24 = {
       if (this.sign != 0) {
         let left = this.arr[0];
         let right = this.arr.splice(i, 1)[0];
-        console.log(`组合操作: left=`, left, `right=`, right, `sign=${this.sign}`);
         let combined = [left, this.sign, right];
         this.arr.splice(0, 1, combined);
         this.sign = 0;
@@ -150,7 +150,6 @@ const Point24 = {
 
     // 重写stepFn方法
     async stepFn() {
-      console.log(`point24 stepFn被调用，当前步数: ${this.step}, 数组长度: ${this.arr.length}`);
       await this.gameManager.step(async () => {
         if (this.step >= 3) {
           console.log(`步数已达到3，检查游戏结果...`);
@@ -161,13 +160,11 @@ const Point24 = {
         console.log(`执行第${this.step}步操作:`, temp);
         this.sign = 0;
         const index1 = this.arr.indexOf(temp[0]);
-        console.log(`查找 temp[0]:`, temp[0], `在数组中的索引:`, index1, `当前数组:`, this.arr);
         this.clickCard(temp[0], index1);
         await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickSign(temp[1]);
         await timeout(() => {}, this.gameManager.autoStepDelay);
         const index2 = this.arr.indexOf(temp[2]);
-        console.log(`查找 temp[2]:`, temp[2], `在数组中的索引:`, index2, `当前数组:`, this.arr);
         this.clickCard(temp[2], index2);
         console.log(`第${this.step}步操作完成，当前数组:`, this.arr);
       });
@@ -179,14 +176,14 @@ const Point24 = {
           const result = this.calc(this.arr[0]);
           console.log(`计算结果: ${result}, 目标: 24`);
           if (result == 24) {
-            console.log('游戏胜利！');
+            console.log("游戏胜利！");
             this.gameManager.setWin();
           } else {
-            console.log('游戏失败！');
+            console.log("游戏失败！");
             this.gameManager.setLose();
           }
         } catch (error) {
-          console.log('计算过程出错:', error.message);
+          console.log("计算过程出错:", error.message);
           this.gameManager.stopAuto();
         }
         return;

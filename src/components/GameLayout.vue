@@ -1,21 +1,17 @@
 <template>
   <div class="game-layout-container">
     <!-- 切换按钮 -->
-    <button 
-      class="toggle-header-btn" 
+    <button
+      class="toggle-header-btn"
       @click="toggleHeader"
       :title="isHeaderExpanded ? '收起导航和标题' : '展开导航和标题'"
     >
-      {{ isHeaderExpanded ? '▲' : '▼' }}
+      {{ isHeaderExpanded ? "▲" : "▼" }}
     </button>
 
     <!-- Fixed 导航栏 -->
     <transition name="slide-down">
-      <div 
-        v-show="isHeaderExpanded" 
-        ref="gameNav" 
-        class="game-nav"
-      >
+      <div v-show="isHeaderExpanded" ref="gameNav" class="game-nav">
         GAMES: &nbsp;
         <router-link to="/month">🌛</router-link>
         &nbsp; / &nbsp;
@@ -39,14 +35,14 @@
 
     <!-- Fixed 标题和顶部控制区 -->
     <transition name="slide-down">
-      <div 
-        v-show="isHeaderExpanded" 
-        ref="gameHeader" 
+      <div
+        v-show="isHeaderExpanded"
+        ref="gameHeader"
         class="game-header"
         :style="{ top: navHeight / 16 + 'rem' }"
       >
         <h1>{{ title }}</h1>
-        
+
         <!-- 顶部控制按钮插槽 -->
         <slot name="top-controls">
           <GameControls
@@ -62,17 +58,14 @@
     </transition>
 
     <!-- 可滚动的游戏内容区域 -->
-    <div 
-      class="game-content-wrapper" 
-      :style="contentWrapperStyle"
-    >
+    <div class="game-content-wrapper" :style="contentWrapperStyle">
       <slot name="game-content"></slot>
     </div>
 
     <!-- Fixed 底部控制按钮 -->
-    <div 
+    <div
       ref="gameFooter"
-      class="game-footer" 
+      class="game-footer"
       v-if="showBottomControls || $slots['bottom-controls']"
     >
       <slot name="bottom-controls">
@@ -230,11 +223,11 @@ export default {
   },
   computed: {
     contentWrapperStyle() {
-      const topPadding = this.isHeaderExpanded 
-        ? this.navHeight + this.headerHeight + 20 
+      const topPadding = this.isHeaderExpanded
+        ? this.navHeight + this.headerHeight + 20
         : 0;
       const bottomPadding = this.footerHeight + 20;
-      
+
       return {
         ...this.containerStyle,
         paddingTop: `${topPadding / 16}rem`,
@@ -309,12 +302,12 @@ export default {
       });
     },
     setupResizeObserver() {
-      if (typeof ResizeObserver === 'undefined') return;
-      
+      if (typeof ResizeObserver === "undefined") return;
+
       this.resizeObserver = new ResizeObserver(() => {
         this.updateHeights();
       });
-      
+
       this.$nextTick(() => {
         if (this.$refs.gameNav) {
           this.resizeObserver.observe(this.$refs.gameNav);

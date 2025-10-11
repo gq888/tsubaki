@@ -91,11 +91,13 @@ export default class GameStateManager {
    */
   async startAuto(stepCallback) {
     if (this.isAutoRunning || this.winflag || this.loseflag || this.drawflag) {
-      console.log(`startAuto被跳过: isAutoRunning=${this.isAutoRunning}, win=${this.winflag}, lose=${this.loseflag}, draw=${this.drawflag}`);
+      console.log(
+        `startAuto被跳过: isAutoRunning=${this.isAutoRunning}, win=${this.winflag}, lose=${this.loseflag}, draw=${this.drawflag}`,
+      );
       return;
     }
 
-    console.log('开始自动模式...');
+    console.log("开始自动模式...");
     this.isAutoRunning = true;
     this.lockflag = false;
     this.emit("autoStart");
@@ -113,10 +115,10 @@ export default class GameStateManager {
       ) {
         await stepCallback();
         stepCount++;
-        
+
         await wait(this.autoStepDelay);
       }
-      
+
       if (stepCount >= maxSteps) {
         console.log(`达到最大步数${maxSteps}`);
         this.stopAuto();

@@ -1,3 +1,12 @@
 export default {
-  presets: ["@vue/cli-plugin-babel/preset"],
+  presets: [
+    [
+      "@vue/cli-plugin-babel/preset",
+      {
+        targets: {
+          esmodules: true,
+        },
+      },
+    ],
+  ],
 };

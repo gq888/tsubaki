@@ -19,7 +19,12 @@
           >
             <li
               class="m-0 static"
-              style="max-width: 6.25rem; width: 25%; height: 9.375rem; z-index: 0"
+              style="
+                max-width: 6.25rem;
+                width: 25%;
+                height: 9.375rem;
+                z-index: 0;
+              "
               @click="hitflag && lockflag && clickCard(0)"
             >
               <img
@@ -148,7 +153,10 @@
                 v-for="(item, j) in cards[i + 5]"
                 :key="item + (fresh[i + 5] * 3 + 3) * number"
                 style="width: 25%; height: 9.375rem"
-                :style="{ top: (j * 30 + 360) / 16 + 'rem', left: (i - 1) * 25 + '%' }"
+                :style="{
+                  top: (j * 30 + 360) / 16 + 'rem',
+                  left: (i - 1) * 25 + '%',
+                }"
                 :class="{
                   drag: dragItem == i + 5,
                   opa0: dragItem == i + 5 && dragCard >= item && enterItem >= 0,
@@ -168,8 +176,9 @@
                 :style="{
                   top:
                     (cards[i + 5].length * 30 +
-                    (j - cards[dragItem].indexOf(dragCard)) * 30 +
-                    360) / 16 +
+                      (j - cards[dragItem].indexOf(dragCard)) * 30 +
+                      360) /
+                      16 +
                     'rem',
                   left: (i - 1) * 25 + '%',
                 }"

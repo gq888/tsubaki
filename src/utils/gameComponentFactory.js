@@ -1,15 +1,18 @@
 // 条件编译：在Node.js环境中使用模拟组件
-const GameResultModal = typeof window === 'undefined' 
-  ? { name: 'GameResultModal', template: '<div>Mock GameResultModal</div>' }
-  : (await import("../components/GameResultModal.vue")).default;
+const GameResultModal =
+  typeof window === "undefined"
+    ? { name: "GameResultModal", template: "<div>Mock GameResultModal</div>" }
+    : (await import("../components/GameResultModal.vue")).default;
 
-const GameControls = typeof window === 'undefined'
-  ? { name: 'GameControls', template: '<div>Mock GameControls</div>' }
-  : (await import("../components/GameControls.vue")).default;
+const GameControls =
+  typeof window === "undefined"
+    ? { name: "GameControls", template: "<div>Mock GameControls</div>" }
+    : (await import("../components/GameControls.vue")).default;
 
-const GameLayout = typeof window === 'undefined'
-  ? { name: 'GameLayout', template: '<div><slot></slot></div>' }
-  : (await import("../components/GameLayout.vue")).default;
+const GameLayout =
+  typeof window === "undefined"
+    ? { name: "GameLayout", template: "<div><slot></slot></div>" }
+    : (await import("../components/GameLayout.vue")).default;
 
 import GameStateManager from "./gameStateManager.js";
 
@@ -68,19 +71,22 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     created() {
       // 初始化GameStateManager
       this.gameManager.init();
-      
+
       // 设置事件监听
       this.handleUndo && this.gameManager.on("undo", this.handleUndo);
-      
+
       // 设置historyUpdate事件监听
       this.gameManager.on("historyUpdate", () => {
         // 先执行各页面自定义的handleHistoryUpdate方法
-        if (this.handleHistoryUpdate && typeof this.handleHistoryUpdate === 'function') {
+        if (
+          this.handleHistoryUpdate &&
+          typeof this.handleHistoryUpdate === "function"
+        ) {
           this.handleHistoryUpdate();
         }
-        
+
         // 然后执行autoCalc方法（如果存在）
-        if (this.autoCalc && typeof this.autoCalc === 'function') {
+        if (this.autoCalc && typeof this.autoCalc === "function") {
           this.autoCalc();
         }
       });
@@ -105,7 +111,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     beforeUnmount() {
       // 停止自动模式
       this.gameManager.stopAuto();
-      
+
       // 清理事件监听
       this.gameManager.off("undo");
       this.gameManager.off("historyUpdate");

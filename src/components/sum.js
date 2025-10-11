@@ -71,7 +71,7 @@ const Sum = {
     // 计算点数
     getScore(player) {
       let score = 0;
-      let arr = this["arr" + player]
+      let arr = this["arr" + player];
       let flag = false;
       for (let i = 0; i < arr.length; i++) {
         score += arr[i].value;
@@ -84,7 +84,7 @@ const Sum = {
         score += 10;
       } else if (score > 21) {
         score = 0;
-        player == 2 ? this.gameManager.setLose() : this.gameManager.setWin()
+        player == 2 ? this.gameManager.setLose() : this.gameManager.setWin();
       }
       return score;
     },
