@@ -189,11 +189,6 @@ const Tortoise = {
       }
     },
   },
-  watch: {
-    step() {
-      this.autoCalc();
-    },
-  },
 };
 
 // 使用工厂函数创建增强的Tortoise组件并导出

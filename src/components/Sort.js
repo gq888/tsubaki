@@ -270,11 +270,6 @@ const Sort = {
       }
     },
   },
-  watch: {
-    step() {
-      this.autoCalc();
-    },
-  },
 };
 
 // 使用工厂函数创建增强的Sort组件并导出

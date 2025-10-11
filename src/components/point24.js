@@ -79,7 +79,9 @@ const Point24 = {
       }
       shuffleCards(cards, this.number);
       this.arr.push(...cards.splice(0, 4));
-      this.autoCalc();
+      console.log('初始化后的数组:', this.arr);
+      this.autoCalc(); // 恢复autoCalc调用
+      console.log('autoCalc执行后的cards2:', this.cards2);
     },
     calc,
     first,
@@ -117,16 +119,23 @@ const Point24 = {
 
     // 重写clickCard方法，使用GameStateManager记录操作
     clickCard(card, i) {
+      console.log(`clickCard被调用: card=`, card, `i=${i}, sign=${this.sign}`);
       if (i == 0) {
+        console.log(`索引为0，直接返回`);
         return;
+      }
+      if (i === -1) {
+        throw new Error(`没找到该卡片`);
       }
       if (this.sign != 0) {
         let left = this.arr[0];
         let right = this.arr.splice(i, 1)[0];
+        console.log(`组合操作: left=`, left, `right=`, right, `sign=${this.sign}`);
         let combined = [left, this.sign, right];
         this.arr.splice(0, 1, combined);
         this.sign = 0;
         this.cards2.splice(this.step, 1, combined);
+        console.log(`组合后数组:`, this.arr);
         this.recordOperation("combine", {
           left: left,
           right: right,
@@ -151,11 +160,15 @@ const Point24 = {
         let temp = this.cards2[this.step];
         console.log(`执行第${this.step}步操作:`, temp);
         this.sign = 0;
-        this.clickCard(temp[0], this.arr.indexOf(temp[0]));
+        const index1 = this.arr.indexOf(temp[0]);
+        console.log(`查找 temp[0]:`, temp[0], `在数组中的索引:`, index1, `当前数组:`, this.arr);
+        this.clickCard(temp[0], index1);
         await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickSign(temp[1]);
         await timeout(() => {}, this.gameManager.autoStepDelay);
-        this.clickCard(temp[2], this.arr.indexOf(temp[2]));
+        const index2 = this.arr.indexOf(temp[2]);
+        console.log(`查找 temp[2]:`, temp[2], `在数组中的索引:`, index2, `当前数组:`, this.arr);
+        this.clickCard(temp[2], index2);
         console.log(`第${this.step}步操作完成，当前数组:`, this.arr);
       });
     },
@@ -223,11 +236,6 @@ const Point24 = {
             : temp00,
       );
       console.log(this.cards2);
-    },
-  },
-  watch: {
-    step() {
-      this.autoCalc();
     },
   },
 };

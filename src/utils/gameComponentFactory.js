@@ -68,7 +68,22 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     created() {
       // 初始化GameStateManager
       this.gameManager.init();
+      
+      // 设置事件监听
       this.handleUndo && this.gameManager.on("undo", this.handleUndo);
+      
+      // 设置historyUpdate事件监听
+      this.gameManager.on("historyUpdate", () => {
+        // 先执行各页面自定义的handleHistoryUpdate方法
+        if (this.handleHistoryUpdate && typeof this.handleHistoryUpdate === 'function') {
+          this.handleHistoryUpdate();
+        }
+        
+        // 然后执行autoCalc方法（如果存在）
+        if (this.autoCalc && typeof this.autoCalc === 'function') {
+          this.autoCalc();
+        }
+      });
 
       // 调用自定义初始化函数
       if (customInit) {
@@ -90,7 +105,10 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     beforeUnmount() {
       // 停止自动模式
       this.gameManager.stopAuto();
+      
+      // 清理事件监听
       this.gameManager.off("undo");
+      this.gameManager.off("historyUpdate");
 
       // 调用自定义清理函数
       if (customCleanup) {

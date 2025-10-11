@@ -67,6 +67,7 @@ const Sum = {
       var value = currentCard >> 2;
       // console.log(value)
       arr.push({ id: currentCard, value: ++value > 10 ? 10 : value });
+      this.gameManager.recordOperation();
     },
     // 计算点数
     getScore(ary, score) {
@@ -95,6 +96,17 @@ const Sum = {
         this.gameManager.setLose();
       }
     },
+    
+    // 处理历史更新事件
+    handleHistoryUpdate() {
+      // 处理score监听逻辑
+      if (this.score2 === 0) {
+        this.gameManager.setLose();
+      }
+      if (this.score1 === 0) {
+        this.gameManager.setWin();
+      }
+    },
   },
   computed: {
     // 监听点数
@@ -103,19 +115,6 @@ const Sum = {
     },
     score2: function () {
       return this.getScore(this.arr2, this.score);
-    },
-  },
-  // watch属性现在由sum.vue重写
-  watch: {
-    score2() {
-      if (this.score2 === 0) {
-        this.gameManager.setLose();
-      }
-    },
-    score1() {
-      if (this.score1 === 0) {
-        this.gameManager.setWin();
-      }
     },
   },
 };
