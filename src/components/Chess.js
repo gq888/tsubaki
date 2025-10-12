@@ -313,19 +313,41 @@ const Chess = {
       }
       let suicide = false;
       let road = [];
+      let protectedRoad = [];
+      // 预先收集所有友方棋子可以到达的空位
+      let friendsReach = {};
       for (let f of friends) {
         let c = this.cards1[f];
         let boxes = this.getValidBoxes(c);
         for (let box of boxes) {
           if (temp[box] == 1) {
-            road.push([f, box]);
-            // return await moveFn(f, box)
+            friendsReach[box] = (friendsReach[box] || 0) + 1;
+          }
+        }
+      }
+      // 收集路径，区分受保护和普通路径
+      for (let f of friends) {
+        let c = this.cards1[f];
+        let boxes = this.getValidBoxes(c);
+        for (let box of boxes) {
+          if (temp[box] == 1) {
+            if (friendsReach[box] >= 2) {
+              protectedRoad.push([f, box]);
+            } else {
+              road.push([f, box]);
+            }
           }
           if (temp[box] == 2) {
             suicide = [f, box];
           }
         }
       }
+      // 优先移动到受保护的位置
+      if (protectedRoad.length > 0) {
+        let random = Math.floor(Math.random() * protectedRoad.length);
+        return await moveFn(protectedRoad[random][0], protectedRoad[random][1]);
+      }
+      // 其次移动到普通空位
       if (road.length > 0) {
         let random = Math.floor(Math.random() * road.length);
         return await moveFn(road[random][0], road[random][1]);
