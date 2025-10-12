@@ -446,14 +446,14 @@ export default {
   top: 0;
   left: 0;
   right: 0;
-  padding: 0.9375rem 1.875rem;
+  padding: 0.5rem 1rem;
   background: #fff;
   border-bottom: 0.0625rem solid #e0e0e0;
   z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
@@ -461,10 +461,10 @@ export default {
   font-weight: bold;
   color: #2c3e50;
   text-decoration: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
   transition: all 0.2s ease;
-  font-size: 1.5rem;
+  font-size: 1.125rem;
 }
 
 .game-nav a:hover {
@@ -492,17 +492,17 @@ export default {
 /* 切换按钮 */
 .toggle-header-btn {
   position: fixed;
-  top: 0.625rem;
-  left: 0.625rem;
-  width: 2.25rem;
-  height: 2.25rem;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: 50%;
   background: #42b983;
   color: white;
   border: none;
   cursor: pointer;
   z-index: 1001;
-  font-size: 1rem;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -539,7 +539,7 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0.9375rem;
+  padding: 0.5rem;
   background: #fff;
   border-top: 0.0625rem solid #f0f0f0;
   z-index: 999;

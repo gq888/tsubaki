@@ -133,20 +133,20 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
   flex-wrap: wrap;
 }
 
 /* 覆盖原有input样式以确保按钮一致性 */
 .btns input {
-  margin: 1.25rem 0;
+  margin: 0.5rem 0;
   color: #3c4245;
-  padding: 0.3125rem 0.9375rem;
+  padding: 0.25rem 0.625rem;
   border: 0.0625rem solid #dfcdc3;
   background-color: #dfcdc3;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .btns input:disabled {
