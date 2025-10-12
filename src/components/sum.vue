@@ -46,12 +46,12 @@
           {
             label: 'HIT',
             action: 'hitBtn',
-            disabled: !hitflag,
+            disabled: stepDisabled,
           },
           {
             label: 'PASS',
             action: 'passBtn',
-            disabled: !hitflag,
+            disabled: autoDisabled,
           },
         ]"
         @hitBtn="hit(cardsChg, arr2)"

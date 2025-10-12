@@ -69,7 +69,7 @@
       <!-- Win Modal -->
       <GameResultModal
         v-if="winflag"
-        :title="winTitle || 'U WIN!'"
+        :title="winTitle !== undefined ? winTitle : 'U WIN!'"
         :subtitle="winSubtitle"
         :buttons="winButtons || defaultWinButtons"
         :modalStyle="winModalStyle"
@@ -86,7 +86,7 @@
       <!-- Lose Modal -->
       <GameResultModal
         v-if="loseflag"
-        :title="loseTitle || 'U LOSE'"
+        :title="loseTitle !== undefined ? loseTitle : 'U LOSE'"
         :subtitle="loseSubtitle"
         :buttons="loseButtons || defaultLoseButtons"
         :modalStyle="loseModalStyle || { backgroundColor: 'rgba(0,0,0,0.5)' }"
@@ -103,7 +103,7 @@
       <!-- Draw Modal -->
       <GameResultModal
         v-if="drawflag"
-        :title="drawTitle || 'DRAW GAME'"
+        :title="drawTitle !== undefined ? drawTitle : 'DRAW GAME'"
         :subtitle="drawSubtitle"
         :buttons="drawButtons || defaultDrawButtons"
         :modalStyle="drawModalStyle || { backgroundColor: 'rgba(0,0,0,0.5)' }"

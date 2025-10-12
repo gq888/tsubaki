@@ -235,7 +235,7 @@ export const GameComponentPresets = {
     createEnhancedGameComponent(baseComponent, {
       autoStepDelay,
       hasUndo: false,
-      hasRestart: false,
+      hasRestart: true,
       customInit() {
         // 为fish游戏添加特殊的stepFn和goon方法
         if (this.title && this.title.includes("FISHING")) {

@@ -160,7 +160,7 @@ input {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  z-index: 1000;
+  z-index: 995;
 }
 
 .lose h1 {
