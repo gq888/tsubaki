@@ -12,15 +12,10 @@
     <!-- Fixed 导航栏 -->
     <transition name="slide-down">
       <div v-show="isHeaderExpanded" ref="gameNav" class="game-nav">
-        <router-link to="/month">🌛</router-link>
-        <router-link to="/fish">🐟</router-link>
-        <router-link to="/blackjack">♠️</router-link>
-        <router-link to="/point24">24</router-link>
-        <router-link to="/Tortoise">🐢</router-link>
-        <router-link to="/Sort">🐗</router-link>
-        <router-link to="/Pairs">🐰</router-link>
-        <router-link to="/Spider">🕷️</router-link>
-        <router-link to="/Chess">♟️</router-link>
+        <template v-for="nav in navItems" :key="nav.path">
+          <router-link :to="nav.path">{{ nav.icon + ($route.path === nav.path ? title : "") }}</router-link>
+          <!-- <span v-if="$route.path === nav.path" class="nav-title">{{ title }}</span> -->
+        </template>
       </div>
     </transition>
 
@@ -32,8 +27,6 @@
         class="game-header"
         :style="{ top: navHeight / 16 + 'rem' }"
       >
-        <h1>{{ title }}</h1>
-
         <!-- 顶部控制按钮插槽 -->
         <slot name="top-controls">
           <GameControls
@@ -148,6 +141,17 @@ export default {
       lastToggleTime: 0, // 上次切换的时间戳
       toggleCooldown: 500, // 切换冷却时间（毫秒）
       autoHideTimer: null, // 自动隐藏定时器
+      navItems: [
+        { path: '/month', icon: '🌛' },
+        { path: '/fish', icon: '🐟' },
+        { path: '/blackjack', icon: '♠️' },
+        { path: '/point24', icon: '24' },
+        { path: '/Tortoise', icon: '🐢' },
+        { path: '/Sort', icon: '🐗' },
+        { path: '/Pairs', icon: '🐰' },
+        { path: '/Spider', icon: '🕷️' },
+        { path: '/Chess', icon: '♟️' },
+      ],
     };
   },
   props: {
@@ -227,15 +231,13 @@ export default {
     },
     autoHideDelay: {
       type: Number,
-      default: 2000, // 默认2秒后自动隐藏
+      default: 4000, // 默认4秒后自动隐藏
     },
   },
   computed: {
     contentWrapperStyle() {
-      const topPadding = this.isHeaderExpanded
-        ? this.navHeight + this.headerHeight + 20
-        : 0;
-      const bottomPadding = this.footerHeight + 20;
+      const topPadding = this.navHeight + this.headerHeight;
+      const bottomPadding = this.footerHeight;
 
       return {
         ...this.containerStyle,
@@ -381,17 +383,6 @@ export default {
       const now = Date.now();
       const canToggle = now - this.lastToggleTime >= this.toggleCooldown;
       
-      console.log('📊 滚动状态:', {
-        scrollTop: Math.round(scrollTop),
-        scrollDelta: Math.round(scrollDelta),
-        scrollingDown,
-        scrollingUp,
-        isAtTop,
-        isAtBottom,
-        headerExpanded: this.isHeaderExpanded,
-        canToggle
-      });
-      
       // 智能切换逻辑（带冷却时间）
       if (canToggle) {
         if ((isAtTop && scrollingUp || isAtBottom && scrollingDown) && !this.isHeaderExpanded) {
@@ -491,16 +482,11 @@ export default {
   position: fixed;
   left: 0;
   right: 0;
-  padding: 1.25rem;
   background: #fff;
   z-index: 999;
   text-align: center;
   border-bottom: 0.0625rem solid #f0f0f0;
   transition: top 0.3s ease;
-}
-
-.game-header h1 {
-  margin: 0 0 0.625rem 0;
 }
 
 /* 切换按钮 */
