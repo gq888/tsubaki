@@ -3,23 +3,13 @@
 /**
  * 基于renderToString的方法测试器
  * 通过覆盖created生命周期来执行测试方法
+ * 支持动态按文件路径导入组件
  */
 
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// 预导入所有真实的游戏组件（.js文件，已包含工厂模式）
-import ChessComponent from '../src/components/Chess.js';
-import SpiderComponent from '../src/components/Spider.js';
-import TortoiseComponent from '../src/components/Tortoise.js';
-import PairsComponent from '../src/components/Pairs.js';
-import SortComponent from '../src/components/Sort.js';
-import fishComponent from '../src/components/fish.js';
-import monthComponent from '../src/components/month.js';
-import point24Component from '../src/components/point24.js';
-import sumComponent from '../src/components/sum.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,32 +27,32 @@ global.document = {
   removeEventListener: () => {}
 };
 
-// 组件映射表
-const GAME_COMPONENTS = {
-  'Chess.js': ChessComponent,
-  'Spider.js': SpiderComponent,
-  'Tortoise.js': TortoiseComponent,
-  'Pairs.js': PairsComponent,
-  'Sort.js': SortComponent,
-  'fish.js': fishComponent,
-  'month.js': monthComponent,
-  'point24.js': point24Component,
-  'sum.js': sumComponent
-};
-
 /**
  * 使用renderToString执行组件方法
  */
 async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = []) {
   try {
     console.log(`正在通过renderToString执行方法: ${methodName}`);
+    console.log(`组件路径: ${componentPath}`);
     
-    // 从预导入的组件中获取组件
-    const componentName = path.basename(componentPath);
-    const originalComponent = GAME_COMPONENTS[componentName];
+    // 根据路径动态导入组件
+    // 如果是相对路径，转换为绝对路径
+    let absolutePath;
+    if (path.isAbsolute(componentPath)) {
+      absolutePath = componentPath;
+    } else {
+      // 相对于当前脚本目录的路径
+      absolutePath = path.resolve(__dirname, '..', componentPath);
+    }
+    
+    console.log(`绝对路径: ${absolutePath}`);
+    
+    // 动态导入组件
+    const componentModule = await import(`file://${absolutePath}`);
+    const originalComponent = componentModule.default || componentModule;
     
     if (!originalComponent) {
-      throw new Error(`组件 ${componentName} 未在预导入列表中找到。可用组件: ${Object.keys(GAME_COMPONENTS).join(', ')}`);
+      throw new Error(`无法从 ${componentPath} 导入组件`);
     }
     
     // 保存原始的created函数
@@ -198,7 +188,9 @@ async function main() {
   
   if (args.length < 3) {
     console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...]');
-    console.log('示例: node renderToString-method-tester.js test-components/LifecycleTest.js clickCard 0');
+    console.log('示例: node renderToString-method-tester.js src/components/Chess.js init 0');
+    console.log('      node renderToString-method-tester.js src/components/Spider.js clickCard 0');
+    console.log('说明: 支持相对路径和绝对路径，组件将动态导入');
     process.exit(1);
   }
   
