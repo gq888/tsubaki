@@ -156,6 +156,7 @@ export default {
       lastScrollTop: 0,
       lastToggleTime: 0, // 上次切换的时间戳
       toggleCooldown: 500, // 切换冷却时间（毫秒）
+      autoHideTimer: null, // 自动隐藏定时器
     };
   },
   props: {
@@ -233,6 +234,10 @@ export default {
       type: Number,
       default: 50,
     },
+    autoHideDelay: {
+      type: Number,
+      default: 2000, // 默认2秒后自动隐藏
+    },
   },
   computed: {
     contentWrapperStyle() {
@@ -289,19 +294,22 @@ export default {
     this.updateHeights();
     this.setupResizeObserver();
     this.setupScrollListener();
+    this.startAutoHideTimer();
   },
   beforeUnmount() {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
     this.removeScrollListener();
+    this.clearAutoHideTimer();
   },
   methods: {
     toggleHeader() {
-      this.isHeaderExpanded = !this.isHeaderExpanded;
-      this.$nextTick(() => {
-        this.updateHeights();
-      });
+      if (this.isHeaderExpanded) {
+        this.collapseHeader();
+      } else {
+        this.expandHeader();
+      }
     },
     updateHeights() {
       this.$nextTick(() => {
@@ -400,26 +408,45 @@ export default {
       
       // 智能切换逻辑（带冷却时间）
       if (canToggle) {
-        if (isAtTop && scrollingUp && this.isHeaderExpanded) {
-          // 在顶部继续向上滚动 → 隐藏头部（释放更多空间）
-          console.log('✅ 触发：隐藏头部');
-          this.isHeaderExpanded = false;
+        if ((isAtTop && scrollingUp || isAtBottom && scrollingDown) && !this.isHeaderExpanded) {
           this.lastToggleTime = now;
-          this.$nextTick(() => {
-            this.updateHeights();
-          });
-        } else if (isAtBottom && scrollingDown && !this.isHeaderExpanded) {
-          // 在底部继续向下滚动 → 展开头部（显示控制区域）
-          console.log('✅ 触发：展开头部');
-          this.isHeaderExpanded = true;
-          this.lastToggleTime = now;
-          this.$nextTick(() => {
-            this.updateHeights();
-          });
+          this.expandHeader();
         }
       }
       
       this.lastScrollTop = scrollTop;
+    },
+    
+    expandHeader() {
+      this.isHeaderExpanded = true;
+      this.$nextTick(() => {
+        this.updateHeights();
+      });
+      // 展开头部时自动启动隐藏定时器
+      this.startAutoHideTimer();
+    },
+    
+    collapseHeader() {
+      this.isHeaderExpanded = false;
+      this.$nextTick(() => {
+        this.updateHeights();
+      });
+      // 隐藏头部时清除定时器
+      this.clearAutoHideTimer();
+    },
+    
+    startAutoHideTimer() {
+      this.clearAutoHideTimer();
+      this.autoHideTimer = setTimeout(() => {
+        this.collapseHeader();
+      }, this.autoHideDelay);
+    },
+    
+    clearAutoHideTimer() {
+      if (this.autoHideTimer) {
+        clearTimeout(this.autoHideTimer);
+        this.autoHideTimer = null;
+      }
     },
   },
   emits: ["undo", "goon", "step", "auto"],
