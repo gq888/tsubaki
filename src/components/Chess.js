@@ -57,6 +57,7 @@ const Chess = {
       // return cards.splice(0, 0, ...this.modes)
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
+        this.cards2.push(false); // 初始化cards2为36个false
       }
       shuffleCards(cards, this.number);
     },
@@ -97,7 +98,7 @@ const Chess = {
           break;
         case "flip":
           // 撤销翻转操作
-          this.cards2.splice(operation.card, 1, false);
+          this.cards2[operation.card] = false; // 直接赋值而不是splice
           break;
       }
     },
@@ -116,7 +117,7 @@ const Chess = {
         this.grade = this.grades[card];
       }
       if (card >= 0 && !this.cards2[card]) {
-        this.cards2.splice(card, 1, true);
+        this.cards2[card] = true; // 直接赋值而不是splice
         this.recordFlip(card); // 使用GameStateManager记录操作
         this.sign = -1;
         if (!isAuto) {
@@ -221,7 +222,6 @@ const Chess = {
       let grade = this.step % 2 == 0 ? this.grade : !this.grade;
       let _this = this;
       let moveFn = async function (from, to) {
-        console.log(from, to);
         _this.sign = -1;
         await _this.clickCard(from, true);
         await wait(_this.gameManager.autoStepDelay);

@@ -27,6 +27,27 @@ global.document = {
   removeEventListener: () => {}
 };
 
+// 模拟 localStorage
+const localStorageMock = {
+  _data: {
+    "game-global-delay": "100"
+  },
+  getItem(key) {
+    return this._data[key] || null;
+  },
+  setItem(key, value) {
+    this._data[key] = String(value);
+  },
+  removeItem(key) {
+    delete this._data[key];
+  },
+  clear() {
+    this._data = {};
+  }
+};
+
+global.localStorage = localStorageMock;
+
 /**
  * 使用renderToString执行组件方法
  */
