@@ -55,6 +55,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isAutoRunning: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     // 根据buttons数组或单独的show属性生成要显示的按钮列表
@@ -93,7 +97,7 @@ export default {
 
       if (this.showAuto) {
         defaultButtons.push({
-          label: "AUTO",
+          label: this.isAutoRunning ? "STOP" : "AUTO",
           action: "auto",
           disabled: this.autoDisabled,
         });

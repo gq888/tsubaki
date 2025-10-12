@@ -161,6 +161,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           restartDisabled: this.restartDisabled,
           stepDisabled: this.stepDisabled,
           autoDisabled: this.autoDisabled,
+          isAutoRunning: this.gameManager?.isAutoRunning || false,
         };
       },
 
@@ -189,7 +190,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
 
       // 统一的自动模式方法
       async pass() {
-        await this.gameManager.startAuto(async () => {
+        this.gameManager.isAutoRunning ? this.gameManager.stopAuto() : await this.gameManager.startAuto(async () => {
           const beforeState = JSON.stringify(this.$data);
           await this.stepFn();
           const afterState = JSON.stringify(this.$data);

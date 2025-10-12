@@ -337,8 +337,7 @@ export default class GameStateManager {
           !manager.hitflag ||
           manager.winflag ||
           manager.loseflag ||
-          manager.drawflag ||
-          manager.isAutoRunning
+          manager.drawflag
         );
       },
 
