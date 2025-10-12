@@ -1,20 +1,13 @@
 <template>
   <div class="btns">
-    <div
+    <input
       v-for="(button, index) in displayButtons"
       :key="button.id || index"
-      class="button-wrapper"
-    >
-      <input
-        type="button"
-        :value="button.label"
-        :disabled="button.disabled"
-        @click="handleButtonClick(button.action)"
-      />
-      <span v-if="index < displayButtons.length - 1"
-        >&nbsp;&nbsp;&nbsp;&nbsp;</span
-      >
-    </div>
+      type="button"
+      :value="button.label"
+      :disabled="button.disabled"
+      @click="handleButtonClick(button.action)"
+    />
   </div>
 </template>
 
@@ -140,7 +133,9 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 0.75rem;
   padding: 0.625rem 0;
+  flex-wrap: wrap;
 }
 
 /* 覆盖原有input样式以确保按钮一致性 */

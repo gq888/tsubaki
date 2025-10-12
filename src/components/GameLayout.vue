@@ -12,23 +12,14 @@
     <!-- Fixed 导航栏 -->
     <transition name="slide-down">
       <div v-show="isHeaderExpanded" ref="gameNav" class="game-nav">
-        GAMES: &nbsp;
         <router-link to="/month">🌛</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/fish">🐟</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/blackjack">♠️</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/point24">24</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/Tortoise">🐢</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/Sort">🐗</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/Pairs">🐰</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/Spider">🕷️</router-link>
-        &nbsp; / &nbsp;
         <router-link to="/Chess">♟️</router-link>
       </div>
     </transition>
@@ -375,15 +366,10 @@ export default {
       const scrollHeight = wrapper.scrollHeight;
       const clientHeight = wrapper.clientHeight;
       
-      // 如果没有可滚动的内容，直接返回
-      if (scrollHeight <= clientHeight) {
-        return;
-      }
-      
       // 计算滚动方向（需要有明显的滚动距离才算）
       const scrollDelta = scrollTop - this.lastScrollTop;
-      const scrollingDown = scrollDelta > 2; // 向下滚动超过2px
-      const scrollingUp = scrollDelta < -2;  // 向上滚动超过2px
+      const scrollingDown = scrollDelta > 0;
+      const scrollingUp = scrollDelta < 0;
       
       // 检查是否在顶部（带阈值）
       const isAtTop = scrollTop <= this.smartScrollThreshold;
@@ -473,17 +459,31 @@ export default {
   background: #fff;
   border-bottom: 0.0625rem solid #e0e0e0;
   z-index: 1000;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .game-nav a {
   font-weight: bold;
   color: #2c3e50;
   text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 1.5rem;
+}
+
+.game-nav a:hover {
+  background: #f5f5f5;
+  transform: scale(1.1);
 }
 
 .game-nav a.router-link-exact-active {
   color: #42b983;
+  background: #e8f5f0;
 }
 
 /* Fixed 标题和顶部控制区 */
