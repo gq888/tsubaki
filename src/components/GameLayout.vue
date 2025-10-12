@@ -153,6 +153,9 @@ export default {
       headerHeight: 0,
       footerHeight: 0,
       resizeObserver: null,
+      lastScrollTop: 0,
+      lastToggleTime: 0, // 上次切换的时间戳
+      toggleCooldown: 500, // 切换冷却时间（毫秒）
     };
   },
   props: {
@@ -220,6 +223,16 @@ export default {
       type: Number,
       default: 0,
     },
+    
+    // 智能滚动配置
+    enableSmartScroll: {
+      type: Boolean,
+      default: true,
+    },
+    smartScrollThreshold: {
+      type: Number,
+      default: 50,
+    },
   },
   computed: {
     contentWrapperStyle() {
@@ -275,11 +288,13 @@ export default {
   mounted() {
     this.updateHeights();
     this.setupResizeObserver();
+    this.setupScrollListener();
   },
   beforeUnmount() {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
+    this.removeScrollListener();
   },
   methods: {
     toggleHeader() {
@@ -319,6 +334,92 @@ export default {
           this.resizeObserver.observe(this.$refs.gameFooter);
         }
       });
+    },
+    /**
+     * 设置滚动监听器
+     * 实现智能头部显示/隐藏：
+     * - 在顶部继续向上滚动 → 隐藏头部（释放空间）
+     * - 在底部继续向下滚动 → 展开头部（显示控制）
+     */
+    setupScrollListener() {
+      this.$nextTick(() => {
+        const wrapper = this.$el?.querySelector('.game-content-wrapper');
+        if (wrapper) {
+          this._scrollHandler = this.handleScroll.bind(this);
+          wrapper.addEventListener('scroll', this._scrollHandler, { passive: true });
+        }
+      });
+    },
+    removeScrollListener() {
+      const wrapper = this.$el?.querySelector('.game-content-wrapper');
+      if (wrapper && this._scrollHandler) {
+        wrapper.removeEventListener('scroll', this._scrollHandler);
+      }
+    },
+    handleScroll(event) {
+      // 如果禁用了智能滚动，直接返回
+      if (!this.enableSmartScroll) {
+        return;
+      }
+      
+      const wrapper = event.target;
+      const scrollTop = wrapper.scrollTop;
+      const scrollHeight = wrapper.scrollHeight;
+      const clientHeight = wrapper.clientHeight;
+      
+      // 如果没有可滚动的内容，直接返回
+      if (scrollHeight <= clientHeight) {
+        return;
+      }
+      
+      // 计算滚动方向（需要有明显的滚动距离才算）
+      const scrollDelta = scrollTop - this.lastScrollTop;
+      const scrollingDown = scrollDelta > 2; // 向下滚动超过2px
+      const scrollingUp = scrollDelta < -2;  // 向上滚动超过2px
+      
+      // 检查是否在顶部（带阈值）
+      const isAtTop = scrollTop <= this.smartScrollThreshold;
+      
+      // 检查是否在底部（带阈值）
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - this.smartScrollThreshold;
+      
+      // 检查冷却时间
+      const now = Date.now();
+      const canToggle = now - this.lastToggleTime >= this.toggleCooldown;
+      
+      console.log('📊 滚动状态:', {
+        scrollTop: Math.round(scrollTop),
+        scrollDelta: Math.round(scrollDelta),
+        scrollingDown,
+        scrollingUp,
+        isAtTop,
+        isAtBottom,
+        headerExpanded: this.isHeaderExpanded,
+        canToggle
+      });
+      
+      // 智能切换逻辑（带冷却时间）
+      if (canToggle) {
+        if (isAtTop && scrollingUp && this.isHeaderExpanded) {
+          // 在顶部继续向上滚动 → 隐藏头部（释放更多空间）
+          console.log('✅ 触发：隐藏头部');
+          this.isHeaderExpanded = false;
+          this.lastToggleTime = now;
+          this.$nextTick(() => {
+            this.updateHeights();
+          });
+        } else if (isAtBottom && scrollingDown && !this.isHeaderExpanded) {
+          // 在底部继续向下滚动 → 展开头部（显示控制区域）
+          console.log('✅ 触发：展开头部');
+          this.isHeaderExpanded = true;
+          this.lastToggleTime = now;
+          this.$nextTick(() => {
+            this.updateHeights();
+          });
+        }
+      }
+      
+      this.lastScrollTop = scrollTop;
     },
   },
   emits: ["undo", "goon", "step", "auto"],
@@ -415,6 +516,8 @@ export default {
   overflow-y: auto;
   overflow-x: hidden;
   transition: padding 0.3s ease;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* 移动端流畅滚动 */
 }
 
 /* Fixed 底部控制区 */
