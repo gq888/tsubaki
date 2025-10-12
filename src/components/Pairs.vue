@@ -1,8 +1,6 @@
 <template>
   <GameLayout
     v-bind="gameLayoutProps"
-    :show-top-controls="true"
-    :show-bottom-controls="true"
     @goon="goon"
     @step="stepFn"
     @auto="pass"

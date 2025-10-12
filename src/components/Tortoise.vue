@@ -1,7 +1,6 @@
 <template>
   <GameLayout
     v-bind="gameLayoutProps"
-    :show-bottom-controls="true"
     :lose-subtitle="'NO PAIR'"
     @undo="undo"
     @goon="goon"

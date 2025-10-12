@@ -1,8 +1,6 @@
 <template>
   <GameLayout
     v-bind="gameLayoutProps"
-    :show-top-controls="true"
-    :show-bottom-controls="true"
     :lose-subtitle="n + '/' + number * 4"
     :lose-buttons="[
       {

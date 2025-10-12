@@ -3,13 +3,13 @@
     <div v-if="visible" class="settings-overlay" @click.self="close">
       <div class="settings-modal">
         <div class="settings-header">
-          <h2>游戏设置</h2>
+          <h2>SETTING</h2>
           <button class="close-btn" @click="close">✕</button>
         </div>
         
         <div class="settings-body">
           <div class="setting-item">
-            <label class="setting-label">游戏延迟速度</label>
+            <label class="setting-label">SPEED</label>
             <input 
               type="range" 
               class="delay-slider"
@@ -20,8 +20,8 @@
               step="1"
             />
             <div class="slider-labels">
-              <span>快</span>
-              <span>慢</span>
+              <span>FAST</span>
+              <span>SLOW</span>
             </div>
           </div>
 
@@ -31,17 +31,14 @@
                 type="checkbox" 
                 v-model="applyToAll"
               />
-              <span class="checkbox-label">应用到全部游戏</span>
+              <span class="checkbox-label">IS APPLY TO ALL GAMES</span>
             </label>
-            <p class="setting-hint">
-              {{ applyToAll ? '将影响所有游戏的延迟设置' : '仅影响当前游戏的延迟设置' }}
-            </p>
           </div>
         </div>
 
         <div class="settings-footer">
-          <button class="btn btn-secondary" @click="reset">重置</button>
-          <button class="btn btn-primary" @click="save">保存</button>
+          <button class="btn btn-secondary" @click="reset">RESET</button>
+          <button class="btn btn-primary" @click="save">SAVE</button>
         </div>
       </div>
     </div>
@@ -147,8 +144,6 @@ export default {
     reset() {
       this.localDelay = this.defaultDelay;
       this.applyToAll = false;
-      gameSettingsManager.reset();
-      gameSettingsManager.save();
     },
 
     /**
@@ -309,13 +304,6 @@ export default {
 .checkbox-label {
   font-size: 0.9375rem;
   color: #2c3e50;
-}
-
-.setting-hint {
-  margin: 0.5rem 0 0 1.625rem;
-  font-size: 0.8125rem;
-  color: #666;
-  line-height: 1.4;
 }
 
 .settings-footer {

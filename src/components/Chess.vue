@@ -2,8 +2,6 @@
   <GameLayout
     v-bind="gameLayoutProps"
     :container-style="{ width: '100%' }"
-    :show-top-controls="true"
-    :show-bottom-controls="true"
     @undo="undo"
     @goon="goon"
     @step="stepTwiceFn"

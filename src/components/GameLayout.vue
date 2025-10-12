@@ -192,7 +192,7 @@ export default {
     },
     showBottomControls: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     gameControlsConfig: {
       type: Object,
