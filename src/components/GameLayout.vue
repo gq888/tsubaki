@@ -9,6 +9,23 @@
       {{ isHeaderExpanded ? "▲" : "▼" }}
     </button>
 
+    <!-- 设置按钮 -->
+    <button
+      class="settings-btn"
+      @click="openSettings"
+      title="游戏设置"
+    >
+      ⚙️
+    </button>
+
+    <!-- 设置弹窗 -->
+    <GameSettings
+      :visible="showSettings"
+      :currentGame="currentGameName"
+      @close="closeSettings"
+      @settings-saved="handleSettingsSaved"
+    />
+
     <!-- Fixed 导航栏 -->
     <transition name="slide-down">
       <div v-show="isHeaderExpanded" ref="gameNav" class="game-nav">
@@ -123,12 +140,14 @@
 <script>
 import GameControls from "./GameControls.vue";
 import GameResultModal from "./GameResultModal.vue";
+import GameSettings from "./GameSettings.vue";
 
 export default {
   name: "GameLayout",
   components: {
     GameControls,
     GameResultModal,
+    GameSettings,
   },
   data() {
     return {
@@ -141,6 +160,7 @@ export default {
       lastToggleTime: 0, // 上次切换的时间戳
       toggleCooldown: 500, // 切换冷却时间（毫秒）
       autoHideTimer: null, // 自动隐藏定时器
+      showSettings: false, // 是否显示设置弹窗
       navItems: [
         { path: '/month', icon: '🌛' },
         { path: '/fish', icon: '🐟' },
@@ -281,6 +301,10 @@ export default {
           disabled: this.step <= 0,
         },
       ];
+    },
+    currentGameName() {
+      // 从路由中获取当前游戏名称
+      return this.$route?.path?.substring(1) || '';
     },
   },
   mounted() {
@@ -425,8 +449,21 @@ export default {
         this.autoHideTimer = null;
       }
     },
+    
+    openSettings() {
+      this.showSettings = true;
+    },
+    
+    closeSettings() {
+      this.showSettings = false;
+    },
+    
+    handleSettingsSaved(settings) {
+      // 发送设置保存事件给父组件
+      this.$emit('settings-changed', settings);
+    },
   },
-  emits: ["undo", "goon", "step", "auto"],
+  emits: ["undo", "goon", "step", "auto", "settings-changed"],
 };
 </script>
 
@@ -516,6 +553,36 @@ export default {
 }
 
 .toggle-header-btn:active {
+  transform: scale(0.95);
+}
+
+/* 设置按钮 */
+.settings-btn {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: #42b983;
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.settings-btn:hover {
+  background: #35a372;
+  transform: scale(1.1) rotate(90deg);
+}
+
+.settings-btn:active {
   transform: scale(0.95);
 }
 

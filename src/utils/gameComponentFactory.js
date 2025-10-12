@@ -1,4 +1,5 @@
 import GameStateManager from "./gameStateManager.js";
+import gameSettingsManager from "./gameSettingsManager.js";
 import { defineAsyncComponent } from "vue";
 
 /**
@@ -92,6 +93,13 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       // 初始化GameStateManager
       this.gameManager.init();
 
+      // 从 localStorage 加载延迟设置
+      this.loadDelaySettings();
+
+      // 监听设置变化
+      this._settingsChangeHandler = this.handleSettingsChanged.bind(this);
+      gameSettingsManager.addListener(this._settingsChangeHandler);
+
       // 设置事件监听
       this.handleUndo && this.gameManager.on("undo", this.handleUndo);
 
@@ -135,6 +143,11 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       // 清理事件监听
       this.gameManager.off("undo");
       this.gameManager.off("historyUpdate");
+
+      // 移除设置变化监听器
+      if (this._settingsChangeHandler) {
+        gameSettingsManager.removeListener(this._settingsChangeHandler);
+      }
 
       // 调用自定义清理函数
       if (customCleanup) {
@@ -210,6 +223,27 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
             this.init();
           }
         });
+      },
+
+      /**
+       * 从 localStorage 加载延迟设置
+       */
+      loadDelaySettings() {
+        const currentGame = this.$route?.path?.substring(1) || '';
+        const delay = gameSettingsManager.getDelay(currentGame);
+        this.gameManager.setAutoStepDelay(delay);
+      },
+
+      /**
+       * 处理设置变化事件
+       */
+      handleSettingsChanged(settings) {
+        const currentGame = this.$route?.path?.substring(1) || '';
+        
+        // 如果是应用到所有游戏，或者是针对当前游戏的设置，则更新
+        if (settings.applyToAll || settings.gameName === currentGame) {
+          this.gameManager.setAutoStepDelay(settings.delay);
+        }
       },
 
       ...baseComponent.methods,

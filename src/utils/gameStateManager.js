@@ -146,6 +146,23 @@ export default class GameStateManager {
   }
 
   /**
+   * 设置自动模式的延迟时间
+   * @param {number} delay - 延迟时间（毫秒）
+   */
+  setAutoStepDelay(delay) {
+    this.autoStepDelay = delay;
+    this.emit("delayChanged", delay);
+  }
+
+  /**
+   * 获取当前的延迟时间
+   * @returns {number} 当前延迟时间（毫秒）
+   */
+  getAutoStepDelay() {
+    return this.autoStepDelay;
+  }
+
+  /**
    * 执行单步操作
    * @param {Function} stepCallback - 单步操作的回调函数
    */
