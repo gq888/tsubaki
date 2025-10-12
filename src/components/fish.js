@@ -4,9 +4,10 @@ import { defineAsyncComponent } from "vue";
 /**
  * message 组件 - 根据环境选择
  */
-const message = typeof window === "undefined"
-  ? { name: "message", template: "<div>Mock message</div>" }
-  : defineAsyncComponent(() => import("./message.vue"));
+const message =
+  typeof window === "undefined"
+    ? { name: "message", template: "<div>Mock message</div>" }
+    : defineAsyncComponent(() => import("./message.vue"));
 
 const Fish = {
   name: "Fish",

@@ -67,8 +67,8 @@
                   }"
                   :src="
                     !cards2[item]
-                      ? './static/logo.png'
-                      : './static/avatar/' + item + '.png'
+                      ? './static/logo.webp'
+                      : './static/avatar/' + item + '.webp'
                   "
                   style="width: 100%"
                 />

@@ -48,7 +48,7 @@
                   (month == i && ((month == 12 && j == 3) || j == 4))
                     ? card
                     : 'bg') +
-                  '.jpg'
+                  '.webp'
                 "
               />
               <div
@@ -69,7 +69,7 @@
             <div v-for="(item, i) in cards2" :key="i">
               <img
                 v-if="item >= 4 && i < 12"
-                :src="'./static/' + (i * 4 + 1) + '.jpg'"
+                :src="'./static/' + (i * 4 + 1) + '.webp'"
                 class="card"
               />
             </div>

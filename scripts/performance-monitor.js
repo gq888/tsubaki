@@ -142,8 +142,9 @@ class PerformanceMonitor {
     return Math.round(complexity);
   }
 
-  // 分析构建产物
+  // 分析构建产物（触发新构建 - 已弃用，请使用 analyzeDistDirectory）
   analyzeBuildOutput() {
+    console.log('⚠️  警告: 此命令会触发新构建，请使用 analyze-dist 命令\n');
     console.log('📦 分析构建产物...\n');
     
     try {
@@ -175,6 +176,37 @@ class PerformanceMonitor {
       
     } catch (error) {
       console.error('❌ 构建分析失败:', error.message);
+      return null;
+    }
+  }
+
+  // 分析已存在的dist目录（不触发构建）
+  analyzeDistDirectory() {
+    console.log('📦 分析构建产物（不触发新构建）...\n');
+    
+    try {
+      const distPath = path.join(this.projectRoot, 'dist');
+      if (!fs.existsSync(distPath)) {
+        console.error('❌ dist目录不存在，请先运行 npm run build');
+        return null;
+      }
+      
+      const analysis = this.analyzeBuildSize(distPath);
+      
+      console.log('📊 构建分析结果:');
+      console.log(`总大小: ${analysis.totalSize} KB`);
+      console.log(`JS文件: ${analysis.jsSize} KB (${analysis.jsFiles} 个文件)`);
+      console.log(`CSS文件: ${analysis.cssSize} KB (${analysis.cssFiles} 个文件)`);
+      console.log(`图片资源: ${analysis.imageSize} KB (${analysis.imageFiles} 个文件)`);
+      console.log(`其他文件: ${analysis.otherSize} KB`);
+      
+      // 性能建议
+      this.generatePerformanceRecommendations(analysis);
+      
+      return analysis;
+      
+    } catch (error) {
+      console.error('❌ 分析失败:', error.message);
       return null;
     }
   }
@@ -283,7 +315,7 @@ class PerformanceMonitor {
     const report = {
       timestamp,
       complexity: this.analyzeComplexity(),
-      buildAnalysis: this.analyzeBuildOutput(),
+      buildAnalysis: this.analyzeDistDirectory(),
       recommendations: this.generateOptimizationPlan()
     };
     
@@ -445,8 +477,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       monitor.analyzeComplexity();
       break;
       
+    case 'analyze-dist':
+      monitor.analyzeDistDirectory();
+      break;
+      
     case 'build':
-      monitor.analyzeBuildOutput();
+      console.log('⚠️  警告: build命令已弃用，会触发递归构建！');
+      console.log('💡 请使用: npm run perf:build:analyze');
       break;
       
     case 'report':
@@ -462,10 +499,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 🚀 性能监控工具
 
 用法:
-  node performance-monitor.js complexity  # 分析代码复杂度
-  node performance-monitor.js build       # 分析构建产物
-  node performance-monitor.js report      # 生成完整报告
-  node performance-monitor.js monitor     # 实时监控
+  node performance-monitor.js complexity    # 分析代码复杂度
+  node performance-monitor.js analyze-dist  # 分析已构建产物（推荐）
+  node performance-monitor.js report        # 生成完整报告
+  node performance-monitor.js monitor       # 实时监控
+  
+推荐命令:
+  npm run perf:build:analyze               # 分析构建结果
+  npm run perf:build                       # 构建并分析
       `);
   }
 }

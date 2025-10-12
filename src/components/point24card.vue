@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <div v-if="Number.isFinite(card)" class="">
-      <img :src="'./static/' + card + '.jpg'" class="card" />
+      <img :src="'./static/' + card + '.webp'" class="card" />
     </div>
     <div v-else class="align-center flex-col">
       <div class="vertical" style="width: 3.125rem"><span>(</span></div>

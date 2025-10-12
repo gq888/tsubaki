@@ -26,7 +26,7 @@
                 >
               </div>
               <div v-if="sign != 0" class="align-center">
-                <div class="card"><img :src="'./static/bg.jpg'" /></div>
+                <div class="card"><img :src="'./static/bg.webp'" /></div>
               </div>
               <!-- <span class="vertical m-0">)</span> -->
               <span class="vertical m-0">=</span>

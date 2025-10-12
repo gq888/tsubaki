@@ -5,9 +5,10 @@ import { defineAsyncComponent } from "vue";
 /**
  * point24card 组件 - 根据环境选择
  */
-const point24card = typeof window === "undefined"
-  ? { name: "point24card", template: "<div>Mock point24card</div>" }
-  : defineAsyncComponent(() => import("./point24card.vue"));
+const point24card =
+  typeof window === "undefined"
+    ? { name: "point24card", template: "<div>Mock point24card</div>" }
+    : defineAsyncComponent(() => import("./point24card.vue"));
 // var opts    =  [ " + " , " * " , " - " , " - " , " / " , " / " ];
 var opts = [1, 3, 2, 2, 4, 4];
 

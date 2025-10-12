@@ -14,14 +14,14 @@
   >
     <template #game-content>
       <div class="row center">
-        <img class="avatar" :src="'./static/avatar/17.png'" />
+        <img class="avatar" :src="'./static/avatar/17.webp'" />
         <span class="scrore">{{ score1 }}</span>
       </div>
       <div class="row">
         <div>
           <ul class="cardsul">
             <li v-for="item in arr1" :key="item.id" class="card">
-              <img :src="'./static/' + item.id + '.jpg'" />
+              <img :src="'./static/' + item.id + '.webp'" />
             </li>
           </ul>
         </div>
@@ -30,13 +30,13 @@
         <div>
           <ul class="cardsul reverse">
             <li v-for="item in arr2" :key="item.id" class="card">
-              <img :src="'./static/' + item.id + '.jpg'" />
+              <img :src="'./static/' + item.id + '.webp'" />
             </li>
           </ul>
         </div>
       </div>
       <div class="row center">
-        <img class="avatar" :src="'./static/avatar/32.png'" />
+        <img class="avatar" :src="'./static/avatar/32.webp'" />
         <span class="scrore">{{ score2 }}</span>
       </div>
     </template>

@@ -30,7 +30,7 @@
               style="width: 20%; height: 9.375rem; margin: 0"
             >
               <img
-                :src="'./static/' + (check(i) ? item : 'bg') + '.jpg'"
+                :src="'./static/' + (check(i) ? item : 'bg') + '.webp'"
                 @click="hitflag && lockflag && clickCard(item, i)"
                 :class="{ shanshuo: sign == item }"
               />

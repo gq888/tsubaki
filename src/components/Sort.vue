@@ -42,7 +42,7 @@
               style="width: 25%; height: 9.375rem"
             >
               <img
-                :src="'./static/' + item + '.jpg'"
+                :src="'./static/' + item + '.webp'"
                 v-if="item >= 0"
                 @click="hitflag && lockflag && clickCard(item, i)"
                 :class="{ shanshuo: cards1[cards1.indexOf(item + 4) + 1] < 0 }"

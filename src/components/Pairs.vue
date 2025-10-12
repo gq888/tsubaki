@@ -26,11 +26,11 @@
               style="max-width: 25%"
             >
               <img
-                :src="'./static/' + item + '.jpg'"
+                :src="'./static/' + item + '.webp'"
                 v-if="sign == item || sign2 == item || cards2[item]"
               />
               <img
-                :src="'./static/bg.jpg'"
+                :src="'./static/bg.webp'"
                 v-else
                 @click="hitflag && lockflag && clickCard(item, i)"
               />

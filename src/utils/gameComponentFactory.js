@@ -8,26 +8,32 @@ let GameResultModal, GameControls, GameLayout;
 
 if (typeof window === "undefined") {
   // Node.js 环境：直接使用 Mock 组件
-  GameResultModal = { 
-    name: "GameResultModal", 
+  GameResultModal = {
+    name: "GameResultModal",
     template: "<div>Mock GameResultModal</div>",
-    props: ["title", "subtitle", "buttons", "show"]
+    props: ["title", "subtitle", "buttons", "show"],
   };
-  GameControls = { 
-    name: "GameControls", 
+  GameControls = {
+    name: "GameControls",
     template: "<div>Mock GameControls</div>",
-    props: ["canUndo", "canGoon", "canRestart", "canAuto", "canStep"]
+    props: ["canUndo", "canGoon", "canRestart", "canAuto", "canStep"],
   };
-  GameLayout = { 
-    name: "GameLayout", 
+  GameLayout = {
+    name: "GameLayout",
     template: "<div><slot name='game-content'></slot></div>",
-    props: ["title", "winflag", "loseflag", "drawflag"]
+    props: ["title", "winflag", "loseflag", "drawflag"],
   };
 } else {
   // 浏览器环境：使用 Vue 3 异步组件
-  GameResultModal = defineAsyncComponent(() => import("../components/GameResultModal.vue"));
-  GameControls = defineAsyncComponent(() => import("../components/GameControls.vue"));
-  GameLayout = defineAsyncComponent(() => import("../components/GameLayout.vue"));
+  GameResultModal = defineAsyncComponent(
+    () => import("../components/GameResultModal.vue"),
+  );
+  GameControls = defineAsyncComponent(
+    () => import("../components/GameControls.vue"),
+  );
+  GameLayout = defineAsyncComponent(
+    () => import("../components/GameLayout.vue"),
+  );
 }
 
 /**

@@ -18,7 +18,7 @@
             show1="1"
             >1</message
           >
-          <img class="avatar" :src="'./static/avatar/32.png'" />
+          <img class="avatar" :src="'./static/avatar/32.webp'" />
           <span class="diff" :style="{ opacity: diff1 != 0 ? 1 : 0 }"
             >{{ diff1 > 0 ? "+" : "" }}{{ diff1 }}</span
           >
@@ -28,7 +28,7 @@
           <message class="abso" style="top: 4.375rem; left: 0; width: 100%"
             >asfasfasdfasfdasdfasdfas</message
           >
-          <img class="avatar" :src="'./static/avatar/31.png'" />
+          <img class="avatar" :src="'./static/avatar/31.webp'" />
           <span class="diff" :style="{ opacity: diff2 != 0 ? 1 : 0 }"
             >{{ diff2 > 0 ? "+" : "" }}{{ diff2 }}</span
           >
@@ -38,7 +38,7 @@
           <message class="abso" style="top: 4.375rem; left: 0; width: 100%"
             >1</message
           >
-          <img class="avatar" :src="'./static/avatar/29.png'" />
+          <img class="avatar" :src="'./static/avatar/29.webp'" />
           <span class="diff" :style="{ opacity: diff3 != 0 ? 1 : 0 }"
             >{{ diff3 > 0 ? "+" : "" }}{{ diff3 }}</span
           >
@@ -48,7 +48,7 @@
           <message class="abso" style="top: 4.375rem; left: 0; width: 100%"
             >1</message
           >
-          <img class="avatar" :src="'./static/avatar/30.png'" />
+          <img class="avatar" :src="'./static/avatar/30.webp'" />
           <span class="diff" :style="{ opacity: diff4 != 0 ? 1 : 0 }"
             >{{ diff4 > 0 ? "+" : "" }}{{ diff4 }}</span
           >
@@ -75,7 +75,7 @@
                   flyout1: flyout1.indexOf(item) >= 0,
                   flyout2: flyout2.indexOf(item) >= 0,
                 }"
-                :src="'./static/' + item + '.jpg'"
+                :src="'./static/' + item + '.webp'"
               />
             </li>
           </ul>
@@ -87,7 +87,7 @@
       <h1>
         <img
           class="avatar"
-          :src="'./static/avatar/' + [32, 31, 29, 30][step % 4] + '.png'"
+          :src="'./static/avatar/' + [32, 31, 29, 30][step % 4] + '.webp'"
         />WIN!
       </h1>
     </template>

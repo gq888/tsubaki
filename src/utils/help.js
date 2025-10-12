@@ -29,7 +29,7 @@ export function preload(cb) {
     arr.push(
       new Promise((resolve) => {
         let img = new Image();
-        img.src = "./static/" + i + ".jpg";
+        img.src = "./static/" + i + ".webp";
         img.onload = () => {
           cb && cb(img, i);
           resolve(img);
