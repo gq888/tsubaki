@@ -89,7 +89,21 @@ const Sort = {
       }
       let temp = ((card >> 2) - 1) * 4 + (card % 4);
       let index = this.cards1.indexOf(temp);
-      window !== undefined && window.document !== undefined && (document.documentElement.scrollTop = window.document.body.scrollTop = (index % (this.number + 1)) * 150);
+      
+      // 滚动到目标卡片位置
+      if (typeof window !== 'undefined' && window.document) {
+        const scrollTop = (index % (this.number + 1)) * 150;
+        
+        // 优先滚动 GameLayout 的 wrapper
+        const wrapper = document.querySelector('.game-content-wrapper');
+        if (wrapper) {
+          wrapper.scrollTop = scrollTop;
+        } else {
+          // 降级到传统的 document 滚动
+          document.documentElement.scrollTop = scrollTop;
+          document.body.scrollTop = scrollTop;
+        }
+      }
     },
     autoCalc() {
       let over = true,
