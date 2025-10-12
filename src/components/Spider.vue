@@ -25,7 +25,7 @@
                 height: 9.375rem;
                 z-index: 0;
               "
-              @click="hitflag && lockflag && clickCard(0)"
+              @click="canOperate && clickCard(0)"
             >
               <img
                 :src="'./static/bg.webp'"
@@ -97,7 +97,7 @@
               <div
                 class="card m-0 abso"
                 style="top: 11.25rem; width: 25%"
-                @click="hitflag && lockflag && clickCard(i + 1)"
+                @click="canOperate && clickCard(i + 1)"
                 :style="{
                   zIndex: dragItem == i + 1 ? 10 : 1,
                   left: (i - 1) * 25 + '%',

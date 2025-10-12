@@ -21,7 +21,7 @@
                   :key="i"
                   class="sign center"
                   :class="{ choose: sign == i }"
-                  @click="hitflag && lockflag && clickSign(i)"
+                  @click="canOperate && clickSign(i)"
                   >{{ signs[i] }}</span
                 >
               </div>
@@ -45,12 +45,12 @@
               <div v-if="i != 0" class="flex-row center m-0">
                 <span
                   class="sign center"
-                  @click="hitflag && lockflag && clickCard(item, i)"
+                  @click="canOperate && clickCard(item, i)"
                   >{{ signs[sign] }}</span
                 >
                 <point24card
                   :card="item"
-                  @click="hitflag && lockflag && clickCard(item, i)"
+                  @click="canOperate && clickCard(item, i)"
                 ></point24card>
               </div>
             </div>

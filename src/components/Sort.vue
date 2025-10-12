@@ -44,12 +44,12 @@
               <img
                 :src="'./static/' + item + '.webp'"
                 v-if="item >= 0"
-                @click="hitflag && lockflag && clickCard(item, i)"
+                @click="canOperate && clickCard(item, i)"
                 :class="{ shanshuo: cards1[cards1.indexOf(item + 4) + 1] < 0 }"
               />
               <div
                 v-else-if="cards1[i - 1] >= 4"
-                @click="hitflag && lockflag && clickSign(i)"
+                @click="canOperate && clickSign(i)"
               >
                 <span class="m-0">{{
                   types[cards1[i - 1] % 4] + point[(cards1[i - 1] >> 2) - 1]

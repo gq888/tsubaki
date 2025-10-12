@@ -8,7 +8,6 @@ export default class GameStateManager {
   constructor(options = {}) {
     // 游戏状态标志
     this.hitflag = true; // 是否可以操作
-    this.lockflag = true; // 是否锁定
     this.winflag = false; // 胜利标志
     this.loseflag = false; // 失败标志
     this.drawflag = false; // 平局标志
@@ -30,7 +29,6 @@ export default class GameStateManager {
    */
   init() {
     this.hitflag = true;
-    this.lockflag = true;
     this.winflag = false;
     this.loseflag = false;
     this.drawflag = false;
@@ -82,7 +80,7 @@ export default class GameStateManager {
    * @returns {boolean} 是否可以撤销
    */
   canUndo() {
-    return this.history.length > 0 && this.hitflag && this.lockflag;
+    return this.history.length > 0 && this.hitflag && !this.isAutoRunning;
   }
 
   /**
@@ -99,7 +97,6 @@ export default class GameStateManager {
 
     console.log("开始自动模式...");
     this.isAutoRunning = true;
-    this.lockflag = false;
     this.emit("autoStart");
 
     let stepCount = 0;
@@ -140,7 +137,6 @@ export default class GameStateManager {
     }
 
     this.isAutoRunning = false;
-    this.lockflag = true;
     if (this.autoInterval) {
       clearInterval(this.autoInterval);
       this.autoInterval = null;
@@ -260,7 +256,6 @@ export default class GameStateManager {
   getState() {
     return {
       hitflag: this.hitflag,
-      lockflag: this.lockflag,
       winflag: this.winflag,
       loseflag: this.loseflag,
       drawflag: this.drawflag,
@@ -289,11 +284,6 @@ export default class GameStateManager {
       hitflag() {
         const manager = this.gameManager;
         return manager ? manager.hitflag : true;
-      },
-
-      lockflag() {
-        const manager = this.gameManager;
-        return manager ? manager.lockflag : true;
       },
 
       winflag() {
@@ -325,7 +315,7 @@ export default class GameStateManager {
 
       restartDisabled() {
         const manager = this.gameManager;
-        return !manager || !manager.hitflag || !manager.lockflag;
+        return !manager || !manager.hitflag || manager.isAutoRunning;
       },
 
       stepDisabled() {
@@ -333,7 +323,7 @@ export default class GameStateManager {
         return (
           !manager ||
           !manager.hitflag ||
-          !manager.lockflag ||
+          manager.isAutoRunning ||
           manager.winflag ||
           manager.loseflag ||
           manager.drawflag
@@ -345,12 +335,17 @@ export default class GameStateManager {
         return (
           !manager ||
           !manager.hitflag ||
-          !manager.lockflag ||
           manager.winflag ||
           manager.loseflag ||
           manager.drawflag ||
           manager.isAutoRunning
         );
+      },
+
+      // 用于模板的便捷计算属性
+      canOperate() {
+        const manager = this.gameManager;
+        return manager && manager.hitflag && !manager.isAutoRunning;
       },
 
       // 游戏状态

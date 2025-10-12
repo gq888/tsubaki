@@ -505,7 +505,7 @@ const Spider = {
     },
     start(e) {
       let item = e.detail.vnode.key % this.number;
-      if (!this.gameManager.hitflag || !this.gameManager.lockflag) {
+      if (!this.canOperate) {
         return false;
       }
       let drag = this.findPos(item);
@@ -524,7 +524,7 @@ const Spider = {
     },
     async end(e) {
       let drag = this.dragItem;
-      if (!this.gameManager.hitflag || !this.gameManager.lockflag) {
+      if (!this.canOperate) {
         return;
       }
       if (drag == 1 && this.dragCard != this.cards[1][0]) {
@@ -565,7 +565,7 @@ const Spider = {
       // this.moveflag = false
     },
     move(e) {
-      if (!this.gameManager.hitflag || !this.gameManager.lockflag) {
+      if (!this.canOperate) {
         return false;
       }
       if (this.dragItem == 1 && this.dragCard != this.cards[1][0]) {

@@ -8,7 +8,7 @@
 
 ### 主要功能
 
-- 统一管理游戏状态标志（如：hitflag, lockflag, winflag等）
+- 统一管理游戏状态标志（如：hitflag, winflag, isAutoRunning等）
 - 管理游戏历史记录，支持撤销操作
 - 提供自动模式，支持自动执行游戏步骤
 - 事件系统，支持状态变化监听
@@ -104,7 +104,12 @@ computed: {
   },
   
   restartDisabled() {
-    return !this.gameManager.hitflag || !this.gameManager.lockflag;
+    return !this.gameManager.hitflag || this.gameManager.isAutoRunning;
+  },
+  
+  // 用于模板的便捷计算属性
+  canOperate() {
+    return this.gameManager.hitflag && !this.gameManager.isAutoRunning;
   }
 }
 ```

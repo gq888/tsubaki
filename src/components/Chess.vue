@@ -28,7 +28,7 @@
               :key="i"
               class="m-0 center"
               style="width: 16%; border-radius: 50%; overflow: hidden"
-              @click="hitflag && lockflag && clickCard(i)"
+              @click="canOperate && clickCard(i)"
             >
               <div
                 class="center"

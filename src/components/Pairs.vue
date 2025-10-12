@@ -32,7 +32,7 @@
               <img
                 :src="'./static/bg.webp'"
                 v-else
-                @click="hitflag && lockflag && clickCard(item, i)"
+                @click="canOperate && clickCard(item, i)"
               />
             </div>
           </ul>

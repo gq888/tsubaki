@@ -30,13 +30,13 @@ export default {
     },
 
     restartDisabled() {
-      return !this.gameManager.hitflag || !this.gameManager.lockflag;
+      return !this.gameManager.hitflag || this.gameManager.isAutoRunning;
     },
 
     stepDisabled() {
       return (
         !this.gameManager.hitflag ||
-        !this.gameManager.lockflag ||
+        this.gameManager.isAutoRunning ||
         this.gameManager.winflag ||
         this.gameManager.loseflag
       );
@@ -45,11 +45,15 @@ export default {
     autoDisabled() {
       return (
         !this.gameManager.hitflag ||
-        !this.gameManager.lockflag ||
         this.gameManager.winflag ||
         this.gameManager.loseflag ||
         this.gameManager.isAutoRunning
       );
+    },
+
+    // 用于模板的便捷计算属性
+    canOperate() {
+      return this.gameManager.hitflag && !this.gameManager.isAutoRunning;
     },
   },
 
@@ -162,7 +166,7 @@ export default {
 
     // 执行游戏中的一步操作
     async makeMove(from, to) {
-      if (!this.gameManager.hitflag || !this.gameManager.lockflag) {
+      if (!this.canOperate) {
         return;
       }
 

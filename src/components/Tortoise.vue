@@ -31,7 +31,7 @@
             >
               <img
                 :src="'./static/' + (check(i) ? item : 'bg') + '.webp'"
-                @click="hitflag && lockflag && clickCard(item, i)"
+                @click="canOperate && clickCard(item, i)"
                 :class="{ shanshuo: sign == item }"
               />
             </li>
