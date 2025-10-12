@@ -190,8 +190,14 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       // 统一的自动模式方法
       async pass() {
         await this.gameManager.startAuto(async () => {
-          if (!this.winflag && !this.loseflag && !this.drawflag) {
-            await this.stepFn();
+          const beforeState = JSON.stringify(this.$data);
+          await this.stepFn();
+          const afterState = JSON.stringify(this.$data);
+          
+          // 如果状态没变，说明移动无效
+          if (beforeState === afterState) {
+            console.warn('移动无效，游戏可能陷入死锁');
+            this.gameManager.stopAuto();
           }
         });
       },

@@ -31,7 +31,8 @@
     "generate:examples": "node scripts/generate-component.js examples",
     "img:convert": "node scripts/convert-to-webp.js",
     "img:update-refs": "node scripts/update-image-refs.js",
-    "img:optimize": "npm run img:convert && npm run img:update-refs"
+    "img:optimize": "npm run img:convert && npm run img:update-refs",
+    "test": "node scripts/renderToString-method-tester.js"
   },
   "dependencies": {
     "@vue/compiler-sfc": "^3.5.22",

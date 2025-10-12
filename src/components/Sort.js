@@ -62,9 +62,9 @@ const Sort = {
       if (index >= 0) {
         if (this.cards1[index + 1] < 0) {
           let sign = this.cards1[index + 1];
-          this.recordMove(i, index + 1, card, sign); // 使用GameStateManager记录操作
           this.cards1.splice(i, 1, sign);
           this.cards1.splice(index + 1, 1, card);
+          this.recordMove(i, index + 1, card, sign); // 使用GameStateManager记录操作
         }
       }
     },
@@ -74,6 +74,11 @@ const Sort = {
       await this.gameManager.step(async () => {
         this.clickSign(this.next[1]);
         await wait(this.gameManager.autoStepDelay);
+        
+        const cardBefore = this.next[0];
+        const indexBefore = this.cards1.indexOf(cardBefore);
+        console.log(`🎯 准备移动卡片: card=${cardBefore}, index=${indexBefore}`);
+        
         this.clickCard(this.next[0]);
       });
     },
@@ -84,8 +89,7 @@ const Sort = {
       }
       let temp = ((card >> 2) - 1) * 4 + (card % 4);
       let index = this.cards1.indexOf(temp);
-      document.documentElement.scrollTop = window.document.body.scrollTop =
-        (index % (this.number + 1)) * 150;
+      window !== undefined && window.document !== undefined && (document.documentElement.scrollTop = window.document.body.scrollTop = (index % (this.number + 1)) * 150);
     },
     autoCalc() {
       let over = true,

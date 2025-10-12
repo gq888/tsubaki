@@ -42,7 +42,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
       absolutePath = componentPath;
     } else {
       // 相对于当前脚本目录的路径
-      absolutePath = path.resolve(__dirname, '..', componentPath);
+      absolutePath = path.resolve(__dirname, '..', "src/components/" + componentPath);
     }
     
     console.log(`绝对路径: ${absolutePath}`);
@@ -63,7 +63,8 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
       before: null,
       after: null,
       result: null,
-      error: null
+      error: null,
+      errorStack: null
     };
     
     // 创建修改后的组件
@@ -102,14 +103,20 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
             console.log(`开始执行${methodName}方法，当前游戏状态: win=${this.gameManager?.winflag}, lose=${this.gameManager?.loseflag}, draw=${this.gameManager?.drawflag}`);
             console.log(`游戏步数: ${this.gameManager?.getStepCount()}, 自动运行状态: ${this.gameManager?.isAutoRunning}`);
             
-            // 添加超时控制
-            const timeoutPromise = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error('方法执行超时（150秒）')), 150000);
-            });
-            
+            console.log('准备调用方法...');
             const methodPromise = this[methodName].apply(this, args);
+            console.log(`方法返回类型: ${typeof methodPromise}, 是否是Promise: ${methodPromise && typeof methodPromise.then === 'function'}`);
             
-            this._testCapture.result = await Promise.race([methodPromise, timeoutPromise]);
+            // 检查返回值是否是 Promise
+            if (methodPromise && typeof methodPromise.then === 'function') {
+              console.log('等待 Promise resolve...');
+              this._testCapture.result = await methodPromise;
+              console.log('Promise 已 resolve');
+            } else {
+              this._testCapture.result = methodPromise;
+              console.log('同步方法执行完成');
+            }
+            
             console.log(`${methodName}方法执行完成，最终游戏状态: win=${this.gameManager?.winflag}, lose=${this.gameManager?.loseflag}, draw=${this.gameManager?.drawflag}`);
             console.log(`最终游戏步数: ${this.gameManager?.getStepCount()}, 自动运行状态: ${this.gameManager?.isAutoRunning}`);
           } else {
@@ -117,12 +124,9 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           }
         } catch (error) {
           this._testCapture.error = error.message;
-          console.error('方法执行错误:', error);
-          // 如果是超时错误，强制停止自动模式
-          if (error.message.includes('超时') && this.gameManager) {
-            console.log('强制停止自动模式...');
-            this.gameManager.stopAuto();
-          }
+          this._testCapture.errorStack = error.stack;
+          console.error('❌ 方法执行错误:', error.message);
+          console.error('错误堆栈:', error.stack);
         }
         
         // 捕获执行后状态
@@ -144,6 +148,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           args: args,
           result: this._testCapture.result,
           error: this._testCapture.error,
+          errorStack: this._testCapture.errorStack,
           before: this._testCapture.before,
           after: this._testCapture.after,
           gameFlags: {
@@ -208,7 +213,6 @@ async function main() {
   });
   
   await executeMethodWithRenderToString(componentPath, methodName, {}, parsedArgs);
-  process.exit(0);
 }
 
 // 直接调用main函数
