@@ -50,11 +50,13 @@ global.localStorage = localStorageMock;
 
 /**
  * 使用renderToString执行组件方法
+ * @param {number} timeout - 超时时间（毫秒），默认30秒
  */
-async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = []) {
+async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 30000) {
   try {
     console.log(`正在通过renderToString执行方法: ${methodName}`);
     console.log(`组件路径: ${componentPath}`);
+    console.log(`超时设置: ${timeout}ms`);
     
     // 根据路径动态导入组件
     // 如果是相对路径，转换为绝对路径
@@ -131,7 +133,20 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
             // 检查返回值是否是 Promise
             if (methodPromise && typeof methodPromise.then === 'function') {
               console.log('等待 Promise resolve...');
-              this._testCapture.result = await methodPromise;
+              
+              // 创建超时Promise
+              const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                  reject(new Error(`TIMEOUT: 方法执行超时 (${timeout}ms)`));
+                }, timeout);
+              });
+              
+              // 使用Promise.race实现超时控制
+              this._testCapture.result = await Promise.race([
+                methodPromise,
+                timeoutPromise
+              ]);
+              
               console.log('Promise 已 resolve');
             } else {
               this._testCapture.result = methodPromise;
@@ -144,9 +159,20 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
             throw new Error(`方法 ${methodName} 不存在`);
           }
         } catch (error) {
+          // 检测超时异常并停止自动运行
+          if (error.message && error.message.startsWith('TIMEOUT:')) {
+            console.error('⏱️  超时异常:', error.message);
+            if (this.gameManager && typeof this.gameManager.stopAuto === 'function') {
+              console.log('正在停止自动运行...');
+              this.gameManager.stopAuto();
+              console.log('自动运行已停止');
+            }
+          } else {
+            console.error('❌ 方法执行错误:', error.message);
+          }
+          
           this._testCapture.error = error.message;
           this._testCapture.errorStack = error.stack;
-          console.error('❌ 方法执行错误:', error.message);
           console.error('错误堆栈:', error.stack);
         }
         
@@ -182,6 +208,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         
         console.log('\n=== 测试结果 ===');
         console.log(JSON.stringify(testResult, null, 2));
+        process.exit(0);
       },
       // 简单的模板，不输出任何内容
       template: '<div>Test completed</div>'
@@ -212,17 +239,35 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
 async function main() {
   const args = process.argv.slice(2);
   
-  if (args.length < 3) {
-    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...]');
+  if (args.length < 2) {
+    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>]');
     console.log('示例: node renderToString-method-tester.js src/components/Chess.js init 0');
-    console.log('      node renderToString-method-tester.js src/components/Spider.js clickCard 0');
+    console.log('      node renderToString-method-tester.js src/components/Spider.js clickCard 0 --timeout=60000');
     console.log('说明: 支持相对路径和绝对路径，组件将动态导入');
+    console.log('      默认超时时间为30000ms (30秒)');
+    console.log('      超时后会自动调用 gameManager.stopAuto() 停止自动运行');
     process.exit(1);
   }
   
   const componentPath = args[0];
   const methodName = args[1];
-  const methodArgs = args.slice(2);
+  
+  // 提取timeout参数
+  let timeout = 30000;
+  const methodArgs = [];
+  
+  for (let i = 2; i < args.length; i++) {
+    const arg = args[i];
+    if (arg.startsWith('--timeout=')) {
+      timeout = parseInt(arg.split('=')[1], 10);
+      if (isNaN(timeout) || timeout <= 0) {
+        console.error('错误: timeout必须是正整数');
+        process.exit(1);
+      }
+    } else {
+      methodArgs.push(arg);
+    }
+  }
   
   // 尝试解析JSON参数
   const parsedArgs = methodArgs.map(arg => {
@@ -233,7 +278,7 @@ async function main() {
     }
   });
   
-  await executeMethodWithRenderToString(componentPath, methodName, {}, parsedArgs);
+  await executeMethodWithRenderToString(componentPath, methodName, {}, parsedArgs, timeout);
 }
 
 // 直接调用main函数
