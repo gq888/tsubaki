@@ -25,7 +25,7 @@ const Sort = {
         cards.splice(cards.indexOf(this.number * 4 - 1 - i), 1, -1 - i);
       }
       for (let i = 0; i < 4; i++) {
-        cards.splice(i * (this.number + 1), 0, this.number * 4 - 4 + i);
+        cards.splice(i * 13, 0, this.number * 4 - 4 + i);
       }
       this.autoCalc();
     },
@@ -92,7 +92,7 @@ const Sort = {
       
       // 滚动到目标卡片位置
       if (typeof window !== 'undefined' && window.document) {
-        const scrollTop = (index % (this.number + 1)) * 150;
+        const scrollTop = (index % 13) * 150;
         
         // 优先滚动 GameLayout 的 wrapper
         const wrapper = document.querySelector('.game-content-wrapper');
@@ -162,12 +162,12 @@ const Sort = {
               return;
             }
             next_c += 4;
-            while (this.cards1[n] == next_c && n % (this.number + 1) > 0) {
+            while (this.cards1[n] == next_c && n % 13 > 0) {
               n--;
               next_c += 4;
               deep++;
             }
-            if (n % (this.number + 1) == 0) {
+            if (n % 13 == 0) {
               return;
             }
             let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1];
@@ -183,14 +183,14 @@ const Sort = {
           let next_i = this.cards1.indexOf(card - 4);
           while (
             this.cards1[i] ==
-            (this.number - 1 - (i % (this.number + 1))) * 4 + type
+            (this.number - 1 - (i % 13)) * 4 + type
           ) {
             i--;
           }
-          if (i < 0 || i % (this.number + 1) == this.number) {
+          if (i < 0 || i % 13 == this.number) {
             if (
               card < 8 ||
-              next_i % (this.number + 1) == this.number ||
+              next_i % 13 == this.number ||
               this.cards1[next_i + 1] == card - 8
             ) {
               this.next = [card - 4, index];
@@ -206,7 +206,7 @@ const Sort = {
         for (let i = 0; i < this.number * 4 + 4; i++) {
           if (
             this.cards1[i] >> 2 ==
-            this.number - 1 - (i % (this.number + 1))
+            this.number - 1 - (i % 13)
           ) {
             this.n++;
           }
@@ -279,7 +279,7 @@ const Sort = {
           Math.abs(
             ((t.card - 4) >> 2) -
               (this.number - 1) +
-              ((t.index % (this.number + 1))),
+              ((t.index % 13)),
           );
         let card_rank = (t.card - 4) >> 2;  // 卡片等级，K=11最大
         // 优先级 > 距离 > 卡片等级（大牌优先）
