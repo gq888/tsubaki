@@ -265,6 +265,7 @@ const Sort = {
       this.next = [-1, -1];
       let min = 999999,
         max = -1;
+      let best_card_rank = -1;
       for (let i = -4; i < 0; i++) {
         let t = temp[i];
         if (t.card < 4) {
@@ -278,12 +279,17 @@ const Sort = {
           Math.abs(
             ((t.card - 4) >> 2) -
               (this.number - 1) +
-              ((t.index % this.number) + 1),
+              ((t.index % (this.number + 1))),
           );
-        if (t.priority > max || (t.priority == max && diff < min)) {
+        let card_rank = (t.card - 4) >> 2;  // 卡片等级，K=11最大
+        // 优先级 > 距离 > 卡片等级（大牌优先）
+        if (t.priority > max || 
+            (t.priority == max && diff < min) ||
+            (t.priority == max && diff == min && card_rank > best_card_rank)) {
           this.next = [t.card - 4, t.index];
           min = diff;
           max = t.priority;
+          best_card_rank = card_rank;
         }
       }
     },
