@@ -12,6 +12,7 @@ const Sort = {
       number: 12,
       n: 0,
       sign_index: -1,
+      matchMode: 2,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
     };
   },
   methods: {
@@ -235,11 +236,11 @@ const Sort = {
     // returnAll: 返回所有候选（用于多路径搜索）
     findCardByRankOffset(card, offset, condition = null, returnAll = false) {
       let target_rank = (card >> 2) + offset;
-      let card_color = card % 2;  // 0=红色(♥♦), 1=黑色(♠♣)
+      let card_group = card % this.matchMode;  // 按 matchMode 分组
       let candidates = [];
       
-      // 收集所有同颜色的候选牌
-      for (let suit = card_color; suit < 4; suit += 2) {
+      // 收集所有同组的候选牌
+      for (let suit = card_group; suit < 4; suit += this.matchMode) {
         let target_card = target_rank * 4 + suit;
         let idx = this.cards1.indexOf(target_card);
         if (idx >= 0) {
@@ -361,7 +362,7 @@ const Sort = {
               let card_at_n = this.cards1[n];
               if (card_at_n >= 0 && 
                   (card_at_n >> 2) == (next_c >> 2) && 
-                  (card_at_n % 2) == (next_c % 2)) {
+                  (card_at_n % this.matchMode) == (next_c % this.matchMode)) {
                 n--;
                 next_c += 4;
                 deep++;
@@ -387,8 +388,8 @@ const Sort = {
         };
         if (card >= 4) {
           let i = index - 1;
-          let color = card % 2;  // 牌的颜色
-          // 查找所有同颜色的前一张牌候选
+          let cardGroup = card % this.matchMode;  // 牌的分组
+          // 查找所有同组的前一张牌候选
           let prevCandidates = this.findAllCardsByRankOffset(card, -1);
           
           // 检查是否形成递减序列（点数递减，颜色相同）
@@ -397,7 +398,7 @@ const Sort = {
             let card_at_i = this.cards1[i];
             if (card_at_i >= 0 && 
                 (card_at_i >> 2) == expected_rank && 
-                (card_at_i % 2) == color) {
+                (card_at_i % this.matchMode) == cardGroup) {
               i--;
             } else {
               break;
@@ -659,6 +660,27 @@ const Sort = {
           this.gameManager.setLose();
         }
       }
+    },
+    
+    // 设置匹配难度
+    setMatchMode(mode) {
+      if ([1, 2, 4].includes(mode)) {
+        this.matchMode = mode;
+        this.init();  // 重新初始化游戏
+        console.log(`✅ 难度已设置为: ${mode === 1 ? '简单(数值)' : mode === 2 ? '中等(颜色)' : '困难(花色)'}`);
+      } else {
+        console.error('❌ 无效的难度模式，请使用 1, 2 或 4');
+      }
+    },
+    
+    // 获取当前难度的描述
+    getMatchModeDescription() {
+      const descriptions = {
+        1: '简单(数值匹配) - 任意点数相同即可连接',
+        2: '中等(颜色匹配) - 同颜色的牌可以连接',
+        4: '困难(花色匹配) - 必须同花色才能连接'
+      };
+      return descriptions[this.matchMode] || '未知难度';
     },
   },
 };
