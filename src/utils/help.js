@@ -2,7 +2,7 @@ export function shuffleCards(cards, num) {
   let rand, tmp;
   let last = num - 1;
   for (let i = 0; i < 1000; i++) {
-    rand = Math.floor(Math.random() * last);
+    rand = Math.floor(seededRandom() * last);
     tmp = cards[last];
     cards[last] = cards[rand];
     cards[rand] = tmp;
@@ -75,7 +75,7 @@ export function checkDeadForeach(array, newest) {
   return true;
 }
 
-let s = 1;
+let s = 1234;
 
 export function setSeed(seed) {
   s = seed;

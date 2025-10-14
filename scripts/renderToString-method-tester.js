@@ -51,8 +51,9 @@ global.localStorage = localStorageMock;
 /**
  * 使用renderToString执行组件方法
  * @param {number} timeout - 超时时间（毫秒），默认30秒
+ * @param {number} seed - 随机数种子
  */
-async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 30000) {
+async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 30000, seed = null) {
   try {
     console.log(`正在通过renderToString执行方法: ${methodName}`);
     console.log(`组件路径: ${componentPath}`);
@@ -95,11 +96,18 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
       ...originalComponent,
       data() {
         const initialData = originalComponent.data ? originalComponent.data() : {};
-        return {
+        const mergedData = {
           ...initialData,
           ...currentData, // 覆盖当前数据
           _testCapture: capturedState // 添加状态捕获对象
         };
+        
+        // 如果提供了种子，覆盖数据中的种子值
+        if (seed !== null) {
+          mergedData.seed = seed;
+        }
+        
+        return mergedData;
       },
       async created() {
         console.log('=== 修改后的created生命周期执行 ===');
@@ -240,20 +248,28 @@ async function main() {
   const args = process.argv.slice(2);
   
   if (args.length < 2) {
-    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>]');
+    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>]');
     console.log('示例: node renderToString-method-tester.js src/components/Chess.js init 0');
     console.log('      node renderToString-method-tester.js src/components/Spider.js clickCard 0 --timeout=60000');
+    console.log('      node renderToString-method-tester.js point24.js stepFn --state=\'{"gameManager":{...}}\'');
+    console.log('      node renderToString-method-tester.js point24.js stepFn --state-file=state.json');
+    console.log('      node renderToString-method-tester.js point24.js init 0 --seed=12345');
     console.log('说明: 支持相对路径和绝对路径，组件将动态导入');
     console.log('      默认超时时间为30000ms (30秒)');
     console.log('      超时后会自动调用 gameManager.stopAuto() 停止自动运行');
+    console.log('      --state: 直接传入JSON格式的状态对象');
+    console.log('      --state-file: 从文件读取状态对象');
+    console.log('      --seed: 设置随机数种子（用于可重现的测试）');
     process.exit(1);
   }
   
   const componentPath = args[0];
   const methodName = args[1];
   
-  // 提取timeout参数
+  // 提取timeout、state、state-file和seed参数
   let timeout = 30000;
+  let currentState = {};
+  let seed = null;
   const methodArgs = [];
   
   for (let i = 2; i < args.length; i++) {
@@ -262,6 +278,33 @@ async function main() {
       timeout = parseInt(arg.split('=')[1], 10);
       if (isNaN(timeout) || timeout <= 0) {
         console.error('错误: timeout必须是正整数');
+        process.exit(1);
+      }
+    } else if (arg.startsWith('--seed=')) {
+      seed = parseInt(arg.split('=')[1], 10);
+      if (isNaN(seed)) {
+        console.error('错误: seed必须是整数');
+        process.exit(1);
+      }
+      console.log('✓ 将使用种子:', seed);
+    } else if (arg.startsWith('--state=')) {
+      const stateJson = arg.substring('--state='.length);
+      try {
+        currentState = JSON.parse(stateJson);
+        console.log('✓ 成功解析状态对象');
+      } catch (error) {
+        console.error('错误: 无法解析状态JSON:', error.message);
+        process.exit(1);
+      }
+    } else if (arg.startsWith('--state-file=')) {
+      const stateFilePath = arg.substring('--state-file='.length);
+      try {
+        const { readFileSync } = await import('fs');
+        const stateContent = readFileSync(stateFilePath, 'utf-8');
+        currentState = JSON.parse(stateContent);
+        console.log('✓ 成功从文件读取状态对象:', stateFilePath);
+      } catch (error) {
+        console.error('错误: 无法读取状态文件:', error.message);
         process.exit(1);
       }
     } else {
@@ -278,7 +321,7 @@ async function main() {
     }
   });
   
-  await executeMethodWithRenderToString(componentPath, methodName, {}, parsedArgs, timeout);
+  await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed);
 }
 
 // 直接调用main函数

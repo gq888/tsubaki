@@ -1,5 +1,6 @@
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 import { defineAsyncComponent } from "vue";
+import { shuffleCards } from "../utils/help.js";
 
 /**
  * message 组件 - 根据环境选择
@@ -45,22 +46,11 @@ const Fish = {
       for (let i = 0; i < 54; i++) {
         cards.push(i);
       }
-      this.shuffleCards(cards);
+      shuffleCards(cards, 53);
       this.cards2.push(...cards.splice(-14));
       this.cards3.push(...cards.splice(-13));
       this.cards4.push(...cards.splice(-13));
       console.log(cards, this.cards2, this.cards3);
-    },
-    // 洗牌
-    shuffleCards(cards) {
-      let rand, tmp;
-      for (let i = 0; i < 1000; i++) {
-        rand = Math.floor(Math.random() * 53);
-        tmp = cards[53];
-        cards[53] = cards[rand];
-        cards[rand] = tmp;
-      }
-      return cards;
     },
     time(handle, time) {
       return new Promise((resolve) => {

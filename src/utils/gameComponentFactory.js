@@ -1,6 +1,7 @@
 import GameStateManager from "./gameStateManager.js";
 import gameSettingsManager from "./gameSettingsManager.js";
 import { defineAsyncComponent } from "vue";
+import { setSeed } from "./help.js";
 
 /**
  * 组件定义 - 根据环境选择 Mock 或真实组件
@@ -80,6 +81,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     // 扩展data函数
     data() {
       const baseData = baseComponent.data ? baseComponent.data.call(this) : {};
+      
       return {
         ...baseData,
         gameManager: new GameStateManager({
@@ -90,6 +92,8 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
 
     // 扩展created生命周期
     created() {
+      this.setSeed(this.seed ? this.seed : Date.now());
+      
       // 初始化GameStateManager
       this.gameManager.init();
 
@@ -196,6 +200,12 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
 
     // 扩展methods
     methods: {
+      // 设置随机数种子
+      setSeed(seed) {
+        this.seed = seed;
+        setSeed(seed);
+      },
+      
       // 统一的撤销方法
       undo() {
         this.gameManager.undo();

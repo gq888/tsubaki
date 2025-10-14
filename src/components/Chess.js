@@ -1,4 +1,4 @@
-import { shuffleCards, wait } from "../utils/help.js";
+import { shuffleCards, wait, seededRandom } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
 let _modes = [
@@ -308,7 +308,7 @@ const Chess = {
         return await this.clickCard(best, true);
       }
       if (hide.length > 0) {
-        let random = Math.floor(Math.random() * hide.length);
+        let random = Math.floor(seededRandom() * hide.length);
         return await this.clickCard(hide[random], true);
       }
       let suicide = false;
@@ -344,12 +344,12 @@ const Chess = {
       }
       // 优先移动到受保护的位置
       if (protectedRoad.length > 0) {
-        let random = Math.floor(Math.random() * protectedRoad.length);
+        let random = Math.floor(seededRandom() * protectedRoad.length);
         return await moveFn(protectedRoad[random][0], protectedRoad[random][1]);
       }
       // 其次移动到普通空位
       if (road.length > 0) {
-        let random = Math.floor(Math.random() * road.length);
+        let random = Math.floor(seededRandom() * road.length);
         return await moveFn(road[random][0], road[random][1]);
       }
       if (worst >= 0) {

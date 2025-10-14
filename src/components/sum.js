@@ -1,4 +1,5 @@
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { shuffleCards } from "../utils/help.js";
 
 const Sum = {
   name: "Sum",
@@ -28,7 +29,7 @@ const Sum = {
       for (let i = 0; i < 54; i++) {
         cards.push(i);
       }
-      this.shuffleCards(cards);
+      shuffleCards(cards, 53);
       console.log(cards);
       this.hit(cards, this.arr1);
       this.hit(cards, this.arr2);
@@ -43,21 +44,6 @@ const Sum = {
         }
       }
       return cards;
-    },
-    // 洗牌
-    shuffleCards(cards) {
-      let rand, tmp;
-      for (let i = 0; i < 1000; i++) {
-        rand = Math.floor(Math.random() * 53);
-        tmp = cards[53];
-        cards[53] = cards[rand];
-        cards[rand] = tmp;
-      }
-      return cards;
-    },
-    // 取随机数
-    getRandomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
     },
     // 摸牌
     hit(cards, arr) {
