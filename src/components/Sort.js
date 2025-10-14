@@ -81,12 +81,15 @@ const Sort = {
       const cardToMoveIndex = this.cards1.indexOf(cardToMove);
       const emptySlot = this.cards1[targetEmptyIndex];
       
+      if (this.findNextCard(cardToMove, (idx) => idx == targetEmptyIndex - 1) < 0) {
+        return console.warn("❌ 无效的移动");
+      }
+
       this.cards1.splice(cardToMoveIndex, 1, emptySlot);
       this.cards1.splice(targetEmptyIndex, 1, cardToMove);
       this.recordMove(cardToMoveIndex, targetEmptyIndex, cardToMove, emptySlot);
       
-      // 移动后重新计算下一步
-      this.autoCalc();
+      // autoCalc 已经在工厂函数里监听 historyUpdate 事件自动执行，无需手动调用
     },
     
     // 重写clickCard方法，使用GameStateManager记录操作
@@ -123,45 +126,14 @@ const Sort = {
         return;
       }
       
-      const targetCard = this.next[0];
-      const emptySlotIndex = this.next[1];
-      const targetEmptyIndex = this.next[4];  // 使用 autoCalc 保存的目标空位位置
-      
-      // 验证目标卡片是否有效
-      if (targetCard < 4) {
-        console.error(`❌ stepFn: 目标卡片 ${targetCard} 无效`);
-        
-        // 保存故障状态
-        const errorState = {
-          cards1: [...this.cards1],
-          stateHashHistory: [...(this.stateHashHistory || [])],
-          next: this.next,
-          sign_index: this.sign_index,
-          n: this.n,
-        };
-        console.error('💾 故障状态已保存:', JSON.stringify(errorState));
-        
-        this.gameManager.stopAuto();
-        return;
-      }
-      
-      // 验证目标空位是否有效
-      if (targetEmptyIndex < 0 || this.cards1[targetEmptyIndex] >= 0) {
-        console.error(`❌ stepFn: 目标位置 ${targetEmptyIndex} 不是空位`);
-        this.gameManager.stopAuto();
-        return;
-      }
+      // 根据用户建议：直接使用 this.executeMove(this.next[0], this.next[1])
+      // this.next[0] = 要移动的卡片
+      // this.next[1] = 目标空位位置
       
       await this.gameManager.step(async () => {
-        this.clickSign(targetEmptyIndex)
-
-        // 获取空位前面的卡片
-        const cardToMove = this.cards1[emptySlotIndex - 1];
-        
+        this.clickSign(this.next[1])
         await wait(this.gameManager.autoStepDelay);
-        
-        // 使用共享的移动执行函数（与 clickCard 行为一致）
-        this.clickCard(cardToMove);
+        this.executeMove(this.next[0], this.next[1]);
       });
     },
     clickSign(i) {
@@ -431,9 +403,9 @@ const Sort = {
         }
         nextFn(index, id, 0);
         
-        // 深度搜索完成后，比较 card 的下一张牌的所有候选，记录最优的
+        // 深度搜索完成后，查找比 card 小一号的牌（规则：小的放到大的后面）
         if (card >= 4) {
-          let candidates = this.findAllCardsByRankOffset(card, 1);
+          let candidates = this.findAllCardsByRankOffset(card, -1);
           if (candidates.length > 0) {
             // 评估每个候选，过滤掉会导致哈希重复的
             let maxPriority = -1;
@@ -469,11 +441,12 @@ const Sort = {
                 
                 if (candidatePriority > maxPriority) {
                   maxPriority = candidatePriority;
+                  
                   // 保存候选的卡片值和位置信息
                   bestCandidate = {
                     card: candidate.card,
                     idx: candidate.idx,
-                    emptySlot: signCard
+                    emptySlot: signCard  // 空位标记（负数），不是位置！
                   };
                 }
               }
@@ -565,6 +538,8 @@ const Sort = {
       let min = 999999,
         max = -1;
       let best_card_rank = -1;
+      
+      
       for (let i = -4; i < 0; i++) {
         let t = temp[i];
         
@@ -581,8 +556,25 @@ const Sort = {
           continue;
         }
         
-        let targetCard = bestCardInfo.card;
-        let targetIdx = bestCardInfo.idx;
+        let targetCard = bestCardInfo.card;  // bestCard，要移动的卡片
+        
+        // 验证：targetCard 是否存在
+        let currentTargetIdx = this.cards1.indexOf(targetCard);
+        if (currentTargetIdx < 0) {
+          continue;
+        }
+        
+        // 验证：targetCard 后面是否仍然是空位（状态可能已变化）
+        if (this.cards1[currentTargetIdx + 1] >= 0) {
+          // targetCard 后面不是空位了，bestCard 信息已过时
+          continue;
+        }
+        
+        // 验证：t.index 位置是否是空位
+        if (this.cards1[t.index] >= 0) {
+          // t.index 不是空位，跳过
+          continue;
+        }
         
         let diff =
           t.deep ||
@@ -596,8 +588,8 @@ const Sort = {
         if (t.priority > max || 
             (t.priority == max && diff < min) ||
             (t.priority == max && diff == min && card_rank > best_card_rank)) {
-          // this.next = [targetCard, emptySlotIndex, emptySlotId, targetIdx, targetEmptyIndex]
-          this.next = [targetCard, t.index, i, targetIdx, targetIdx + 1];
+          // 正确逻辑：把 targetCard（bestCard）移动到空位 t.index
+          this.next = [targetCard, t.index, i, t.card, currentTargetIdx];
           min = diff;
           max = t.priority;
           best_card_rank = card_rank;
