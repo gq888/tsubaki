@@ -18,6 +18,7 @@ const Sort = {
     init() {
       this.sign_index = -1;
       this.cards1.splice(0);
+      this.stateHashHistory = [];  // 记录状态哈希历史
       let cards = this.cards1;
       for (let i = 0; i < this.number * 4; i++) {
         cards.push(i);
@@ -31,8 +32,26 @@ const Sort = {
       }
       this.autoCalc();
     },
+    
+    // 计算 cards1 的哈希值
+    calculateStateHash() {
+      return this.cards1.join(',');
+    },
+    
+    // 检查当前状态哈希是否已存在
+    isStateHashRepeated(hash) {
+      if (!this.stateHashHistory) return false;
+      return this.stateHashHistory.includes(hash);
+    },
     // 记录移动操作
     recordMove(from, to, card, sign) {
+      // 计算并记录当前状态的哈希
+      const stateHash = this.calculateStateHash();
+      if (!this.stateHashHistory) {
+        this.stateHashHistory = [];
+      }
+      this.stateHashHistory.push(stateHash);
+      
       this.gameManager.recordOperation({
         type: "move",
         from: from,
@@ -40,6 +59,7 @@ const Sort = {
         card: card,
         sign: sign,
         timestamp: Date.now(),
+        stateHash: stateHash,
       });
     },
 
@@ -55,31 +75,100 @@ const Sort = {
       }
     },
 
+    // 提取的移动执行函数（供 clickCard 和 stepFn 复用）
+    executeMove(cardToMove, targetEmptyIndex) {
+      const cardToMoveIndex = this.cards1.indexOf(cardToMove);
+      const emptySlot = this.cards1[targetEmptyIndex];
+      
+      this.cards1.splice(cardToMoveIndex, 1, emptySlot);
+      this.cards1.splice(targetEmptyIndex, 1, cardToMove);
+      this.recordMove(cardToMoveIndex, targetEmptyIndex, cardToMove, emptySlot);
+      
+      // 移动后重新计算下一步
+      this.autoCalc();
+    },
+    
     // 重写clickCard方法，使用GameStateManager记录操作
     clickCard(card) {
-      let i = this.cards1.indexOf(card);
       // 查找同颜色的下一张牌，要求其后必须有空位
       let index = this.findNextCard(card, (idx) => this.sign_index >= 0 ? idx == this.sign_index - 1 : this.cards1[idx + 1] < 0);
+      
       if (index >= 0) {
-        let sign = this.cards1[index + 1];
-        this.cards1.splice(i, 1, sign);
-        this.cards1.splice(index + 1, 1, card);
-        this.recordMove(i, index + 1, card, sign); // 使用GameStateManager记录操作
+        let targetEmptyIndex = index + 1;
+        this.executeMove(card, targetEmptyIndex);
+      } else {
+        console.error(`❌ clickCard: 移动失败 card=${card}, 找不到有效目标位置`);
       }
       this.sign_index = -1;
     },
 
-    // 重写stepFn方法
+    // 重写stepFn方法，使用clickSign/clickCard保持行为一致
     async stepFn() {
+      // 验证 this.next 是否有效
+      if (!this.next || this.next.length < 3) {
+        console.error('❌ stepFn: this.next 无效', this.next);
+        
+        // 保存故障状态
+        const errorState = {
+          cards1: [...this.cards1],
+          stateHashHistory: [...(this.stateHashHistory || [])],
+          next: this.next,
+          sign_index: this.sign_index,
+          n: this.n,
+        };
+        console.error('💾 故障状态已保存:', JSON.stringify(errorState));
+        
+        this.gameManager.stopAuto();
+        return;
+      }
+      
+      const targetCard = this.next[0];
+      const emptySlotIndex = this.next[1];
+      
+      // 验证目标卡片是否有效
+      if (targetCard < 4) {
+        console.error(`❌ stepFn: 目标卡片 ${targetCard} 无效`);
+        
+        // 保存故障状态
+        const errorState = {
+          cards1: [...this.cards1],
+          stateHashHistory: [...(this.stateHashHistory || [])],
+          next: this.next,
+          sign_index: this.sign_index,
+          n: this.n,
+        };
+        console.error('💾 故障状态已保存:', JSON.stringify(errorState));
+        
+        this.gameManager.stopAuto();
+        return;
+      }
+      
       await this.gameManager.step(async () => {
-        this.clickSign(this.next[1]);
+        // 获取空位前面的卡片
+        const cardToMove = this.cards1[emptySlotIndex - 1];
+        
+        // 找到 targetCard 后面的空位位置
+        let targetEmptyIndex = -1;
+        const candidates = this.findAllCardsByRankOffset(targetCard, 1);
+        
+        for (let candidate of candidates) {
+          const signCard = this.cards1[candidate.idx + 1];
+          if (signCard < 0) {
+            targetEmptyIndex = candidate.idx + 1;
+            break;
+          }
+        }
+        
+        if (targetEmptyIndex < 0) {
+          console.error(`❌ stepFn: 找不到 targetCard=${targetCard} 后面的空位`);
+          this.gameManager.stopAuto();
+          return;
+        }
+        
         await wait(this.gameManager.autoStepDelay);
         
-        const cardBefore = this.next[0];
-        const indexBefore = this.cards1.indexOf(cardBefore);
-        console.log(`🎯 准备移动卡片: card=${cardBefore}, index=${indexBefore}`);
-        
-        this.clickCard(this.next[0]);
+        // 使用共享的移动执行函数（与 clickCard 行为一致）
+        this.executeMove(cardToMove, targetEmptyIndex);
       });
     },
     clickSign(i) {
@@ -198,10 +287,12 @@ const Sort = {
     autoCalc() {
       let over = true,
         temp = {},
-        prior = [];
+        prior = [],
+        slotsToResetPriority = [];  // 记录需要清空 priority 的空位
       for (let id = -4; id < 0; id++) {
         let index = this.cards1.indexOf(id);
         let card = this.cards1[index - 1];
+        
         temp[id] = {
           index,
           card: card,
@@ -348,28 +439,67 @@ const Sort = {
         // 深度搜索完成后，比较 card 的下一张牌的所有候选，记录最优的
         if (card >= 4) {
           let candidates = this.findAllCardsByRankOffset(card, 1);
-          if (candidates.length > 1) {
-            // 有多个候选，比较它们各自后面的空位的 priority
+          if (candidates.length > 0) {
+            // 评估每个候选，过滤掉会导致哈希重复的
             let maxPriority = -1;
             let bestCandidate = null;
+            let validCandidateCount = 0;
             
             for (let candidate of candidates) {
               let signCard = this.cards1[candidate.idx + 1];
+              
+              // 模拟移动并检查哈希重复
+              let cardIdx = this.cards1.indexOf(card);
+              if (cardIdx < 0) continue;
+              
+              // 创建临时状态来计算哈希
+              let tempCards = [...this.cards1];
+              let candidateIdx = candidate.idx;
+              let tempSignCard = tempCards[candidateIdx + 1];
+              tempCards[cardIdx] = tempSignCard;
+              tempCards[candidateIdx + 1] = card;
+              
+              let simulatedHash = tempCards.join(',');
+              
+              // 检查哈希是否重复
+              if (this.isStateHashRepeated(simulatedHash)) {
+                continue;  // 跳过这个候选
+              }
+              
+              validCandidateCount++;
+              
+              // 只选择后面直接是空位的候选
               if (signCard < 0 && temp[signCard]) {
-                if (temp[signCard].priority > maxPriority) {
-                  maxPriority = temp[signCard].priority;
+                let candidatePriority = temp[signCard].priority;
+                
+                if (candidatePriority > maxPriority) {
+                  maxPriority = candidatePriority;
                   bestCandidate = candidate.card;
                 }
               }
             }
             
             // 记录最优候选到当前空位
-            if (bestCandidate !== null) {
+            if (bestCandidate !== null && maxPriority > 0) {
               temp[id].bestCard = bestCandidate;
+            } else if (validCandidateCount === 0 && candidates.length > 0) {
+              // 如果所有候选都被哈希过滤，记录这个空位以便后续清空 priority
+              slotsToResetPriority.push(id);
+            } else if (validCandidateCount > 0 && (maxPriority === 0 || bestCandidate === null)) {
+              // 如果有有效候选但都不能到达空位（后面不是空位），也清空 priority
+              slotsToResetPriority.push(id);
             }
           }
         }
       }
+      
+      // 四次深度搜索结束后，统一清空被哈希过滤的空位的 priority
+      for (let slotId of slotsToResetPriority) {
+        if (temp[slotId]) {
+          temp[slotId].priority = 0;
+        }
+      }
+      
       if (over) {
         this.n = 0;
         for (let i = 0; i < this.number * 4 + 4; i++) {
@@ -437,15 +567,19 @@ const Sort = {
       let best_card_rank = -1;
       for (let i = -4; i < 0; i++) {
         let t = temp[i];
+        
+        // 跳过前面不是有效卡片的空位
         if (t.card < 4) {
           continue;
         }
-        if (!t.able) {
+        
+        // 使用深度搜索找到的最优候选牌
+        let targetCard = t.bestCard;
+        
+        // 如果没有 bestCard，跳过这个空位
+        if (targetCard === null || targetCard === undefined || targetCard < 4) {
           continue;
         }
-        
-        // 使用深度搜索找到的最优候选牌，如果没有则回退到严格花色匹配
-        let targetCard = (t.bestCard !== null && t.bestCard !== undefined) ? t.bestCard : (t.card - 4);
         
         let diff =
           t.deep ||
@@ -463,6 +597,62 @@ const Sort = {
           min = diff;
           max = t.priority;
           best_card_rank = card_rank;
+        }
+      }
+      
+      
+      // 如果没有找到有效移动，检查游戏状态
+      if (this.next[0] < 4) {
+        
+        // 检查四个空位的 priority 是否都为 0（只检查前面是有效卡片且有 bestCard 的空位）
+        let allPrioritiesZero = true;
+        let validSlotCount = 0;
+        for (let i = -4; i < 0; i++) {
+          if (temp[i] && temp[i].card >= 4) {
+            validSlotCount++;
+            // 只有既有 priority 又有 bestCard 的空位才算有效移动
+            if (temp[i].priority > 0 && temp[i].bestCard !== null && temp[i].bestCard !== undefined) {
+              allPrioritiesZero = false;
+            }
+          }
+        }
+        
+        
+        // 保存调试状态
+        const debugState = {
+          cards1: [...this.cards1],
+          stateHashHistory: [...(this.stateHashHistory || [])],
+          next: this.next,
+          sign_index: this.sign_index,
+          n: this.n,
+          emptySlots: {}
+        };
+        for (let i = -4; i < 0; i++) {
+          debugState.emptySlots[i] = {
+            card: temp[i].card,
+            priority: temp[i].priority,
+            bestCard: temp[i].bestCard,
+            index: temp[i].index
+          };
+        }
+        
+        // 计算已完成的牌数
+        this.n = 0;
+        for (let i = 0; i < this.number * 4 + 4; i++) {
+          if (
+            this.cards1[i] >> 2 ==
+            this.number - 1 - (i % 13)
+          ) {
+            this.n++;
+          }
+        }
+        
+        // 如果所有牌都已完成，标记为胜利
+        if (this.n >= this.number * 4) {
+          this.gameManager.setWin();
+        } else if (allPrioritiesZero && validSlotCount > 0) {
+          // 仅当有有效空位且所有 priority 都为 0 时才设置失败
+          this.gameManager.setLose();
         }
       }
     },
