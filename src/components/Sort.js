@@ -109,7 +109,7 @@ const Sort = {
     // 重写stepFn方法，使用clickSign/clickCard保持行为一致
     async stepFn() {
       // 验证 this.next 是否有效
-      if (!this.next || this.next.length < 5) {
+      if (!this.next) {
         console.error('❌ stepFn: this.next 无效', this.next);
         
         // 保存故障状态
@@ -271,6 +271,7 @@ const Sort = {
         let index = temp[id].index;
         let card = temp[id].card;
         let dead = [];
+        let candidatePriorities = new Map();  // 存储候选牌与优先级的映射
         let prevFn = (prev_c, deep, accumulatedPriority = 0) => {
           if (prev_c < 0) {
             // 到达空位，累加 priority
@@ -301,6 +302,9 @@ const Sort = {
               
               let subPriority = prevFn(signCard, deep, accumulatedPriority);
               maxPriority = Math.max(maxPriority, subPriority);
+              
+              let currentPriority = candidatePriorities.get(candidate.card) || 0;
+              candidatePriorities.set(candidate.card, Math.max(currentPriority, subPriority));
             }
             
             return maxPriority;
@@ -345,14 +349,10 @@ const Sort = {
             if (n % 13 == 0) {
               return;
             }
-            let idx = this.cards1.indexOf(next_c);
-            if (idx >= 0) {
-              let prev_c = this.cards1[idx + 1];
-              prevFn(prev_c, deep);
-            }
+            let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1];
+            prevFn(prev_c, deep);
             return;
           }
-          // 获取所有同颜色的前一张牌候选
           let prevCandidates = this.findAllCardsByRankOffset(next_c, -1);
           for (let prevCandidate of prevCandidates) {
             nextFn(prevCandidate.idx, next_c, deep);
@@ -392,9 +392,7 @@ const Sort = {
                 next_i % 13 == this.number ||
                 this.cards1[next_i + 1] == card_minus_2
               ) {
-                // 快速胜利：prevCard 可以直接移动到当前空位 (index) 后面
-                // this.next = [targetCard, emptySlotIndex, emptySlotId, targetIdx, targetEmptyIndex]
-                this.next = [prevCard, index, id, next_i, index];
+                this.next = [prevCard, index];
                 return;
               }
             }
@@ -429,8 +427,8 @@ const Sort = {
                 continue;  // 跳过这个候选
               }
               
-              // 计算该候选的优先级：调用 prevFn 评估该候选能到达的后续状态
-              let candidatePriority = prevFn(candidate.card, 0, 0);
+              // 从深度搜索中获取该候选的优先级
+              let candidatePriority = candidatePriorities.get(candidate.card) || 0;
               
               candidatesWithPriority.push({
                 card: candidate.card,
@@ -521,7 +519,7 @@ const Sort = {
           }
         }
       }
-      this.next = [-1, -1, -1, -1, -1];
+      this.next = [-1, -1];
       let min = 999999,
         max = -1;
       let best_card_rank = -1;
@@ -571,7 +569,7 @@ const Sort = {
             (candidatePriority == max && diff < min) ||
             (candidatePriority == max && diff == min && card_rank > best_card_rank)) {
           // 正确逻辑：把 targetCard（bestCard）移动到空位 t.index
-          this.next = [targetCard, t.index, i, t.card, currentTargetIdx];
+          this.next = [targetCard, t.index];
           min = diff;
           max = candidatePriority;
           best_card_rank = card_rank;
