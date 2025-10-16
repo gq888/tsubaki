@@ -106,6 +106,18 @@ const Sort = {
       this.sign_index = -1;
     },
 
+    updateN() {
+      this.n = 0;
+      for (let i = 0; i < this.number * 4 + 4; i++) {
+        if (
+          this.cards1[i] >> 2 ==
+          this.number - 1 - (i % 13)
+        ) {
+          this.n++;
+        }
+      }
+    },
+
     // 重写stepFn方法，使用clickSign/clickCard保持行为一致
     async stepFn() {
       // 验证 this.next 是否有效
@@ -123,15 +135,7 @@ const Sort = {
         console.error('💾 故障状态已保存:', JSON.stringify(errorState));
         
         // 检查游戏状态：计算已完成的牌数
-        this.n = 0;
-        for (let i = 0; i < this.number * 4 + 4; i++) {
-          if (
-            this.cards1[i] >> 2 ==
-            this.number - 1 - (i % 13)
-          ) {
-            this.n++;
-          }
-        }
+        this.updateN();
         
         // 如果所有牌都已完成，标记为胜利；否则标记为失败
         if (this.n >= this.number * 4) {
@@ -329,12 +333,12 @@ const Sort = {
             return maxPriority;
           }
         };
-        let nextFn = (next_i, next_c, deep) => {
+        let nextFn = (next_i, next_c, deep, accumulatedPriority = 0) => {
           if (!checkDeadForeach(dead, [next_c, 1])) return 0;
           dead.unshift([next_c, 1]);
           if (deep > 0 && next_c >= 8) {
             let prev_c = this.cards1[next_i + 1];
-            prevFn(prev_c, deep);
+            prevFn(prev_c, deep, accumulatedPriority);
           }
           next_c = this.cards1[next_i - 1];
           if (next_c < 4) {
@@ -348,10 +352,10 @@ const Sort = {
             if (next_c >= num * 4) {
               prior.push([id, this.cards1[next_i - 1], deep]);
               let emptySlotId = this.cards1[next_i - 1];
-              temp[emptySlotId].priority++;
+              temp[emptySlotId].priority = Math.max(temp[emptySlotId].priority, ++accumulatedPriority);
               temp[emptySlotId]._in++;
               
-              return temp[emptySlotId].priority;
+              return accumulatedPriority;
             }
             next_c += 4;
             // 检查是否形成同颜色递增序列
@@ -371,7 +375,7 @@ const Sort = {
               return 0;
             }
             let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1];
-            let priority = prevFn(prev_c, deep);
+            let priority = prevFn(prev_c, deep, accumulatedPriority);
             
             // 同步候选卡片的优先级
             if (candidatePriorities.has(next_c)) {
@@ -383,7 +387,7 @@ const Sort = {
           let prevCandidates = this.findAllCardsByRankOffset(next_c, -1);
           let maxPriority = 0;
           for (let prevCandidate of prevCandidates) {
-            let priority = nextFn(prevCandidate.idx, next_c, deep);
+            let priority = nextFn(prevCandidate.idx, next_c, deep, accumulatedPriority);
             maxPriority = Math.max(maxPriority, priority);
             
             // 同步候选卡片的优先级
@@ -457,7 +461,6 @@ const Sort = {
               
               // 检查哈希是否重复
               if (this.isStateHashRepeated(simulatedHash)) {
-                console.log('❌ 哈希重复，跳过这个候选');
                 continue;  // 跳过这个候选
               }
               
@@ -493,15 +496,7 @@ const Sort = {
       }
       
       if (over) {
-        this.n = 0;
-        for (let i = 0; i < this.number * 4 + 4; i++) {
-          if (
-            this.cards1[i] >> 2 ==
-            this.number - 1 - (i % 13)
-          ) {
-            this.n++;
-          }
-        }
+        this.updateN();
         if (this.n >= this.number * 4) {
           this.gameManager.setWin();
         } else {
@@ -648,15 +643,7 @@ const Sort = {
         }
         
         // 计算已完成的牌数
-        this.n = 0;
-        for (let i = 0; i < this.number * 4 + 4; i++) {
-          if (
-            this.cards1[i] >> 2 ==
-            this.number - 1 - (i % 13)
-          ) {
-            this.n++;
-          }
-        }
+        this.updateN();
         
         // 如果所有牌都已完成，标记为胜利
         if (this.n >= this.number * 4) {
@@ -665,6 +652,8 @@ const Sort = {
           // 仅当有有效空位且所有 priority 都为 0 时才设置失败
           this.gameManager.setLose();
         }
+      } else {
+        this.updateN();
       }
     },
     
