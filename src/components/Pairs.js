@@ -12,7 +12,7 @@ const Pairs = {
       sign: -1,
       sign2: -2,
       time: 0,
-      timer: 0,
+      _timer: 0,
       number: 48,
       n: 0,
     };
@@ -20,8 +20,8 @@ const Pairs = {
   methods: {
     init() {
       this.time = 0;
-      clearInterval(this.timer);
-      this.timer = 0;
+      clearInterval(this._timer);
+      this._timer = 0;
       this.sign = -1;
       this.sign2 = -1;
       this.cards1.splice(0);
@@ -35,8 +35,8 @@ const Pairs = {
       shuffleCards(cards, this.number);
     },
     async clickCard(card) {
-      if (!this.timer) {
-        this.timer = setInterval(() => {
+      if (!this._timer) {
+        this._timer = setInterval(() => {
           this.time++;
         }, 1000);
       }
@@ -72,8 +72,8 @@ const Pairs = {
 
       if (gameOver) {
         this.gameManager.setWin();
-        clearInterval(this.timer);
-        this.timer = 0;
+        clearInterval(this._timer);
+        this._timer = 0;
       }
     },
     async stepFn() {

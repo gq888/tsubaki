@@ -161,12 +161,13 @@ const Point24 = {
         let temp = this.cards2[this.step];
         console.log(`执行第${this.step}步操作:`, temp);
         this.sign = 0;
-        const index1 = this.arr.indexOf(temp[0]);
+        const index1 = this.arr.findIndex((a) => this.first(a) == this.first(temp[0]));
+        console.log(`temp[0]的索引:`, index1);
         this.clickCard(temp[0], index1);
         await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickSign(temp[1]);
         await timeout(() => {}, this.gameManager.autoStepDelay);
-        const index2 = this.arr.indexOf(temp[2]);
+        const index2 = this.arr.findIndex((a) => this.first(a) == this.first(temp[2]));
         this.clickCard(temp[2], index2);
         console.log(`第${this.step}步操作完成，当前数组:`, this.arr);
       });

@@ -21,9 +21,7 @@ const Chess = {
       // 移除arr数组，因为现在由GameStateManager管理历史记录
       // arr: [],
       sign: -1,
-      sign2: -2,
       number: 36,
-      n: 0,
       grade: -1,
       modes: [
         0, 1, 3, 6, 10, 15, 2, 5, 7, 13, 18, 21, 4, 8, 14, 17, 24, 27, 9, 12,

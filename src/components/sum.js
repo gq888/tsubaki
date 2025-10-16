@@ -6,11 +6,7 @@ const Sum = {
   data() {
     return {
       title: "BlackJack",
-      arrCard: [],
-      sum: 0,
-      cardsOrg: [],
       cardsChg: [],
-      cardsIndex: "",
       types: ["♠", "♥", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
       arr1: [],
@@ -24,8 +20,6 @@ const Sum = {
       cards = this.cardsChg;
       this.arr1.splice(0);
       this.arr2.splice(0);
-      // this.getCards(this.cardsOrg)
-      // this.getCards(cards)
       for (let i = 0; i < 54; i++) {
         cards.push(i);
       }
@@ -48,9 +42,7 @@ const Sum = {
     // 摸牌
     hit(cards, arr) {
       var currentCard = cards.shift();
-      // var value = (this.cardsOrg.indexOf(currentCard) + 1) % 13
       var value = currentCard >> 2;
-      // console.log(value)
       arr.push({ id: currentCard, value: ++value > 10 ? 10 : value });
       this.gameManager.recordOperation();
     },

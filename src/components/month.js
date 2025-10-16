@@ -10,7 +10,6 @@ const Month = {
       cards1: [],
       cards2: [],
       arr: [],
-      timer: "",
       number: 52,
     };
   },

@@ -21,7 +21,7 @@ export default class GameStateManager {
     this.autoStepDelay = options.autoStepDelay / 10 || 500; // 默认单步延迟500ms，测试时除以10以缩短测试时间
 
     // 事件监听器
-    this.listeners = {};
+    this._listeners = {};
   }
 
   /**
@@ -227,10 +227,10 @@ export default class GameStateManager {
    * @param {Function} listener - 事件监听器
    */
   on(event, listener) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
+    if (!this._listeners[event]) {
+      this._listeners[event] = [];
     }
-    this.listeners[event].push(listener);
+    this._listeners[event].push(listener);
   }
 
   /**
@@ -239,12 +239,12 @@ export default class GameStateManager {
    * @param {Function} listener - 要移除的事件监听器
    */
   off(event, listener) {
-    if (!this.listeners[event]) {
+    if (!this._listeners[event]) {
       return;
     }
-    const index = this.listeners[event].indexOf(listener);
+    const index = this._listeners[event].indexOf(listener);
     if (index > -1) {
-      this.listeners[event].splice(index, 1);
+      this._listeners[event].splice(index, 1);
     }
   }
 
@@ -254,10 +254,10 @@ export default class GameStateManager {
    * @param {*} data - 事件数据
    */
   emit(event, data) {
-    if (!this.listeners[event]) {
+    if (!this._listeners[event]) {
       return;
     }
-    this.listeners[event].forEach((listener) => {
+    this._listeners[event].forEach((listener) => {
       try {
         listener(data);
       } catch (error) {

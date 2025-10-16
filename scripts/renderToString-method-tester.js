@@ -10,9 +10,13 @@ import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { writeFileSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// 默认状态文件路径
+const DEFAULT_STATE_FILE = path.join(__dirname, '..', '.last-test-state.json');
 
 // 模拟浏览器环境
 global.window = {
@@ -49,11 +53,192 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 
 /**
+ * 保存状态到JSON文件
+ * @param {object} state - 要保存的状态对象
+ * @param {string} filePath - 文件路径
+ */
+function saveStateToFile(state, filePath) {
+  try {
+    // 使用replacer处理循环引用和特殊对象
+    const seen = new WeakMap(); // 使用WeakMap记录路径
+    const pathStack = []; // 记录当前路径
+    let hasCircular = false;
+    
+    const replacer = function(key, value) {
+      // 跳过以_开头的属性
+      if (typeof key === 'string' && key.startsWith('_')) {
+        return undefined;
+      }
+      
+      // 处理对象循环引用
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          const circularPath = seen.get(value);
+          const currentPath = pathStack.join('.') + (key ? '.' + key : '');
+          console.warn(`\n⚠️  检测到循环引用:`);
+          console.warn(`   字段: ${currentPath}`);
+          console.warn(`   引用回: ${circularPath}`);
+          hasCircular = true;
+          return undefined; // 跳过循环引用
+        }
+        
+        const currentPath = pathStack.join('.') + (key ? '.' + key : '');
+        seen.set(value, currentPath);
+        pathStack.push(key);
+      }
+      
+      return value;
+    };
+    
+    const result = JSON.stringify(state, replacer, 2);
+    
+    if (hasCircular) {
+      console.log(`\n⚠️  由于存在循环引用，部分字段已被跳过`);
+    }
+    
+    writeFileSync(filePath, result, 'utf-8');
+    console.log(`\n✓ 状态已保存到: ${filePath}`);
+  } catch (error) {
+    console.error(`\n✗ 保存状态失败: ${error.message}`);
+  }
+}
+
+/**
+ * 深度覆盖对象属性
+ * 将源对象的所有属性深度复制到目标对象上，保持目标对象的引用
+ * @param {any} target - 目标对象（已初始化的游戏对象）
+ * @param {any} source - 源对象（保存的状态）
+ * @param {string} path - 当前路径（用于调试）
+ * @param {Set} visited - 已访问的对象（避免循环引用）
+ */
+function deepOverwrite(target, source, path = 'root', visited = new Set()) {
+  // 避免循环引用
+  if (visited.has(source)) {
+    return;
+  }
+  
+  // null 或 undefined 直接返回
+  if (source === null || source === undefined) {
+    return;
+  }
+  
+  // 基本类型直接返回（不能覆盖，因为target是对象）
+  if (typeof source !== 'object') {
+    return;
+  }
+  
+  visited.add(source);
+  
+  // 处理数组
+  if (Array.isArray(source) && Array.isArray(target)) {
+    console.log(`  深度覆盖数组: ${path}, source长度=${source.length}, target长度=${target.length}`);
+    
+    // 处理source范围内的元素（递归更新）
+    const minLength = Math.min(source.length, target.length);
+    for (let i = 0; i < minLength; i++) {
+      const sourceItem = source[i];
+      const targetItem = target[i];
+      
+      if (sourceItem && typeof sourceItem === 'object') {
+        if (targetItem && typeof targetItem === 'object') {
+          // 都是对象/数组，递归更新（保持target的引用和自定义类）
+          deepOverwrite(targetItem, sourceItem, `${path}[${i}]`, visited);
+        } else {
+          // target不是对象，直接赋值（会丢失自定义类，但无法避免）
+          console.log(`  ${path}[${i}] target不是对象，直接赋值`);
+          target[i] = sourceItem;
+        }
+      } else {
+        // source是基本类型，直接赋值
+        target[i] = sourceItem;
+      }
+    }
+
+    const diff = source.length - target.length;
+    if (diff > 0) {
+      // source更长：添加元素
+      console.log(`  ${path} source更长，直接添加多余的${diff}个元素`);
+      target.splice(target.length, 0, ...source.slice(target.length));
+    } else if (diff < 0) {
+      // target更长：删除元素  
+      console.log(`  ${path} target更长，直接删除多余的${-diff}个元素`);
+      target.splice(source.length, -diff);
+    }
+    
+    return;
+  }
+  
+  // 处理普通对象
+  if (typeof source === 'object' && typeof target === 'object' && !Array.isArray(source) && !Array.isArray(target)) {
+    console.log(`  深度覆盖对象: ${path}`);
+    
+    for (const key in source) {
+      // 跳过原型链上的属性
+      if (!source.hasOwnProperty(key)) {
+        continue;
+      }
+      
+      const sourceValue = source[key];
+      const targetValue = target[key];
+      const currentPath = `${path}.${key}`;
+      
+      // 跳过特殊属性
+      if (key.startsWith('_')) {
+        continue;
+      }
+      
+      // 如果target没有这个属性，直接赋值
+      if (!(key in target)) {
+        console.log(`  添加新属性: ${currentPath}`);
+        target[key] = sourceValue;
+        continue;
+      }
+      
+      // 基本类型、null、undefined 直接赋值
+      if (sourceValue === null || sourceValue === undefined || typeof sourceValue !== 'object') {
+        if (target[key] !== sourceValue) {
+          console.log(`  覆盖基本类型: ${currentPath} = ${sourceValue}`);
+          target[key] = sourceValue;
+        }
+        continue;
+      }
+      
+      // 数组类型
+      if (Array.isArray(sourceValue)) {
+        if (Array.isArray(targetValue)) {
+          // 目标也是数组，递归处理
+          deepOverwrite(targetValue, sourceValue, currentPath, visited);
+        } else {
+          // 目标不是数组，直接替换
+          console.log(`  替换为数组: ${currentPath}`);
+          target[key] = sourceValue;
+        }
+        continue;
+      }
+      
+      // 对象类型
+      if (typeof sourceValue === 'object') {
+        if (targetValue && typeof targetValue === 'object' && !Array.isArray(targetValue)) {
+          // 目标也是对象，递归处理
+          deepOverwrite(targetValue, sourceValue, currentPath, visited);
+        } else {
+          // 目标不是对象，直接替换
+          console.log(`  替换为对象: ${currentPath}`);
+          target[key] = sourceValue;
+        }
+        continue;
+      }
+    }
+  }
+}
+
+/**
  * 使用renderToString执行组件方法
  * @param {number} timeout - 超时时间（毫秒），默认30秒
  * @param {number} seed - 随机数种子
+ * @param {string} outputFile - 输出状态文件路径
  */
-async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 30000, seed = null) {
+async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 30000, seed = null, outputFile = DEFAULT_STATE_FILE) {
   try {
     console.log(`正在通过renderToString执行方法: ${methodName}`);
     console.log(`组件路径: ${componentPath}`);
@@ -95,24 +280,23 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
     const modifiedComponent = {
       ...originalComponent,
       data() {
+        // 只返回初始数据和测试对象，不在这里合并currentData
         const initialData = originalComponent.data ? originalComponent.data() : {};
-        const mergedData = {
-          ...initialData,
-          ...currentData, // 覆盖当前数据
-          _testCapture: capturedState // 添加状态捕获对象
-        };
         
-        // 如果提供了种子，覆盖数据中的种子值
+        // 如果提供了种子，设置种子值
         if (seed !== null) {
-          mergedData.seed = seed;
+          initialData.seed = seed;
         }
         
-        return mergedData;
+        return {
+          ...initialData,
+          _testCapture: capturedState // 添加状态捕获对象
+        };
       },
       async created() {
         console.log('=== 修改后的created生命周期执行 ===');
         
-        // 执行原始的created函数
+        // 执行原始的created函数（初始化所有对象）
         if (originalCreated) {
           if (originalCreated.constructor.name === 'AsyncFunction') {
             await originalCreated.call(this);
@@ -121,9 +305,37 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           }
         }
         
-        // 捕获执行前状态
-        const beforeState = { ...this.$data };
-        delete beforeState._testCapture; // 移除测试对象
+        console.log('原始created执行完成，开始状态恢复...');
+        
+        // 如果有保存的状态，使用深度覆盖恢复所有数据
+        if (currentData && Object.keys(currentData).length > 0) {
+          console.log('检测到保存的状态，开始深度恢复...');
+          console.log('保存状态的键:', Object.keys(currentData));
+          
+          // 使用深度覆盖函数恢复状态
+          deepOverwrite(this, currentData, 'this');
+          
+          // 打印恢复后的关键状态
+          console.log('✓ 状态恢复完成');
+          if (this.gameManager) {
+            console.log('  gameManager步数:', this.gameManager.getStepCount ? this.gameManager.getStepCount() : 'N/A');
+            console.log('  gameManager状态:', {
+              winflag: this.gameManager.winflag,
+              loseflag: this.gameManager.loseflag,
+              drawflag: this.gameManager.drawflag
+            });
+          }
+          if (this.arr) {
+            console.log('  arr数组长度:', this.arr.length);
+            console.log('  arr内容:', this.arr);
+          }
+        }
+        
+        // 捕获执行前状态 - 使用JSON深拷贝避免循环引用
+        const beforeState = JSON.parse(JSON.stringify(this.$data, (key, value) => {
+          if (key.startsWith('_')) return undefined;
+          return value;
+        }));
         this._testCapture.before = beforeState;
         
         console.log(`=== 执行方法 ${methodName} ===`);
@@ -184,9 +396,11 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           console.error('错误堆栈:', error.stack);
         }
         
-        // 捕获执行后状态
-        const afterState = { ...this.$data };
-        delete afterState._testCapture; // 移除测试对象
+        // 捕获执行后状态 - 使用JSON深拷贝避免循环引用
+        const afterState = JSON.parse(JSON.stringify(this.$data, (key, value) => {
+          if (key.startsWith('_')) return undefined;
+          return value;
+        }));
         this._testCapture.after = afterState;
         
         console.log('=== 状态捕获完成 ===');
@@ -215,7 +429,46 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         };
         
         console.log('\n=== 测试结果 ===');
-        console.log(JSON.stringify(testResult, null, 2));
+        
+        // 使用自定义replacer处理循环引用和特殊对象
+        const seen = new WeakMap();
+        const pathStack = [];
+        let hasCircular = false;
+        
+        const replacer = function(key, value) {
+          // 跳过以_开头的属性
+          if (typeof key === 'string' && key.startsWith('_')) {
+            return undefined;
+          }
+          
+          // 处理对象循环引用
+          if (typeof value === 'object' && value !== null) {
+            if (seen.has(value)) {
+              const circularPath = seen.get(value);
+              const currentPath = pathStack.join('.') + (key ? '.' + key : '');
+              if (!hasCircular) {
+                console.warn(`\n⚠️  检测到循环引用:`);
+                hasCircular = true;
+              }
+              console.warn(`   字段: ${currentPath} -> 引用回: ${circularPath}`);
+              return '[Circular]';
+            }
+            
+            const currentPath = pathStack.join('.') + (key ? '.' + key : '');
+            seen.set(value, currentPath);
+            pathStack.push(key);
+          }
+          
+          return value;
+        };
+        
+        console.log(JSON.stringify(testResult, replacer, 2));
+        
+        // 保存执行后的状态到文件
+        if (this._testCapture.after) {
+          saveStateToFile(this._testCapture.after, outputFile);
+        }
+        
         process.exit(0);
       },
       // 简单的模板，不输出任何内容
@@ -248,28 +501,38 @@ async function main() {
   const args = process.argv.slice(2);
   
   if (args.length < 2) {
-    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>]');
-    console.log('示例: node renderToString-method-tester.js src/components/Chess.js init 0');
-    console.log('      node renderToString-method-tester.js src/components/Spider.js clickCard 0 --timeout=60000');
-    console.log('      node renderToString-method-tester.js point24.js stepFn --state=\'{"gameManager":{...}}\'');
-    console.log('      node renderToString-method-tester.js point24.js stepFn --state-file=state.json');
-    console.log('      node renderToString-method-tester.js point24.js init 0 --seed=12345');
-    console.log('说明: 支持相对路径和绝对路径，组件将动态导入');
-    console.log('      默认超时时间为30000ms (30秒)');
-    console.log('      超时后会自动调用 gameManager.stopAuto() 停止自动运行');
-    console.log('      --state: 直接传入JSON格式的状态对象');
-    console.log('      --state-file: 从文件读取状态对象');
-    console.log('      --seed: 设置随机数种子（用于可重现的测试）');
+    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>] [--continue] [--output=<path>]');
+    console.log('\n基础示例:');
+    console.log('  node renderToString-method-tester.js src/components/Chess.js init 0');
+    console.log('  node renderToString-method-tester.js Spider.js clickCard 0');
+    console.log('\n参数格式示例:');
+    console.log('  基本类型: node ... clickCard 0 1 true "hello"');
+    console.log('  JSON对象: node ... method \'{"key":"value"}\'');
+    console.log('  JSON数组: node ... method \'[1,2,3]\'');
+    console.log('  混合参数: node ... method 0 \'{"x":10}\' \'[1,2]\'');
+    console.log('\n高级选项:');
+    console.log('  --timeout=60000      设置超时（默认30000ms）');
+    console.log('  --seed=12345         设置随机种子（可重现测试）');
+    console.log('  --continue           使用上次保存的状态');
+    console.log('  --state=\'{"..."}\'    直接传入状态JSON');
+    console.log('  --state-file=x.json  从文件读取状态');
+    console.log('  --output=out.json    指定输出文件（默认: .last-test-state.json）');
+    console.log('\n说明:');
+    console.log('  • 参数会自动尝试JSON解析，失败则作为字符串');
+    console.log('  • 支持相对路径和绝对路径');
+    console.log('  • 执行后状态自动保存到 .last-test-state.json');
+    console.log('  • 超时后自动调用 gameManager.stopAuto()');
     process.exit(1);
   }
   
   const componentPath = args[0];
   const methodName = args[1];
   
-  // 提取timeout、state、state-file和seed参数
+  // 提取timeout、state、state-file、seed、continue和output参数
   let timeout = 30000;
   let currentState = {};
   let seed = null;
+  let outputFile = DEFAULT_STATE_FILE;
   const methodArgs = [];
   
   for (let i = 2; i < args.length; i++) {
@@ -287,6 +550,25 @@ async function main() {
         process.exit(1);
       }
       console.log('✓ 将使用种子:', seed);
+    } else if (arg.startsWith('--output=')) {
+      outputFile = arg.substring('--output='.length);
+      // 如果不是绝对路径，相对于项目根目录
+      if (!path.isAbsolute(outputFile)) {
+        outputFile = path.join(__dirname, '..', outputFile);
+      }
+      console.log('✓ 输出文件:', outputFile);
+    } else if (arg === '--continue') {
+      // 使用上次保存的状态
+      try {
+        const { readFileSync } = await import('fs');
+        const stateContent = readFileSync(DEFAULT_STATE_FILE, 'utf-8');
+        currentState = JSON.parse(stateContent);
+        console.log('✓ 已加载上次保存的状态:', DEFAULT_STATE_FILE);
+      } catch (error) {
+        console.error('错误: 无法读取上次保存的状态文件:', error.message);
+        console.error('提示: 请先运行一次测试以生成状态文件');
+        process.exit(1);
+      }
     } else if (arg.startsWith('--state=')) {
       const stateJson = arg.substring('--state='.length);
       try {
@@ -321,7 +603,7 @@ async function main() {
     }
   });
   
-  await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed);
+  await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed, outputFile);
 }
 
 // 直接调用main函数

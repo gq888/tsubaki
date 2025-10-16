@@ -29,9 +29,7 @@ const Fish = {
       flyin2: [],
       flyout1: [],
       flyout2: [],
-      cardsIndex: "",
       arr: [],
-      timer: "",
     };
   },
   // 初始化

@@ -331,8 +331,8 @@ export const GameComponentPresets = {
       methods,
       customCleanup() {
         // 清理定时器
-        if (this.timer) {
-          clearInterval(this.timer);
+        if (this._timer) {
+          clearInterval(this._timer);
         }
       },
     }),
@@ -417,16 +417,16 @@ export const GameComponentPresets = {
           switch (feature) {
             case "timer":
               this.gameTime = 0;
-              this.gameTimer = null;
+              this._gameTimer = null;
               this.startTimer = function () {
-                this.gameTimer = setInterval(() => {
+                this._gameTimer = setInterval(() => {
                   this.gameTime++;
                 }, 1000);
               };
               this.stopTimer = function () {
-                if (this.gameTimer) {
-                  clearInterval(this.gameTimer);
-                  this.gameTimer = null;
+                if (this._gameTimer) {
+                  clearInterval(this._gameTimer);
+                  this._gameTimer = null;
                 }
               };
               break;
@@ -467,8 +467,8 @@ export const GameComponentPresets = {
       },
       customCleanup() {
         // 清理定时器
-        if (this.gameTimer) {
-          clearInterval(this.gameTimer);
+        if (this._gameTimer) {
+          clearInterval(this._gameTimer);
         }
       },
     });

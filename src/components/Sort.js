@@ -13,6 +13,7 @@ const Sort = {
       n: 0,
       sign_index: -1,
       matchMode: 1,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
+      stateHashHistory: [],
     };
   },
   methods: {
