@@ -9,7 +9,7 @@ const Sort = {
       cards1: [],
       types: ["♥", "♠", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
-      number: 6,
+      number: 12,
       n: 0,
       sign_index: -1,
       matchMode: 1,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
@@ -29,7 +29,7 @@ const Sort = {
         cards.splice(cards.indexOf(this.number * 4 - 1 - i), 1, -1 - i);
       }
       for (let i = 0; i < 4; i++) {
-        cards.splice(i * 13, 0, this.number * 4 - 4 + i);
+        cards.splice(i * (this.number + 1), 0, this.number * 4 - 4 + i);
       }
       this.autoCalc();
     },
@@ -111,7 +111,7 @@ const Sort = {
       for (let i = 0; i < this.number * 4 + 4; i++) {
         if (
           this.cards1[i] >> 2 ==
-          this.number - 1 - (i % 13)
+          this.number - 1 - (i % (this.number + 1))
         ) {
           this.n++;
         }
@@ -166,7 +166,7 @@ const Sort = {
       
       // 滚动到目标卡片位置
       if (index >= 0 && typeof window !== 'undefined' && window.document) {
-        const scrollTop = (index % 13) * 150;
+        const scrollTop = (index % (this.number + 1)) * 150;
         
         // 优先滚动 GameLayout 的 wrapper
         const wrapper = document.querySelector('.game-content-wrapper');
@@ -194,7 +194,7 @@ const Sort = {
       }
       
       // 因素2: 位置靠前（列顶）的优先级更高
-      let row = idx % 13;
+      let row = idx % (this.number + 1);
       score += (this.number - row) * 10;
       
       // 因素3: 更倾向于选择花色值小的（保持稳定性）
@@ -359,7 +359,7 @@ const Sort = {
             }
             next_c += 4;
             // 检查是否形成同颜色递增序列
-            while (n % 13 > 0) {
+            while (n % (this.number + 1) > 0) {
               let card_at_n = this.cards1[n];
               if (card_at_n >= 0 && 
                   (card_at_n >> 2) == (next_c >> 2) && 
@@ -371,7 +371,7 @@ const Sort = {
                 break;
               }
             }
-            if (n % 13 == 0) {
+            if (n % (this.number + 1) == 0) {
               return 0;
             }
             let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1];
@@ -405,7 +405,7 @@ const Sort = {
           
           // 检查是否形成递减序列（点数递减，颜色相同）
           while (i >= 0) {
-            let expected_rank = this.number - 1 - (i % 13);
+            let expected_rank = this.number - 1 - (i % (this.number + 1));
             let card_at_i = this.cards1[i];
             if (card_at_i >= 0 && 
                 (card_at_i >> 2) == expected_rank && 
@@ -416,7 +416,7 @@ const Sort = {
             }
           }
           
-          if (i < 0 || i % 13 == this.number) {
+          if (i < 0 || i % (this.number + 1) == this.number) {
             // 快速胜利检测：检查每个候选是否可以立即移动
             for (let prevCandidate of prevCandidates) {
               let next_i = prevCandidate.idx;
@@ -428,7 +428,7 @@ const Sort = {
               
               if (
                 card < 8 ||
-                next_i % 13 == this.number ||
+                next_i % (this.number + 1) == this.number ||
                 this.cards1[next_i + 1] == card_minus_2
               ) {
                 this.next = [prevCard, index];
@@ -592,7 +592,7 @@ const Sort = {
           Math.abs(
             (targetCard >> 2) -
               (this.number - 1) +
-              ((t.index % 13)),
+              ((t.index % (this.number + 1))),
           );
         let card_rank = targetCard >> 2;  // 卡片等级，K=11最大
         // 候选优先级 > 距离 > 卡片等级（大牌优先）
