@@ -9,7 +9,7 @@ const Sort = {
       cards1: [],
       types: ["♥", "♠", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
-      number: 12,
+      number: 5,
       n: 0,
       sign_index: -1,
       matchMode: 1,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
@@ -421,6 +421,8 @@ const Sort = {
             for (let prevCandidate of prevCandidates) {
               let next_i = prevCandidate.idx;
               let prevCard = prevCandidate.card;
+
+              if (card >> 2 == this.cards1[next_i - 1] >> 2) continue;
               
               // 查找同颜色的前两个点数的牌（用于检查是否已有连续序列）
               let card_minus_2_idx = this.findCardByRankOffset(card, -2);
@@ -452,8 +454,6 @@ const Sort = {
               let cardIdx = this.cards1.indexOf(card);
               if (cardIdx < 0) continue;
 
-              // if (card << 2 == this.cards1[candidate.idx - 1] >> 2) continue;
-              
               // 创建临时状态来计算哈希
               let tempCards = [...this.cards1];
               tempCards[candidate.idx] = id;
