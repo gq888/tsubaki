@@ -109,7 +109,7 @@ const Sort = {
     // 重写stepFn方法，使用clickSign/clickCard保持行为一致
     async stepFn() {
       // 验证 this.next 是否有效
-      if (!this.next) {
+      if (!this.next || this.next[0] < 0) {
         console.error('❌ stepFn: this.next 无效', this.next);
         
         // 保存故障状态
@@ -121,6 +121,22 @@ const Sort = {
           n: this.n,
         };
         console.error('💾 故障状态已保存:', JSON.stringify(errorState));
+        
+        // 检查游戏状态：计算已完成的牌数
+        this.n = 0;
+        for (let i = 0; i < this.number * 4 + 4; i++) {
+          if (
+            this.cards1[i] >> 2 ==
+            this.number - 1 - (i % 13)
+          ) {
+            this.n++;
+          }
+        }
+        
+        // 如果所有牌都已完成，标记为胜利；否则标记为失败
+        if (this.n >= this.number * 4) {
+          this.gameManager.setWin();
+        }
         
         this.gameManager.stopAuto();
         return;
@@ -272,10 +288,14 @@ const Sort = {
         let card = temp[id].card;
         let dead = [];
         let candidatePriorities = new Map();  // 存储候选牌与优先级的映射
+        let candidates = this.findAllCardsByRankOffset(card, -1);
+        for (let candidate of candidates) {
+          candidatePriorities.set(candidate.card, 0);
+        }
         let prevFn = (prev_c, deep, accumulatedPriority = 0) => {
           if (prev_c < 0) {
             // 到达空位，累加 priority
-            prior.push([id, prev_c, deep, accumulatedPriority]);
+            prior.push([id, prev_c, deep]);
             temp[prev_c].priority = Math.max(temp[prev_c].priority, ++accumulatedPriority);
             temp[prev_c]._in++;
             return accumulatedPriority;
@@ -303,15 +323,14 @@ const Sort = {
               let subPriority = prevFn(signCard, deep, accumulatedPriority);
               maxPriority = Math.max(maxPriority, subPriority);
               
-              let currentPriority = candidatePriorities.get(candidate.card) || 0;
-              candidatePriorities.set(candidate.card, Math.max(currentPriority, subPriority));
+              candidatePriorities.has(candidate.card) && candidatePriorities.set(candidate.card, Math.max(candidatePriorities.get(candidate.card), subPriority));
             }
             
             return maxPriority;
           }
         };
         let nextFn = (next_i, next_c, deep) => {
-          if (!checkDeadForeach(dead, [next_c, 1])) return;
+          if (!checkDeadForeach(dead, [next_c, 1])) return 0;
           dead.unshift([next_c, 1]);
           if (deep > 0 && next_c >= 8) {
             let prev_c = this.cards1[next_i + 1];
@@ -328,9 +347,11 @@ const Sort = {
             }
             if (next_c >= num * 4) {
               prior.push([id, this.cards1[next_i - 1], deep]);
-              temp[this.cards1[next_i - 1]].priority++;
-              temp[this.cards1[next_i - 1]]._in++;
-              return;
+              let emptySlotId = this.cards1[next_i - 1];
+              temp[emptySlotId].priority++;
+              temp[emptySlotId]._in++;
+              
+              return temp[emptySlotId].priority;
             }
             next_c += 4;
             // 检查是否形成同颜色递增序列
@@ -347,16 +368,30 @@ const Sort = {
               }
             }
             if (n % 13 == 0) {
-              return;
+              return 0;
             }
             let prev_c = this.cards1[this.cards1.indexOf(next_c) + 1];
-            prevFn(prev_c, deep);
-            return;
+            let priority = prevFn(prev_c, deep);
+            
+            // 同步候选卡片的优先级
+            if (candidatePriorities.has(next_c)) {
+              candidatePriorities.set(next_c, Math.max(candidatePriorities.get(next_c), priority));
+            }
+            
+            return priority;
           }
           let prevCandidates = this.findAllCardsByRankOffset(next_c, -1);
+          let maxPriority = 0;
           for (let prevCandidate of prevCandidates) {
-            nextFn(prevCandidate.idx, next_c, deep);
+            let priority = nextFn(prevCandidate.idx, next_c, deep);
+            maxPriority = Math.max(maxPriority, priority);
+            
+            // 同步候选卡片的优先级
+            if (candidatePriorities.has(prevCandidate.card)) {
+              candidatePriorities.set(prevCandidate.card, Math.max(candidatePriorities.get(prevCandidate.card), priority));
+            }
           }
+          return maxPriority;
         };
         if (card >= 4) {
           let i = index - 1;
@@ -415,15 +450,14 @@ const Sort = {
               
               // 创建临时状态来计算哈希
               let tempCards = [...this.cards1];
-              let candidateIdx = candidate.idx;
-              let tempSignCard = tempCards[candidateIdx + 1];
-              tempCards[cardIdx] = tempSignCard;
-              tempCards[candidateIdx + 1] = card;
+              tempCards[candidate.idx] = id;
+              tempCards[index] = candidate.card;
               
               let simulatedHash = tempCards.join(',');
               
               // 检查哈希是否重复
               if (this.isStateHashRepeated(simulatedHash)) {
+                console.log('❌ 哈希重复，跳过这个候选');
                 continue;  // 跳过这个候选
               }
               
@@ -439,7 +473,7 @@ const Sort = {
             
             // 选择优先级最高的候选
             if (candidatesWithPriority.length > 0) {
-              let bestCandidate = candidatesWithPriority.reduce((best, curr) => 
+              let bestCandidate = candidatesWithPriority.reduce((best, curr) =>
                 curr.priority > best.priority ? curr : best
               );
               temp[id].bestCard = bestCandidate;
@@ -537,7 +571,7 @@ const Sort = {
         let bestCardInfo = t.bestCard;
         
         // 如果没有 bestCard，跳过这个空位
-        if (!bestCardInfo || bestCardInfo.card === null || bestCardInfo.card === undefined || bestCardInfo.card < 4) {
+        if (!bestCardInfo || bestCardInfo.card === null || bestCardInfo.card === undefined || bestCardInfo.card < 0) {
           continue;
         }
         
@@ -578,7 +612,7 @@ const Sort = {
       
       
       // 如果没有找到有效移动，检查游戏状态
-      if (this.next[0] < 4) {
+      if (this.next[0] < 0) {
         
         // 检查四个空位的 priority 是否都为 0（只检查前面是有效卡片且有 bestCard 的空位）
         let allPrioritiesZero = true;
@@ -588,7 +622,7 @@ const Sort = {
             validSlotCount++;
             // 只有既有 priority 又有 bestCard 的空位才算有效移动
             const bestCard = temp[i].bestCard;
-            if (temp[i].priority > 0 && bestCard && bestCard.card !== null && bestCard.card !== undefined) {
+            if (temp[i].priority > 0 && bestCard && bestCard.card !== null && bestCard.card !== undefined && bestCard.card >= 0) {
               allPrioritiesZero = false;
             }
           }
