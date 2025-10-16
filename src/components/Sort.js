@@ -9,10 +9,10 @@ const Sort = {
       cards1: [],
       types: ["♥", "♠", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
-      number: 12,
+      number: 6,
       n: 0,
       sign_index: -1,
-      matchMode: 2,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
+      matchMode: 1,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
     };
   },
   methods: {
@@ -101,7 +101,7 @@ const Sort = {
         let targetEmptyIndex = index + 1;
         this.executeMove(card, targetEmptyIndex);
       } else {
-        console.error(`❌ clickCard: 移动失败 card=${card}, 找不到有效目标位置`);
+        console.error(`❌ clickCard: 移动失败 card=${card}, 找不到有效目标位置。Seed:${this.seed}`);
       }
       this.sign_index = -1;
     },
@@ -264,7 +264,7 @@ const Sort = {
     },
     // 判断卡牌是否可移动（用于 shanshuo 闪烁提示）
     canMoveCard(card) {
-      if (card < 4) return false;
+      if (card < 0) return false;
       // 查找同颜色的下一张牌，检查其后是否有空位
       let nextIdx = this.findNextCard(card, (idx) => this.cards1[idx + 1] < 0);
       return nextIdx >= 0;
@@ -451,6 +451,8 @@ const Sort = {
               // 模拟移动并检查哈希重复
               let cardIdx = this.cards1.indexOf(card);
               if (cardIdx < 0) continue;
+
+              // if (card << 2 == this.cards1[candidate.idx - 1] >> 2) continue;
               
               // 创建临时状态来计算哈希
               let tempCards = [...this.cards1];
