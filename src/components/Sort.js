@@ -270,6 +270,37 @@ const Sort = {
       let nextIdx = this.findNextCard(card, (idx) => this.cards1[idx + 1] < 0);
       return nextIdx >= 0;
     },
+    
+    // 前瞻1步：计算给定状态下有多少个可能的移动
+    countPossibleMoves(cards1Array) {
+      let count = 0;
+      
+      // 遍历所有空位
+      for (let i = 0; i < cards1Array.length; i++) {
+        if (cards1Array[i] >= 0) continue;  // 不是空位
+        
+        const prevCard = i > 0 ? cards1Array[i - 1] : null;
+        if (prevCard === null || prevCard < 0) continue;  // 空位前没有有效卡片
+        
+        const prevRank = prevCard >> 2;
+        const targetRank = prevRank - 1;
+        if (targetRank < 0) continue;  // 前面是A，无法移动
+        
+        // 查找所有匹配的候选牌
+        const card_group = prevCard % this.matchMode;
+        for (let suit = card_group; suit < 4; suit += this.matchMode) {
+          const targetCard = targetRank * 4 + suit;
+          const cardIdx = cards1Array.indexOf(targetCard);
+          
+          // 检查候选牌是否存在
+          if (cardIdx >= 0) {
+            count++;
+          }
+        }
+      }
+      
+      return count;
+    },
     autoCalc() {
       let over = true,
         temp = {},
@@ -548,11 +579,9 @@ const Sort = {
       let min = 999999,
         max = -1;
       let best_card_rank = -1;
+      let best_lookahead_count = -1;  // 前瞻：最优候选的后续移动数
       
-      const currentStep = this.gameManager?.getStepCount() || 0;
-      console.log(`\n📍 步骤 ${currentStep + 1}:`);
-      
-      // 遍历所有空位的所有候选，选择最优的“空位+候选”组合
+      // 遍历所有空位的所有候选，选择最优的"空位+候选"组合
       for (let i = -4; i < 0; i++) {
         let t = temp[i];
         
@@ -599,15 +628,28 @@ const Sort = {
             );
           let card_rank = targetCard >> 2;  // 卡片等级，K=11最大
           
-          // 候选优先级 > 距离 > 卡片等级（大牌优先）
+          // 前瞻1步：模拟移动后的状态，计算后续可能移动数
+          let lookahead_count = 0;
+          if (candidatePriority == max && diff == min && card_rank == best_card_rank) {
+            // 只有在所有条件都相同时才进行前瞻计算（节省性能）
+            const simulatedCards = [...this.cards1];
+            const slotId = simulatedCards[t.index];
+            simulatedCards[currentTargetIdx] = slotId;
+            simulatedCards[t.index] = targetCard;
+            lookahead_count = this.countPossibleMoves(simulatedCards);
+          }
+          
+          // 候选优先级 > 距离 > 卡片等级 > 前瞻后续移动数（越多越好）
           if (candidatePriority > max || 
               (candidatePriority == max && diff < min) ||
-              (candidatePriority == max && diff == min && card_rank > best_card_rank)) {
+              (candidatePriority == max && diff == min && card_rank > best_card_rank) ||
+              (candidatePriority == max && diff == min && card_rank == best_card_rank && lookahead_count > best_lookahead_count)) {
             // 选择这个候选
             this.next = [targetCard, t.index];
             min = diff;
             max = candidatePriority;
             best_card_rank = card_rank;
+            best_lookahead_count = lookahead_count;
           }
         }
       }
