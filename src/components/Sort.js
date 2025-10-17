@@ -580,6 +580,8 @@ const Sort = {
         max = -1;
       let best_card_rank = -1;
       let best_lookahead_count = -1;  // 前瞻：最优候选的后续移动数
+      let best_slot_score = -999999;  // 空位评分：越高越好
+      let best_card_position = 999999;  // 卡片位置：越小越好
       
       // 遍历所有空位的所有候选，选择最优的"空位+候选"组合
       for (let i = -4; i < 0; i++) {
@@ -627,11 +629,15 @@ const Sort = {
                 ((t.index % (this.number + 1))),
             );
           let card_rank = targetCard >> 2;  // 卡片等级，K=11最大
+          const slotPosition = t.index % (this.number + 1);
+          const prevRank = t.card >> 2;
+          let slot_score = prevRank * 10 - slotPosition;
+          let card_position = currentTargetIdx % (this.number + 1);  // 卡片在列中的位置
           
           // 前瞻1步：模拟移动后的状态，计算后续可能移动数
           let lookahead_count = 0;
-          if (candidatePriority == max && diff == min && card_rank == best_card_rank) {
-            // 只有在所有条件都相同时才进行前瞻计算（节省性能）
+          if (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score == best_slot_score) {
+            // 只有priority、diff、rank都相同时才计算前瞻
             const simulatedCards = [...this.cards1];
             const slotId = simulatedCards[t.index];
             simulatedCards[currentTargetIdx] = slotId;
@@ -639,17 +645,22 @@ const Sort = {
             lookahead_count = this.countPossibleMoves(simulatedCards);
           }
           
-          // 候选优先级 > 距离 > 卡片等级 > 前瞻后续移动数（越多越好）
+          // 优先级：priority > diff > rank > slot_score > lookahead↓ > cardPosition↓
+          // lookahead和cardPosition作为最后的tie-breaker，方向基于数据分析
           if (candidatePriority > max || 
               (candidatePriority == max && diff < min) ||
               (candidatePriority == max && diff == min && card_rank > best_card_rank) ||
-              (candidatePriority == max && diff == min && card_rank == best_card_rank && lookahead_count > best_lookahead_count)) {
+              (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score > best_slot_score) ||
+              (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score == best_slot_score && lookahead_count > best_lookahead_count) ||
+              (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score == best_slot_score && lookahead_count == best_lookahead_count && card_position < best_card_position)) {
             // 选择这个候选
             this.next = [targetCard, t.index];
             min = diff;
             max = candidatePriority;
             best_card_rank = card_rank;
+            best_slot_score = slot_score;
             best_lookahead_count = lookahead_count;
+            best_card_position = card_position;
           }
         }
       }
