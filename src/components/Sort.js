@@ -576,12 +576,7 @@ const Sort = {
         }
       }
       this.next = [-1, -1];
-      let min = 999999,
-        max = -1;
-      let best_card_rank = -1;
-      let best_lookahead_count = -1;  // 前瞻：最优候选的后续移动数
-      let best_slot_score = -999999;  // 空位评分：越高越好
-      let best_card_position = 999999;  // 卡片位置：越小越好
+      let bestCandidate = null;
       
       // 遍历所有空位的所有候选，选择最优的"空位+候选"组合
       for (let i = -4; i < 0; i++) {
@@ -620,49 +615,86 @@ const Sort = {
             continue;
           }
           
-          // 计算距离（使用rank）
-          let diff =
-            t.deep ||
-            Math.abs(
-              (targetCard >> 2) -
-                (this.number - 1) +
-                ((t.index % (this.number + 1))),
-            );
-          let card_rank = targetCard >> 2;  // 卡片等级，K=11最大
-          const slotPosition = t.index % (this.number + 1);
-          const prevRank = t.card >> 2;
-          let slot_score = prevRank * 10 - slotPosition;
-          let card_position = currentTargetIdx % (this.number + 1);  // 卡片在列中的位置
+          // 创建候选对象，延迟计算特征值
+          const currentCandidate = {
+            targetCard,
+            slotIndex: t.index,
+            getPriority: () => candidatePriority,
+            getDiff: () => {
+              if (!currentCandidate._diff) {
+                currentCandidate._diff = t.deep || Math.abs(
+                  (targetCard >> 2) - (this.number - 1) + ((t.index % (this.number + 1)))
+                );
+              }
+              return currentCandidate._diff;
+            },
+            getCardRank: () => {
+              if (!currentCandidate._cardRank) {
+                currentCandidate._cardRank = targetCard >> 2; // 卡片等级，K=11最大
+              }
+              return currentCandidate._cardRank;
+            },
+            getSlotScore: () => {
+              if (!currentCandidate._slotScore) {
+                const slotPosition = t.index % (this.number + 1);
+                const prevRank = t.card >> 2;
+                currentCandidate._slotScore = prevRank * 10 - slotPosition;
+              }
+              return currentCandidate._slotScore;
+            },
+            getLookaheadCount: () => {
+              if (!currentCandidate._lookaheadCount) {
+                // 只有在需要时才计算前瞻值
+                const simulatedCards = [...this.cards1];
+                const slotId = simulatedCards[t.index];
+                simulatedCards[currentTargetIdx] = slotId;
+                simulatedCards[t.index] = targetCard;
+                currentCandidate._lookaheadCount = this.countPossibleMoves(simulatedCards);
+              }
+              return currentCandidate._lookaheadCount;
+            },
+            getCardPosition: () => {
+              if (!currentCandidate._cardPosition) {
+                currentCandidate._cardPosition = currentTargetIdx % (this.number + 1);
+              }
+              return currentCandidate._cardPosition;
+            }
+          };
           
-          // 前瞻1步：模拟移动后的状态，计算后续可能移动数
-          let lookahead_count = 0;
-          if (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score == best_slot_score) {
-            // 只有priority、diff、rank都相同时才计算前瞻
-            const simulatedCards = [...this.cards1];
-            const slotId = simulatedCards[t.index];
-            simulatedCards[currentTargetIdx] = slotId;
-            simulatedCards[t.index] = targetCard;
-            lookahead_count = this.countPossibleMoves(simulatedCards);
-          }
-          
-          // 优先级：priority > diff > rank > slot_score > lookahead↓ > cardPosition↓
-          // lookahead和cardPosition作为最后的tie-breaker，方向基于数据分析
-          if (candidatePriority > max || 
-              (candidatePriority == max && diff < min) ||
-              (candidatePriority == max && diff == min && card_rank > best_card_rank) ||
-              (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score > best_slot_score) ||
-              (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score == best_slot_score && lookahead_count > best_lookahead_count) ||
-              (candidatePriority == max && diff == min && card_rank == best_card_rank && slot_score == best_slot_score && lookahead_count == best_lookahead_count && card_position < best_card_position)) {
-            // 选择这个候选
-            this.next = [targetCard, t.index];
-            min = diff;
-            max = candidatePriority;
-            best_card_rank = card_rank;
-            best_slot_score = slot_score;
-            best_lookahead_count = lookahead_count;
-            best_card_position = card_position;
+          // 判断是否替换最佳候选
+          if (!bestCandidate || isBetterCandidate(currentCandidate, bestCandidate)) {
+            bestCandidate = currentCandidate;
+            // 更新最佳移动
+            this.next = [currentCandidate.targetCard, currentCandidate.slotIndex];
           }
         }
+      }
+      
+      // 比较两个候选的优先级函数
+      // 优先级：priority > diff > rank > slot_score > lookahead > cardPosition
+      function isBetterCandidate(candidateA, candidateB) {
+        // 比较优先级
+        if (candidateA.getPriority() > candidateB.getPriority()) return true;
+        if (candidateA.getPriority() < candidateB.getPriority()) return false;
+        
+        // 优先级相同，比较距离
+        if (candidateA.getDiff() < candidateB.getDiff()) return true;
+        if (candidateA.getDiff() > candidateB.getDiff()) return false;
+        
+        // 距离相同，比较卡片等级
+        if (candidateA.getCardRank() > candidateB.getCardRank()) return true;
+        if (candidateA.getCardRank() < candidateB.getCardRank()) return false;
+        
+        // 卡片等级相同，比较空位评分
+        if (candidateA.getSlotScore() > candidateB.getSlotScore()) return true;
+        if (candidateA.getSlotScore() < candidateB.getSlotScore()) return false;
+        
+        // 空位评分相同，比较前瞻值
+        if (candidateA.getLookaheadCount() > candidateB.getLookaheadCount()) return true;
+        if (candidateA.getLookaheadCount() < candidateB.getLookaheadCount()) return false;
+        
+        // 前瞻值相同，比较卡片位置
+        return candidateA.getCardPosition() < candidateB.getCardPosition();
       }
       
       
