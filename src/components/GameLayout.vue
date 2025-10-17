@@ -598,6 +598,7 @@ export default {
   transition: padding 0.3s ease;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch; /* 移动端流畅滚动 */
+  background-color: #3c4245;
 }
 
 /* Fixed 底部控制区 */
@@ -607,8 +608,6 @@ export default {
   left: 0;
   right: 0;
   padding: 0.5rem;
-  background: #fff;
-  border-top: 0.0625rem solid #f0f0f0;
   z-index: 999;
   text-align: center;
 }

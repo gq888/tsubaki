@@ -1,7 +1,7 @@
 <template>
   <GameLayout
     v-bind="gameLayoutProps"
-    :lose-subtitle="n + '/' + number * 4"
+    :lose-subtitle="n + '/' + (number + 1) * 4"
     :lose-buttons="[
       {
         text: 'RESTART',
