@@ -301,6 +301,65 @@ const Sort = {
       
       return count;
     },
+    
+    // 动态规划：计算已还原到正确位置的卡片数量（从高rank开始）
+    countRestoredCards(cards1Array) {
+      let restoredCount = 0;
+      const colSize = this.number + 1;  // 每列的大小
+      
+      // 从最高rank开始检查（K往下到A=0）
+      for (let rank = this.number - 1; rank >= 0; rank--) {
+        // 检查每种花色
+        for (let suit = 0; suit < 4; suit++) {
+          const card = rank * 4 + suit;
+          const cardIdx = cards1Array.indexOf(card);
+          
+          if (cardIdx < 0) continue;  // 卡片不存在
+          
+          // 计算该卡片的目标列（基于matchMode）
+          const targetGroup = suit % this.matchMode;
+          
+          // 计算该卡片在目标列中应该的位置
+          // 目标列从底部开始：colStart + (number - rank)
+          const colStart = targetGroup * colSize;
+          const expectedPosition = colStart + (this.number - 1 - rank);
+          
+          // 检查卡片是否在正确位置
+          if (cardIdx === expectedPosition) {
+            // 还需要检查该位置下方的所有卡片是否都正确
+            let allBelowCorrect = true;
+            
+            // 检查该位置下方的每个位置
+            for (let checkRank = rank + 1; checkRank < this.number; checkRank++) {
+              const checkPos = colStart + (this.number - 1 - checkRank);
+              const cardAtPos = cards1Array[checkPos];
+              
+              if (cardAtPos < 0) {
+                // 下方有空位，不正确
+                allBelowCorrect = false;
+                break;
+              }
+              
+              const cardAtPosRank = cardAtPos >> 2;
+              const cardAtPosSuit = cardAtPos % 4;
+              const cardAtPosGroup = cardAtPosSuit % this.matchMode;
+              
+              // 检查下方卡片是否属于同一列且rank正确
+              if (cardAtPosGroup !== targetGroup || cardAtPosRank !== checkRank) {
+                allBelowCorrect = false;
+                break;
+              }
+            }
+            
+            if (allBelowCorrect) {
+              restoredCount++;
+            }
+          }
+        }
+      }
+      
+      return restoredCount;
+    },
     autoCalc() {
       let over = true,
         temp = {},
@@ -620,9 +679,15 @@ const Sort = {
             targetCard,
             slotIndex: t.index,
             getPriority: () => candidatePriority,
+            getDeep: () => {
+              if (!currentCandidate._deep) {
+                currentCandidate._deep = t.deep;
+              }
+              return currentCandidate._deep;
+            },
             getDiff: () => {
               if (!currentCandidate._diff) {
-                currentCandidate._diff = t.deep || Math.abs(
+                currentCandidate._diff = Math.abs(
                   (targetCard >> 2) - (this.number - 1) + ((t.index % (this.number + 1)))
                 );
               }
@@ -658,6 +723,17 @@ const Sort = {
                 currentCandidate._cardPosition = currentTargetIdx % (this.number + 1);
               }
               return currentCandidate._cardPosition;
+            },
+            getRestoredCount: () => {
+              if (currentCandidate._restoredCount === undefined) {
+                // 计算移动后已还原到正确位置的卡片数量（从高rank开始）
+                const simulatedCards = [...this.cards1];
+                const slotId = simulatedCards[t.index];
+                simulatedCards[currentTargetIdx] = slotId;
+                simulatedCards[t.index] = targetCard;
+                currentCandidate._restoredCount = this.countRestoredCards(simulatedCards);
+              }
+              return currentCandidate._restoredCount;
             }
           };
           
@@ -671,11 +747,14 @@ const Sort = {
       }
       
       // 比较两个候选的优先级函数
-      // 优先级：priority > diff > rank > slot_score > lookahead > cardPosition
+      // 优先级：priority > deep > diff > rank > slot_score > lookahead > restoredCount(DP) > cardPosition
       function isBetterCandidate(candidateA, candidateB) {
         // 比较优先级
         if (candidateA.getPriority() > candidateB.getPriority()) return true;
         if (candidateA.getPriority() < candidateB.getPriority()) return false;
+
+        if (candidateA.getDeep() > candidateB.getDeep()) return true;
+        if (candidateA.getDeep() < candidateB.getDeep()) return false;
         
         // 优先级相同，比较距离
         if (candidateA.getDiff() < candidateB.getDiff()) return true;
@@ -693,7 +772,11 @@ const Sort = {
         if (candidateA.getLookaheadCount() > candidateB.getLookaheadCount()) return true;
         if (candidateA.getLookaheadCount() < candidateB.getLookaheadCount()) return false;
         
-        // 前瞻值相同，比较卡片位置
+        // 前瞻值相同，比较已还原卡片数（动态规划评估，作为tie-breaker）
+        if (candidateA.getRestoredCount() > candidateB.getRestoredCount()) return true;
+        if (candidateA.getRestoredCount() < candidateB.getRestoredCount()) return false;
+        
+        // 已还原数相同，比较卡片位置
         return candidateA.getCardPosition() < candidateB.getCardPosition();
       }
       
