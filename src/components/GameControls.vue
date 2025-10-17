@@ -73,7 +73,7 @@ export default {
 
       if (this.showUndo) {
         defaultButtons.push({
-          label: "UNDO",
+          label: "◀︎",
           action: "undo",
           disabled: this.undoDisabled,
         });
@@ -87,19 +87,19 @@ export default {
         });
       }
 
-      if (this.showStep) {
-        defaultButtons.push({
-          label: "STEP",
-          action: "step",
-          disabled: this.stepDisabled,
-        });
-      }
-
       if (this.showAuto) {
         defaultButtons.push({
           label: this.isAutoRunning ? "STOP" : "AUTO",
           action: "auto",
           disabled: this.autoDisabled,
+        });
+      }
+
+      if (this.showStep) {
+        defaultButtons.push({
+          label: "►",
+          action: "step",
+          disabled: this.stepDisabled,
         });
       }
 

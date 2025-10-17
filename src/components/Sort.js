@@ -9,7 +9,7 @@ const Sort = {
       cards1: [],
       types: ["♥", "♠", "♦", "♣"],
       point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
-      number: 5,
+      number: 4,
       n: 0,
       sign_index: -1,
       matchMode: 1,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
@@ -691,6 +691,18 @@ const Sort = {
                 }
                 return currentCandidate._deep;
               },
+              // 前瞻值 (正常比较)
+              () => {
+                if (!currentCandidate._lookaheadCount) {
+                  // 只有在需要时才计算前瞻值
+                  const simulatedCards = [...this.cards1];
+                  const slotId = simulatedCards[t.index];
+                  simulatedCards[currentTargetIdx] = slotId;
+                  simulatedCards[t.index] = targetCard;
+                  currentCandidate._lookaheadCount = this.countPossibleMoves(simulatedCards);
+                }
+                return currentCandidate._lookaheadCount;
+              },
               // 距离 (取反，因为原逻辑是小于比较)
               () => {
                 if (!currentCandidate._diff) {
@@ -707,26 +719,21 @@ const Sort = {
                 }
                 return currentCandidate._cardRank;
               },
-              // 空位评分 (正常比较)
+              // prevRank (正常比较)
               () => {
-                if (!currentCandidate._slotScore) {
-                  const slotPosition = t.index % (this.number + 1);
+                if (!currentCandidate._prevRank) {
                   const prevRank = t.card >> 2;
-                  currentCandidate._slotScore = prevRank * 10 - slotPosition;
+                  currentCandidate._prevRank = prevRank;
                 }
-                return currentCandidate._slotScore;
+                return currentCandidate._prevRank;
               },
-              // 前瞻值 (正常比较)
+              // slotPosition (取反)
               () => {
-                if (!currentCandidate._lookaheadCount) {
-                  // 只有在需要时才计算前瞻值
-                  const simulatedCards = [...this.cards1];
-                  const slotId = simulatedCards[t.index];
-                  simulatedCards[currentTargetIdx] = slotId;
-                  simulatedCards[t.index] = targetCard;
-                  currentCandidate._lookaheadCount = this.countPossibleMoves(simulatedCards);
+                if (!currentCandidate._slotPosition) {
+                  const slotPosition = t.index % (this.number + 1);
+                  currentCandidate._slotPosition = slotPosition;
                 }
-                return currentCandidate._lookaheadCount;
+                return -currentCandidate._slotPosition;
               },
               // 已还原卡片数 (正常比较)
               () => {
