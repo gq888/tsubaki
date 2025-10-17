@@ -678,63 +678,76 @@ const Sort = {
           const currentCandidate = {
             targetCard,
             slotIndex: t.index,
-            getPriority: () => candidatePriority,
-            getDeep: () => {
-              if (!currentCandidate._deep) {
-                currentCandidate._deep = t.deep;
+            // 统一使用大于比较，对需要小于比较的特征取反
+            _getters: [
+              // 优先级 (正常比较)
+              () => {
+                return candidatePriority;
+              },
+              // 深度 (正常比较)
+              () => {
+                if (!currentCandidate._deep) {
+                  currentCandidate._deep = t.deep;
+                }
+                return currentCandidate._deep;
+              },
+              // 距离 (取反，因为原逻辑是小于比较)
+              () => {
+                if (!currentCandidate._diff) {
+                  currentCandidate._diff = Math.abs(
+                    (targetCard >> 2) - (this.number - 1) + ((t.index % (this.number + 1)))
+                  );
+                }
+                return -currentCandidate._diff; // 取反，使小于比较变为大于比较
+              },
+              // 卡片等级 (正常比较)
+              () => {
+                if (!currentCandidate._cardRank) {
+                  currentCandidate._cardRank = targetCard >> 2; // 卡片等级，K=11最大
+                }
+                return currentCandidate._cardRank;
+              },
+              // 空位评分 (正常比较)
+              () => {
+                if (!currentCandidate._slotScore) {
+                  const slotPosition = t.index % (this.number + 1);
+                  const prevRank = t.card >> 2;
+                  currentCandidate._slotScore = prevRank * 10 - slotPosition;
+                }
+                return currentCandidate._slotScore;
+              },
+              // 前瞻值 (正常比较)
+              () => {
+                if (!currentCandidate._lookaheadCount) {
+                  // 只有在需要时才计算前瞻值
+                  const simulatedCards = [...this.cards1];
+                  const slotId = simulatedCards[t.index];
+                  simulatedCards[currentTargetIdx] = slotId;
+                  simulatedCards[t.index] = targetCard;
+                  currentCandidate._lookaheadCount = this.countPossibleMoves(simulatedCards);
+                }
+                return currentCandidate._lookaheadCount;
+              },
+              // 已还原卡片数 (正常比较)
+              () => {
+                if (currentCandidate._restoredCount === undefined) {
+                  // 计算移动后已还原到正确位置的卡片数量（从高rank开始）
+                  const simulatedCards = [...this.cards1];
+                  const slotId = simulatedCards[t.index];
+                  simulatedCards[currentTargetIdx] = slotId;
+                  simulatedCards[t.index] = targetCard;
+                  currentCandidate._restoredCount = this.countRestoredCards(simulatedCards);
+                }
+                return currentCandidate._restoredCount;
+              },
+              // 卡片位置 (取反，因为原逻辑是小于比较)
+              () => {
+                if (!currentCandidate._cardPosition) {
+                  currentCandidate._cardPosition = currentTargetIdx % (this.number + 1);
+                }
+                return -currentCandidate._cardPosition; // 取反，使小于比较变为大于比较
               }
-              return currentCandidate._deep;
-            },
-            getDiff: () => {
-              if (!currentCandidate._diff) {
-                currentCandidate._diff = Math.abs(
-                  (targetCard >> 2) - (this.number - 1) + ((t.index % (this.number + 1)))
-                );
-              }
-              return currentCandidate._diff;
-            },
-            getCardRank: () => {
-              if (!currentCandidate._cardRank) {
-                currentCandidate._cardRank = targetCard >> 2; // 卡片等级，K=11最大
-              }
-              return currentCandidate._cardRank;
-            },
-            getSlotScore: () => {
-              if (!currentCandidate._slotScore) {
-                const slotPosition = t.index % (this.number + 1);
-                const prevRank = t.card >> 2;
-                currentCandidate._slotScore = prevRank * 10 - slotPosition;
-              }
-              return currentCandidate._slotScore;
-            },
-            getLookaheadCount: () => {
-              if (!currentCandidate._lookaheadCount) {
-                // 只有在需要时才计算前瞻值
-                const simulatedCards = [...this.cards1];
-                const slotId = simulatedCards[t.index];
-                simulatedCards[currentTargetIdx] = slotId;
-                simulatedCards[t.index] = targetCard;
-                currentCandidate._lookaheadCount = this.countPossibleMoves(simulatedCards);
-              }
-              return currentCandidate._lookaheadCount;
-            },
-            getCardPosition: () => {
-              if (!currentCandidate._cardPosition) {
-                currentCandidate._cardPosition = currentTargetIdx % (this.number + 1);
-              }
-              return currentCandidate._cardPosition;
-            },
-            getRestoredCount: () => {
-              if (currentCandidate._restoredCount === undefined) {
-                // 计算移动后已还原到正确位置的卡片数量（从高rank开始）
-                const simulatedCards = [...this.cards1];
-                const slotId = simulatedCards[t.index];
-                simulatedCards[currentTargetIdx] = slotId;
-                simulatedCards[t.index] = targetCard;
-                currentCandidate._restoredCount = this.countRestoredCards(simulatedCards);
-              }
-              return currentCandidate._restoredCount;
-            }
+            ],
           };
           
           // 判断是否替换最佳候选
@@ -746,38 +759,24 @@ const Sort = {
         }
       }
       
-      // 比较两个候选的优先级函数
+      // 比较两个候选的优先级函数 - 使用循环和统一的大于比较
       // 优先级：priority > deep > diff > rank > slot_score > lookahead > restoredCount(DP) > cardPosition
       function isBetterCandidate(candidateA, candidateB) {
-        // 比较优先级
-        if (candidateA.getPriority() > candidateB.getPriority()) return true;
-        if (candidateA.getPriority() < candidateB.getPriority()) return false;
-
-        if (candidateA.getDeep() > candidateB.getDeep()) return true;
-        if (candidateA.getDeep() < candidateB.getDeep()) return false;
+        // 使用_getters数组进行循环比较，所有特征都统一为大于比较
+        for (let i = 0; i < candidateA._getters.length; i++) {
+          const valueA = candidateA._getters[i]();
+          const valueB = candidateB._getters[i]();
+          
+          if (valueA > valueB) {
+            return true; // A比B好
+          } else if (valueA < valueB) {
+            return false; // B比A好
+          }
+          // 相等时继续比较下一个特征
+        }
         
-        // 优先级相同，比较距离
-        if (candidateA.getDiff() < candidateB.getDiff()) return true;
-        if (candidateA.getDiff() > candidateB.getDiff()) return false;
-        
-        // 距离相同，比较卡片等级
-        if (candidateA.getCardRank() > candidateB.getCardRank()) return true;
-        if (candidateA.getCardRank() < candidateB.getCardRank()) return false;
-        
-        // 卡片等级相同，比较空位评分
-        if (candidateA.getSlotScore() > candidateB.getSlotScore()) return true;
-        if (candidateA.getSlotScore() < candidateB.getSlotScore()) return false;
-        
-        // 空位评分相同，比较前瞻值
-        if (candidateA.getLookaheadCount() > candidateB.getLookaheadCount()) return true;
-        if (candidateA.getLookaheadCount() < candidateB.getLookaheadCount()) return false;
-        
-        // 前瞻值相同，比较已还原卡片数（动态规划评估，作为tie-breaker）
-        if (candidateA.getRestoredCount() > candidateB.getRestoredCount()) return true;
-        if (candidateA.getRestoredCount() < candidateB.getRestoredCount()) return false;
-        
-        // 已还原数相同，比较卡片位置
-        return candidateA.getCardPosition() < candidateB.getCardPosition();
+        // 所有特征都相等，返回false（A不优于B）
+        return false;
       }
       
       
