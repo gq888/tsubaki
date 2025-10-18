@@ -364,16 +364,15 @@ const Sort = {
     // 分治算法：评估获胜状态可达性（0-100分，分数越高越可能获胜）
     estimateWinProbability(cards1Array) {
       const colSize = this.number + 1;
-      const groupCount = 4 / this.matchMode;  // 目标组数
+      const totalCols = 4;
       let totalScore = 0;
       let maxScore = 0;
       
-      // 分治：评估每个目标组的完成度
-      for (let group = 0; group < groupCount; group++) {
-        const colStart = group * colSize;
-        const colScore = this.evaluateColumnScore(cards1Array, group, colStart, colSize);
-        totalScore += colScore.score;
-        maxScore += colScore.maxScore;
+      // 分治：评估每一行的完成度
+      for (let row = 0; row < colSize; row++) {
+        const rowScore = this.evaluateRowScore(cards1Array, row, colSize, totalCols);
+        totalScore += rowScore.score;
+        maxScore += rowScore.maxScore;
       }
       
       // 计算全局阻塞惩罚
@@ -386,15 +385,14 @@ const Sort = {
       return finalScore;
     },
     
-    // 评估单列/组的完成度（分治子问题）
-    evaluateColumnScore(cards1Array, targetGroup, colStart) {
+    // 评估单行的完成度（分治子问题）
+    evaluateRowScore(cards1Array, row, colSize, totalCols) {
       let score = 0;
       let maxScore = 0;
-      // const cardsInGroup = this.matchMode;  // 该组应有的花色数
       
-      // 从底部向上检查每个位置
-      for (let rank = this.number - 1; rank >= 0; rank--) {
-        const pos = colStart + (this.number - 1 - rank);
+      // 对于每一行，检查每一列中的对应位置
+      for (let col = 0; col < totalCols; col++) {
+        const pos = col * colSize + row;
         const cardAtPos = cards1Array[pos];
         
         maxScore += 10;  // 每个位置满分10分
@@ -410,29 +408,39 @@ const Sort = {
         const cardSuit = cardAtPos % 4;
         const cardGroup = cardSuit % this.matchMode;
         
-        // 检查卡片是否属于目标组
-        if (cardGroup !== targetGroup) {
-          // 错误的组，严重扣分
-          score += 0;
-          continue;
-        }
+        // 计算该行应该对应的rank
+        const expectedRank = this.number - 1 - row;
         
-        // 检查rank是否正确
-        if (cardRank === rank) {
-          // rank正确
-          score += 10;
-          
-          // 额外奖励：下方都已正确放置
-          if (this.checkBelowCorrect(cards1Array, colStart, rank)) {
+        // 计算该列应该对应的group
+        const expectedGroup = col % this.matchMode;
+        
+        // 检查卡片是否属于正确的组和rank
+        if (cardGroup === expectedGroup) {
+          // 正确的组
+          if (cardRank === expectedRank) {
+            // rank完全正确
+            score += 10;
+            
+            // 额外奖励：该组下方行都已正确放置
+            if (this.checkRowBelowCorrect(cards1Array, row, col, colSize)) {
+              score += 5;
+              maxScore += 5;
+            }
+          } else if (cardRank > expectedRank) {
+            // rank太高，轻微扣分（还能移走）
             score += 5;
-            maxScore += 5;
+          } else {
+            // rank太低，严重扣分（阻塞）
+            score += 2;
           }
-        } else if (cardRank > rank) {
-          // rank太高，轻微扣分（还能移走）
-          score += 5;
         } else {
-          // rank太低，严重扣分（阻塞）
-          score += 2;
+          // 错误的组，适度扣分
+          score += 3;
+          
+          // 如果rank正确，给予部分分数
+          if (cardRank === expectedRank) {
+            score += 2;
+          }
         }
       }
       
@@ -443,26 +451,28 @@ const Sort = {
     countEmptySlotsAbove(cards1Array, pos) {
       let count = 0;
       const col = Math.floor(pos / (this.number + 1));
-      const colStart = col * (this.number + 1);
+        const colStart = col * (this.number + 1);
       const colEnd = colStart + this.number + 1;
       
       for (let i = pos + 1; i < colEnd; i++) {
         if (cards1Array[i] < 0) count++;
-      }
+              }
       
       return count;
     },
     
-    // 检查某位置下方是否都已正确放置
-    checkBelowCorrect(cards1Array, colStart, rank) {
-      for (let checkRank = rank + 1; checkRank < this.number; checkRank++) {
-        const checkPos = colStart + (this.number - 1 - checkRank);
+    // 检查某位置下方的行是否都已正确放置
+    checkRowBelowCorrect(cards1Array, row, col, colSize) {
+      for (let checkRow = row + 1; checkRow < this.number; checkRow++) {
+        const checkPos = col * colSize + checkRow;
         const cardAtPos = cards1Array[checkPos];
         
         if (cardAtPos < 0) return false;
         
         const cardRank = cardAtPos >> 2;
-        if (cardRank !== checkRank) return false;
+        const expectedRank = this.number - 1 - checkRow;
+        
+        if (cardRank !== expectedRank) return false;
       }
       
       return true;
