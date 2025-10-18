@@ -65,7 +65,7 @@
                   }"
                   :src="
                     !cards2[item]
-                      ? './static/logo.webp'
+                      ? './static/avatar/logo.webp'
                       : './static/avatar/' + item + '.webp'
                   "
                   style="width: 100%"

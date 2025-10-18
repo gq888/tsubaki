@@ -301,8 +301,9 @@ export const GameComponentPresets = {
               }
               if (i > 4) {
                 this.gameManager.setWin();
+              } else {
+                this.gameManager.recordOperation();
               }
-              this.gameManager.recordOperation();
             });
           };
         }

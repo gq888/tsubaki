@@ -1,7 +1,6 @@
 {
   "name": "tsubaki-game-library",
   "version": "1.0.0",
-  "type": "module",
   "private": true,
   "description": "高效可复用的Vue游戏组件库，基于工厂函数模式实现极简开发体验",
   "keywords": [

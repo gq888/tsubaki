@@ -4,6 +4,11 @@
     <button
       class="toggle-header-btn"
       @click="toggleHeader"
+      @mouseleave="handleMouseLeave"
+      @touchstart="startLongPress"
+      @touchend="stopLongPress"
+      @touchcancel="stopLongPress"
+      @mouseenter="handleMouseEnter"
       :title="isHeaderExpanded ? '收起导航和标题' : '展开导航和标题'"
     >
       {{ isHeaderExpanded ? "▲" : "▼" }}
@@ -161,6 +166,10 @@ export default {
       toggleCooldown: 500, // 切换冷却时间（毫秒）
       autoHideTimer: null, // 自动隐藏定时器
       showSettings: false, // 是否显示设置弹窗
+      longPressTimer: null, // 长按定时器
+      isLongPress: false, // 是否正在长按
+      isHovered: false, // 是否正在悬停
+      longPressDuration: 500, // 长按判定时间（毫秒）
       navItems: [
         { path: '/month', icon: '🌛' },
         { path: '/fish', icon: '🐟' },
@@ -251,7 +260,7 @@ export default {
     },
     autoHideDelay: {
       type: Number,
-      default: 4000, // 默认4秒后自动隐藏
+      default: 2000, // 默认4秒后自动隐藏
     },
   },
   computed: {
@@ -319,6 +328,7 @@ export default {
     }
     this.removeScrollListener();
     this.clearAutoHideTimer();
+    this.clearLongPressTimer();
   },
   methods: {
     toggleHeader() {
@@ -423,30 +433,86 @@ export default {
       this.$nextTick(() => {
         this.updateHeights();
       });
-      // 展开头部时自动启动隐藏定时器
-      this.startAutoHideTimer();
+      // 只有在没有长按或悬停时才启动自动隐藏定时器
+      if (!this.isLongPress && !this.isHovered) {
+        this.startAutoHideTimer();
+      }
     },
     
     collapseHeader() {
-      this.isHeaderExpanded = false;
-      this.$nextTick(() => {
-        this.updateHeights();
-      });
-      // 隐藏头部时清除定时器
-      this.clearAutoHideTimer();
+      // 只有在没有长按或悬停时才允许收起
+      if (!this.isLongPress && !this.isHovered) {
+        this.isHeaderExpanded = false;
+        this.$nextTick(() => {
+          this.updateHeights();
+        });
+        // 隐藏头部时清除定时器
+        this.clearAutoHideTimer();
+      }
     },
     
     startAutoHideTimer() {
       this.clearAutoHideTimer();
-      this.autoHideTimer = setTimeout(() => {
-        this.collapseHeader();
-      }, this.autoHideDelay);
+      // 只有在没有长按或悬停时才设置自动隐藏
+      if (!this.isLongPress && !this.isHovered) {
+        this.autoHideTimer = setTimeout(() => {
+          this.collapseHeader();
+        }, this.autoHideDelay);
+      }
     },
     
     clearAutoHideTimer() {
       if (this.autoHideTimer) {
         clearTimeout(this.autoHideTimer);
         this.autoHideTimer = null;
+      }
+    },
+    
+    // 开始长按检测
+    startLongPress() {
+      this.isLongPress = false;
+      this.clearLongPressTimer();
+      this.longPressTimer = setTimeout(() => {
+        this.isLongPress = true;
+        // 长按期间展开导航并防止自动收起
+        this.expandHeader();
+        this.clearAutoHideTimer();
+      }, this.longPressDuration);
+    },
+    
+    // 停止长按检测
+    stopLongPress() {
+      this.clearLongPressTimer();
+      this.isLongPress = false;
+      // 如果导航是展开的，重新设置自动隐藏（如果没有悬停）
+      if (this.isHeaderExpanded && !this.isHovered) {
+        this.startAutoHideTimer();
+      }
+    },
+    
+    // 清除长按定时器
+    clearLongPressTimer() {
+      if (this.longPressTimer) {
+        clearTimeout(this.longPressTimer);
+        this.longPressTimer = null;
+      }
+    },
+    
+    // 处理鼠标悬停
+    handleMouseEnter() {
+      this.isHovered = true;
+      // 悬停时展开导航并防止自动收起
+      this.expandHeader();
+      this.clearAutoHideTimer();
+    },
+    
+    // 处理鼠标离开
+    handleMouseLeave() {
+      this.isHovered = false;
+      this.stopLongPress(); // 确保长按状态也被正确清除
+      // 鼠标离开后，重新设置自动隐藏
+      if (this.isHeaderExpanded) {
+        this.startAutoHideTimer();
       }
     },
     
@@ -552,7 +618,9 @@ export default {
   transform: scale(1.1);
 }
 
+/* 长按或触摸时的样式增强 */
 .toggle-header-btn:active {
+  background: #2a8a61;
   transform: scale(0.95);
 }
 
