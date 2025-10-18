@@ -6,7 +6,7 @@ import { setSeed } from "./help.js";
 /**
  * 组件定义 - 根据环境选择 Mock 或真实组件
  */
-let GameResultModal, GameControls, GameLayout;
+let GameResultModal, GameControls, GameLayout, CardImage;
 
 if (typeof window === "undefined") {
   // Node.js 环境：直接使用 Mock 组件
@@ -25,6 +25,11 @@ if (typeof window === "undefined") {
     template: "<div><slot name='game-content'></slot></div>",
     props: ["title", "winflag", "loseflag", "drawflag"],
   };
+  CardImage = {
+    name: "CardImage",
+    template: "<div>Mock CardImage</div>",
+    props: ["src", "alt"],
+  };
 } else {
   // 浏览器环境：使用 Vue 3 异步组件
   GameResultModal = defineAsyncComponent(
@@ -35,6 +40,9 @@ if (typeof window === "undefined") {
   );
   GameLayout = defineAsyncComponent(
     () => import("../components/GameLayout.vue"),
+  );
+  CardImage = defineAsyncComponent(
+    () => import("../components/CardImage.vue"),
   );
 }
 
@@ -76,6 +84,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       GameResultModal,
       GameControls,
       GameLayout,
+      CardImage,
     },
 
     // 扩展data函数

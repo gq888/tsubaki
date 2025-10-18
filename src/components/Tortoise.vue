@@ -43,13 +43,8 @@
 
 <script>
 import TortoiseComponent from "./Tortoise.js";
-import CardImage from "./CardImage.vue";
 
 const component = TortoiseComponent;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>

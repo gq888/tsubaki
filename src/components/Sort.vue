@@ -63,13 +63,8 @@
 
 <script>
 import SortComponent from "./Sort.js";
-import CardImage from "./CardImage.vue";
 
 const component = SortComponent;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>

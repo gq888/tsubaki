@@ -47,13 +47,8 @@
 
 <script>
 import PairsComponent from "./Pairs.js";
-import CardImage from "./CardImage.vue";
 
 const component = PairsComponent;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>

@@ -197,13 +197,8 @@
 
 <script>
 import SpiderComponent from "./Spider.js";
-import CardImage from "./CardImage.vue";
 
 const component = SpiderComponent;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>

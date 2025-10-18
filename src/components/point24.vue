@@ -62,13 +62,8 @@
 
 <script>
 import Point24Component from "./point24.js";
-import CardImage from "./CardImage.vue";
 
 const component = Point24Component;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>

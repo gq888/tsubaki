@@ -96,13 +96,8 @@
 
 <script>
 import FishComponent from "./fish.js";
-import CardImage from "./CardImage.vue";
 
 const component = FishComponent;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>

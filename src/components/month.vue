@@ -79,13 +79,8 @@
 
 <script>
 import MonthComponent from "./month.js";
-import CardImage from "./CardImage.vue";
 
 const component = MonthComponent;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>

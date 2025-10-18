@@ -63,13 +63,8 @@
 
 <script>
 import SumComponent from "./sum.js";
-import CardImage from "./CardImage.vue";
 
 const component = SumComponent;
-component.components = {
-  ...component.components,
-  CardImage,
-};
 
 export default component;
 </script>
