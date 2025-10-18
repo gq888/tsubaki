@@ -360,6 +360,155 @@ const Sort = {
       
       return restoredCount;
     },
+    
+    // 分治算法：评估获胜状态可达性（0-100分，分数越高越可能获胜）
+    estimateWinProbability(cards1Array) {
+      const colSize = this.number + 1;
+      const groupCount = 4 / this.matchMode;  // 目标组数
+      let totalScore = 0;
+      let maxScore = 0;
+      
+      // 分治：评估每个目标组的完成度
+      for (let group = 0; group < groupCount; group++) {
+        const colStart = group * colSize;
+        const colScore = this.evaluateColumnScore(cards1Array, group, colStart, colSize);
+        totalScore += colScore.score;
+        maxScore += colScore.maxScore;
+      }
+      
+      // 计算全局阻塞惩罚
+      const blockPenalty = this.calculateBlockPenalty(cards1Array);
+      
+      // 归一化到0-100
+      const baseScore = maxScore > 0 ? (totalScore / maxScore) * 80 : 0;
+      const finalScore = Math.max(0, baseScore - blockPenalty);
+      
+      return finalScore;
+    },
+    
+    // 评估单列/组的完成度（分治子问题）
+    evaluateColumnScore(cards1Array, targetGroup, colStart) {
+      let score = 0;
+      let maxScore = 0;
+      // const cardsInGroup = this.matchMode;  // 该组应有的花色数
+      
+      // 从底部向上检查每个位置
+      for (let rank = this.number - 1; rank >= 0; rank--) {
+        const pos = colStart + (this.number - 1 - rank);
+        const cardAtPos = cards1Array[pos];
+        
+        maxScore += 10;  // 每个位置满分10分
+        
+        if (cardAtPos < 0) {
+          // 空位：检查该rank的所有候选卡片位置
+          const emptySlotsAbove = this.countEmptySlotsAbove(cards1Array, pos);
+          score += Math.max(0, 10 - emptySlotsAbove * 2);  // 上方空位越多，分数越低
+          continue;
+        }
+        
+        const cardRank = cardAtPos >> 2;
+        const cardSuit = cardAtPos % 4;
+        const cardGroup = cardSuit % this.matchMode;
+        
+        // 检查卡片是否属于目标组
+        if (cardGroup !== targetGroup) {
+          // 错误的组，严重扣分
+          score += 0;
+          continue;
+        }
+        
+        // 检查rank是否正确
+        if (cardRank === rank) {
+          // rank正确
+          score += 10;
+          
+          // 额外奖励：下方都已正确放置
+          if (this.checkBelowCorrect(cards1Array, colStart, rank)) {
+            score += 5;
+            maxScore += 5;
+          }
+        } else if (cardRank > rank) {
+          // rank太高，轻微扣分（还能移走）
+          score += 5;
+        } else {
+          // rank太低，严重扣分（阻塞）
+          score += 2;
+        }
+      }
+      
+      return { score, maxScore };
+    },
+    
+    // 计算某位置上方的空位数
+    countEmptySlotsAbove(cards1Array, pos) {
+      let count = 0;
+      const col = Math.floor(pos / (this.number + 1));
+      const colStart = col * (this.number + 1);
+      const colEnd = colStart + this.number + 1;
+      
+      for (let i = pos + 1; i < colEnd; i++) {
+        if (cards1Array[i] < 0) count++;
+      }
+      
+      return count;
+    },
+    
+    // 检查某位置下方是否都已正确放置
+    checkBelowCorrect(cards1Array, colStart, rank) {
+      for (let checkRank = rank + 1; checkRank < this.number; checkRank++) {
+        const checkPos = colStart + (this.number - 1 - checkRank);
+        const cardAtPos = cards1Array[checkPos];
+        
+        if (cardAtPos < 0) return false;
+        
+        const cardRank = cardAtPos >> 2;
+        if (cardRank !== checkRank) return false;
+      }
+      
+      return true;
+    },
+    
+    // 计算全局阻塞惩罚
+    calculateBlockPenalty(cards1Array) {
+      let penalty = 0;
+      const colSize = this.number + 1;
+      
+      // 检查每列的阻塞情况
+      for (let col = 0; col < 4; col++) {
+        const colStart = col * colSize;
+        
+        // 检查是否存在"死锁"：高rank卡片被低rank卡片压住
+        for (let i = colStart; i < colStart + colSize - 1; i++) {
+          const card = cards1Array[i];
+          if (card < 0) continue;
+          
+          const cardRank = card >> 2;
+          
+          // 检查上方的卡片
+          for (let j = i + 1; j < colStart + colSize; j++) {
+            const upperCard = cards1Array[j];
+            if (upperCard < 0) continue;
+            
+            const upperRank = upperCard >> 2;
+            
+            // 如果上方卡片rank更低，这是一个阻塞
+            if (upperRank < cardRank) {
+              penalty += 5;
+            }
+          }
+        }
+      }
+      
+      // 检查可移动性：如果没有任何可移动的牌，增加惩罚
+      const possibleMoves = this.countPossibleMoves(cards1Array);
+      if (possibleMoves === 0) {
+        penalty += 20;
+      } else if (possibleMoves === 1) {
+        penalty += 10;
+      }
+      
+      return penalty;
+    },
     autoCalc() {
       let over = true,
         temp = {},
@@ -703,6 +852,18 @@ const Sort = {
                 }
                 return currentCandidate._lookaheadCount;
               },
+              // 获胜概率 (分治评估，正常比较)
+              () => {
+                if (currentCandidate._winProbability === undefined) {
+                  // 使用分治算法评估移动后的获胜可达性
+                  const simulatedCards = [...this.cards1];
+                  const slotId = simulatedCards[t.index];
+                  simulatedCards[currentTargetIdx] = slotId;
+                  simulatedCards[t.index] = targetCard;
+                  currentCandidate._winProbability = this.estimateWinProbability(simulatedCards);
+                }
+                return currentCandidate._winProbability;
+              },
               // 距离 (取反，因为原逻辑是小于比较)
               () => {
                 if (!currentCandidate._diff) {
@@ -767,7 +928,7 @@ const Sort = {
       }
       
       // 比较两个候选的优先级函数 - 使用循环和统一的大于比较
-      // 优先级：priority > deep > diff > rank > slot_score > lookahead > restoredCount(DP) > cardPosition
+      // 优先级：priority > deep > lookahead > winProbability(分治) > diff > rank > prevRank > slotPosition > restoredCount(DP) > cardPosition
       function isBetterCandidate(candidateA, candidateB) {
         // 使用_getters数组进行循环比较，所有特征都统一为大于比较
         for (let i = 0; i < candidateA._getters.length; i++) {
