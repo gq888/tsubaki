@@ -25,7 +25,7 @@
                 >
               </div>
               <div v-if="sign != 0" class="align-center">
-                <div class="card"><img :src="'./static/bg.webp'" /></div>
+                <div class="card"><CardImage card-id="bg" /></div>
               </div>
               <!-- <span class="vertical m-0">)</span> -->
               <span class="vertical m-0">=</span>
@@ -62,7 +62,15 @@
 
 <script>
 import Point24Component from "./point24.js";
-export default Point24Component;
+import CardImage from "./CardImage.vue";
+
+const component = Point24Component;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>

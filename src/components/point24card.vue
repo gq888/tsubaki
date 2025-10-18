@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <div v-if="Number.isFinite(card)" class="">
-      <img :src="'./static/' + card + '.webp'" class="card" />
+      <CardImage :card-id="card" class="card" />
     </div>
     <div v-else class="align-center flex-col">
       <div class="vertical" style="width: 3.125rem"><span>(</span></div>
@@ -14,8 +14,13 @@
 </template>
 
 <script>
+import CardImage from "./CardImage.vue";
+
 export default {
   name: "point24card",
+  components: {
+    CardImage,
+  },
   props: ["card"],
 };
 </script>

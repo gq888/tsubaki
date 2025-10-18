@@ -28,8 +28,8 @@
               :style="map[i]"
               style="width: 20%; height: 9.375rem; margin: 0"
             >
-              <img
-                :src="'./static/' + (check(i) ? item : 'bg') + '.webp'"
+              <CardImage
+                :card-id="check(i) ? item : 'bg'"
                 @click="canOperate && clickCard(item, i)"
                 :class="{ shanshuo: sign == item }"
               />
@@ -43,7 +43,15 @@
 
 <script>
 import TortoiseComponent from "./Tortoise.js";
-export default TortoiseComponent;
+import CardImage from "./CardImage.vue";
+
+const component = TortoiseComponent;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>

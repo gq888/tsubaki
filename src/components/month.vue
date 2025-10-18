@@ -33,7 +33,7 @@
               class="cards m-0"
               :class="'cards' + i"
             >
-              <img
+              <CardImage
                 v-for="(card, j) in item"
                 :key="card"
                 class="m-0 card abso"
@@ -41,13 +41,11 @@
                   top: ((month == i ? j : 1 + j) * 30) / 16 + 'rem',
                   left: 0,
                 }"
-                :src="
-                  './static/' +
-                  (cards2[i] > j ||
+                :card-id="
+                  cards2[i] > j ||
                   (month == i && ((month == 12 && j == 3) || j == 4))
                     ? card
-                    : 'bg') +
-                  '.webp'
+                    : 'bg'
                 "
               />
               <div
@@ -66,9 +64,9 @@
         <div>
           <ul class="cardsul" style="padding-left: 0; max-width: 46.25rem">
             <div v-for="(item, i) in cards2" :key="i">
-              <img
+              <CardImage
                 v-if="item >= 4 && i < 12"
-                :src="'./static/' + (i * 4 + 1) + '.webp'"
+                :card-id="i * 4 + 1"
                 class="card"
               />
             </div>
@@ -81,7 +79,15 @@
 
 <script>
 import MonthComponent from "./month.js";
-export default MonthComponent;
+import CardImage from "./CardImage.vue";
+
+const component = MonthComponent;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>

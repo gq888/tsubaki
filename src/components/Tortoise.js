@@ -147,6 +147,9 @@ const Tortoise = {
     },
     autoCalc() {
       let step = this.step;
+      if (step % 2 == 1) {
+        return;
+      }
       if (step >= this.number) {
         this.gameManager.setWin();
         return;

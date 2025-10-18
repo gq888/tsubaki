@@ -23,12 +23,12 @@
               class="card m-0 radius"
               style="max-width: 25%"
             >
-              <img
-                :src="'./static/' + item + '.webp'"
+              <CardImage
+                :card-id="item"
                 v-if="sign == item || sign2 == item || cards2[item]"
               />
-              <img
-                :src="'./static/bg.webp'"
+              <CardImage
+                card-id="bg"
                 v-else
                 @click="canOperate && clickCard(item, i)"
               />
@@ -47,7 +47,15 @@
 
 <script>
 import PairsComponent from "./Pairs.js";
-export default PairsComponent;
+import CardImage from "./CardImage.vue";
+
+const component = PairsComponent;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>

@@ -25,8 +25,8 @@
               "
               @click="canOperate && clickCard(0)"
             >
-              <img
-                :src="'./static/bg.webp'"
+              <CardImage
+                card-id="bg"
                 v-if="cards[0].length > 0"
                 class="card m-0 abso"
                 style="width: 25%; left: 0; top: 0"
@@ -59,8 +59,8 @@
                   opa0: dragCard == cards[1][i - 1] && enterItem >= 0,
                 }"
               >
-                <img
-                  :src="'./static/' + cards[1][i - 1] + '.webp'"
+                <CardImage
+                  :card-id="cards[1][i - 1]"
                   :class="{
                     shanshuo: sign == cards[1][i - 1],
                     drag: dragItem == 1,
@@ -112,8 +112,8 @@
                 :style="{ left: (i - 1) * 25 + '%' }"
                 :class="{ drag: dragItem == i + 1 }"
               >
-                <img
-                  :src="'./static/' + item + '.webp'"
+                <CardImage
+                  :card-id="item"
                   :class="{
                     shanshuo: sign == item,
                     drag: dragItem == i + 1,
@@ -121,8 +121,8 @@
                   }"
                 />
               </div>
-              <img
-                :src="'./static/' + dragCard + '.webp'"
+              <CardImage
+                :card-id="dragCard"
                 :style="{ left: (i - 1) * 25 + '%' }"
                 class="card m-0 abso"
                 v-show="dragCard >= 0 && enterItem == i + 1"
@@ -162,15 +162,15 @@
                 v-move="{ start, end, move }"
                 ref="down"
               >
-                <img
-                  :src="'./static/' + item + '.webp'"
+                <CardImage
+                  :card-id="item"
                   :class="{ shanshuo: sign == item, drag: dragItem == i + 5 }"
                 />
               </div>
-              <img
+              <CardImage
                 v-for="(item, j) in cards[dragItem]"
                 :key="j + 8"
-                :src="'./static/' + item + '.webp'"
+                :card-id="item"
                 :style="{
                   top:
                     (cards[i + 5].length * 30 +
@@ -197,7 +197,15 @@
 
 <script>
 import SpiderComponent from "./Spider.js";
-export default SpiderComponent;
+import CardImage from "./CardImage.vue";
+
+const component = SpiderComponent;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>

@@ -67,7 +67,7 @@
               class="card m-0"
               style="max-width: 25%"
             >
-              <img
+              <CardImage
                 :class="{
                   shanshuo: ssArr.indexOf(item) >= 0,
                   flyin1: flyin1.indexOf(item) >= 0,
@@ -75,7 +75,7 @@
                   flyout1: flyout1.indexOf(item) >= 0,
                   flyout2: flyout2.indexOf(item) >= 0,
                 }"
-                :src="'./static/' + item + '.webp'"
+                :card-id="item"
               />
             </li>
           </ul>
@@ -96,7 +96,15 @@
 
 <script>
 import FishComponent from "./fish.js";
-export default FishComponent;
+import CardImage from "./CardImage.vue";
+
+const component = FishComponent;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>

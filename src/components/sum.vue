@@ -21,7 +21,7 @@
         <div>
           <ul class="cardsul">
             <li v-for="item in arr1" :key="item.id" class="card">
-              <img :src="'./static/' + item.id + '.webp'" />
+              <CardImage :card-id="item.id" />
             </li>
           </ul>
         </div>
@@ -30,7 +30,7 @@
         <div>
           <ul class="cardsul reverse">
             <li v-for="item in arr2" :key="item.id" class="card">
-              <img :src="'./static/' + item.id + '.webp'" />
+              <CardImage :card-id="item.id" />
             </li>
           </ul>
         </div>
@@ -63,7 +63,15 @@
 
 <script>
 import SumComponent from "./sum.js";
-export default SumComponent;
+import CardImage from "./CardImage.vue";
+
+const component = SumComponent;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>

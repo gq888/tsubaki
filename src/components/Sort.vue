@@ -39,8 +39,8 @@
               class="card m-0"
               style="width: 25%; height: 9.375rem"
             >
-              <img
-                :src="'./static/' + item + '.webp'"
+              <CardImage
+                :card-id="item"
                 v-if="item >= 0"
                 @click="canOperate && clickCard(item)"
                 :class="{ shanshuo: canMoveCard(item) }"
@@ -63,7 +63,15 @@
 
 <script>
 import SortComponent from "./Sort.js";
-export default SortComponent;
+import CardImage from "./CardImage.vue";
+
+const component = SortComponent;
+component.components = {
+  ...component.components,
+  CardImage,
+};
+
+export default component;
 </script>
 
 <style scoped>
