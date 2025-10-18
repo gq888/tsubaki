@@ -63,13 +63,12 @@
       <div class1="row" style="margin-top: 0.625rem">
         <div>
           <ul class="cardsul" style="padding-left: 0; max-width: 46.25rem">
-            <div v-for="(item, i) in cards2" :key="i">
-              <CardImage
-                v-if="item >= 4 && i < 12"
-                :card-id="i * 4 + 1"
-                class="card"
-              />
-            </div>
+            <CardImage
+              v-for="(item, i) in visibleCards"
+              :key="i"
+              :card-id="item.cardId"
+              class="card"
+            />
           </ul>
         </div>
       </div>
@@ -80,7 +79,17 @@
 <script>
 import MonthComponent from "./month.js";
 
-const component = MonthComponent;
+const component = {
+  ...MonthComponent,
+  computed: {
+    ...MonthComponent.computed,
+    visibleCards() {
+      return this.cards2
+        .map((item, i) => ({ originalItem: item, index: i, cardId: i * 4 + 1 }))
+        .filter(item => item.originalItem >= 4 && item.index < 12);
+    }
+  }
+};
 
 export default component;
 </script>

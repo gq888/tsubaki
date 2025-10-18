@@ -5,8 +5,8 @@ var getPosition = function (e, isTouch) {
   }
   return [e.clientX, e.clientY];
 };
-var updateMoveData = function (vnode, e, isTouch) {
-  const data = vnode._moveData;
+var updateMoveData = function (el, e, isTouch) {
+  const data = el._moveData;
   data.position = getPosition(e, isTouch);
   data.offsetX = data.position[0] - data.startPosition[0];
   data.offsetY = data.position[1] - data.startPosition[1];
@@ -16,8 +16,7 @@ var prevent = function (e, bubbles) {
   !bubbles && e.stopPropagation();
   return false;
 };
-var emit = (vnode, name, detail, bubbles, cancelable) => {
-  let el = vnode.el || vnode.elm;
+var emit = (el, name, detail, bubbles, cancelable) => {
   el.dispatchEvent(
     new CustomEvent(name, {
       detail,
@@ -35,10 +34,10 @@ var listenEvents = (el, events, handles = {}) => {
 };
 move.listenEvents = listenEvents;
 move.mounted = function (el, binding, vnode) {
-  if (vnode._isInitMove) {
+  if (el._isInitMove) {
     return;
   }
-  vnode._isInitMove = true;
+  el._isInitMove = true;
   var { page = window } = binding.value || {};
   var { bubbles } = binding.modifiers;
   listenEvents(el, ["start", "move", "end"], binding.value);
@@ -69,12 +68,12 @@ move.mounted = function (el, binding, vnode) {
       page.addEventListener("mouseup", _end, { passive: false });
       page.addEventListener("mousemove", _move, { passive: false });
     }
-    if (!vnode._moveData) {
-      vnode._moveData = { isTouch };
+    if (!el._moveData) {
+      el._moveData = { isTouch };
     }
-    vnode._moveData.startPosition = getPosition(e, isTouch);
-    // updateMoveData(vnode, e, isTouch)
-    emit(vnode, "start", {
+    el._moveData.startPosition = getPosition(e, isTouch);
+    // updateMoveData(el, e, isTouch)
+    emit(el, "start", {
       el,
       binding,
       vnode,
@@ -83,8 +82,8 @@ move.mounted = function (el, binding, vnode) {
   }
 
   function _move(e) {
-    updateMoveData(vnode, e, isTouch);
-    emit(vnode, "move", {
+    updateMoveData(el, e, isTouch);
+    emit(el, "move", {
       el,
       binding,
       vnode,
@@ -95,17 +94,17 @@ move.mounted = function (el, binding, vnode) {
 
   function _end(e) {
     if (!isMove) {
-      const data = vnode._moveData;
+      const data = el._moveData;
       data.offsetX = 0;
       data.offsetY = 0;
-      emit(vnode, "notmove");
+      emit(el, "notmove");
     }
-    emit(vnode, "end", {
+    emit(el, "end", {
       el,
       binding,
       vnode,
     });
-    emit(vnode, "cancel");
+    emit(el, "cancel");
     return prevent(e, bubbles);
   }
   el.addEventListener("touchstart", _start);

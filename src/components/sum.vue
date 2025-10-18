@@ -20,18 +20,24 @@
       <div class="row">
         <div>
           <ul class="cardsul">
-            <li v-for="item in arr1" :key="item.id" class="card">
-              <CardImage :card-id="item.id" />
-            </li>
+            <CardImage
+              v-for="item in arr1"
+              :key="item.id"
+              class="card"
+              :card-id="item.id"
+            />
           </ul>
         </div>
       </div>
       <div class="row" style="margin-top: 0.625rem">
         <div>
           <ul class="cardsul reverse">
-            <li v-for="item in arr2" :key="item.id" class="card">
-              <CardImage :card-id="item.id" />
-            </li>
+            <CardImage
+              v-for="item in arr2"
+              :key="item.id"
+              class="card"
+              :card-id="item.id"
+            />
           </ul>
         </div>
       </div>

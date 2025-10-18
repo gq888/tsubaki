@@ -24,9 +24,11 @@
                   >{{ signs[i] }}</span
                 >
               </div>
-              <div v-if="sign != 0" class="align-center">
-                <div class="card"><CardImage card-id="bg" /></div>
-              </div>
+              <CardImage
+                v-if="sign != 0"
+                card-id="bg"
+                class="card align-center"
+              />
               <!-- <span class="vertical m-0">)</span> -->
               <span class="vertical m-0">=</span>
               <span class="m-0">{{ calc(arr[0]).toFixed(2) }}</span>

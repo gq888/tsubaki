@@ -3,24 +3,24 @@ import doublelong from "./doublelong.js";
 var drag = {};
 var emit = move.emit;
 var dragHandle = ({ detail: { el, vnode } }) => {
-  vnode._moveData.offsetLeft = el.offsetLeft;
-  vnode._moveData.offsetWidth = el.offsetWidth || 0;
-  vnode._moveData.offsetTop = el.offsetTop;
-  vnode._moveData.offsetHeight = el.offsetHeight || 0;
+  el._moveData.offsetLeft = el.offsetLeft;
+  el._moveData.offsetWidth = el.offsetWidth || 0;
+  el._moveData.offsetTop = el.offsetTop;
+  el._moveData.offsetHeight = el.offsetHeight || 0;
 };
 var dragMoveXHandle = ({ detail: { el, binding, vnode } }) => {
   var {
     left,
     right,
-    width = vnode._moveData.offsetWidth,
+    width = el._moveData.offsetWidth,
   } = binding.value || {};
-  let l = vnode._moveData.offsetLeft + vnode._moveData.offsetX;
+  let l = el._moveData.offsetLeft + el._moveData.offsetX;
   if (l <= left) {
     l = left;
-    emit(vnode, "dragtoleft", undefined, true);
+    emit(el, "dragtoleft", undefined, true);
   } else if (l >= right - width) {
     l = right - width;
-    emit(vnode, "dragtoright", undefined, true);
+    emit(el, "dragtoright", undefined, true);
   }
   el.style.left = l / 16 + "rem";
 };
@@ -28,15 +28,15 @@ var dragMoveYHandle = ({ detail: { el, binding, vnode } }) => {
   var {
     top,
     bottom,
-    height = vnode._moveData.offsetHeight,
+    height = el._moveData.offsetHeight,
   } = binding.value || {};
-  let t = vnode._moveData.offsetTop + vnode._moveData.offsetY;
+  let t = el._moveData.offsetTop + el._moveData.offsetY;
   if (t <= top) {
     t = top;
-    emit(vnode, "dragtotop", undefined, true);
+    emit(el, "dragtotop", undefined, true);
   } else if (t >= bottom - height) {
     t = bottom - height;
-    emit(vnode, "dragtobottom", undefined, true);
+    emit(el, "dragtobottom", undefined, true);
   }
   el.style.top = t / 16 + "rem";
 };

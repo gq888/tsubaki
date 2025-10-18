@@ -33,27 +33,20 @@
               position: static;
             "
           >
-            <div
+            <CardImage
               v-for="(item, i) in cards1"
               :key="i"
               class="card m-0"
               style="width: 25%; height: 9.375rem"
+              :card-id="item"
+              :hide="item < 0"
+              @click="canOperate && (item >= 0 ? clickCard(item) : cards1[i - 1] >= 4 && clickSign(i))"
+              :class="{ shanshuo: item >= 0 && canMoveCard(item) }"
             >
-              <CardImage
-                :card-id="item"
-                v-if="item >= 0"
-                @click="canOperate && clickCard(item)"
-                :class="{ shanshuo: canMoveCard(item) }"
-              />
-              <div
-                v-else-if="cards1[i - 1] >= 4"
-                @click="canOperate && clickSign(i)"
-              >
-                <span class="m-0">{{
-                  types[cards1[i - 1] % 4] + point[(cards1[i - 1] >> 2) - 1]
-                }}</span>
-              </div>
-            </div>
+              <span v-if="cards1[i - 1] >= 4" class="m-0">{{
+                types[cards1[i - 1] % 4] + point[(cards1[i - 1] >> 2) - 1]
+              }}</span>
+            </CardImage>
           </ul>
         </div>
       </div>

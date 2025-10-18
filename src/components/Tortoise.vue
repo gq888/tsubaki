@@ -20,20 +20,17 @@
               margin: auto;
             "
           >
-            <li
+            <CardImage
               v-for="(item, i) in cards1"
               :key="i"
               v-show="!done(item)"
               class="card abso"
               :style="map[i]"
               style="width: 20%; height: 9.375rem; margin: 0"
-            >
-              <CardImage
-                :card-id="check(i) ? item : 'bg'"
-                @click="canOperate && clickCard(item, i)"
-                :class="{ shanshuo: sign == item }"
-              />
-            </li>
+              :card-id="check(i) ? item : 'bg'"
+              @click="canOperate && clickCard(item, i)"
+              :class="{ shanshuo: sign == item }"
+            />
           </ul>
         </div>
       </div>

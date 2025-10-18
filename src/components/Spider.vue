@@ -15,58 +15,44 @@
             style="padding-left: 0; max-width: 31.25rem; margin: auto"
             :style="{ height: height / 16 + 'rem' }"
           >
-            <li
-              class="m-0 static"
+            <CardImage
+              card-id="bg"
+              :hide="cards[0].length === 0"
+              class="m-0 static card m-0 abso"
               style="
                 max-width: 6.25rem;
                 width: 25%;
                 height: 9.375rem;
                 z-index: 0;
+                left: 0;
+                top: 0;
               "
               @click="canOperate && clickCard(0)"
-            >
-              <CardImage
-                card-id="bg"
-                v-if="cards[0].length > 0"
-                class="card m-0 abso"
-                style="width: 25%; left: 0; top: 0"
-              />
-              <div
-                v-else
-                class="card m-0 abso"
-                style="width: 25%; left: 0; top: 0"
-              ></div>
-            </li>
+            />
             <li
               class="cards m-0 static"
               style="width: 50%; height: 9.375rem"
               :style="{ zIndex: dragItem == 1 ? 10 : 0 }"
               :class="{ drag: dragItem == 1 }"
             >
-              <div
-                class="m-0 card abso"
+              <CardImage
                 v-for="i in cards[1].length >= (turn > 3 ? 1 : 4 - turn)
                   ? turn > 3
                     ? 1
                     : 4 - turn
                   : cards[1].length"
-                :style="{ left: (3 - i) * 12.5 + 25 + '%', zIndex: 3 - i }"
                 :key="cards[1][i - 1] + (fresh[1] * 3 + 1) * number"
+                class="m-0 card abso"
                 style="width: 25%; top: 0"
+                :style="{ left: (3 - i) * 12.5 + 25 + '%', zIndex: 3 - i }"
                 v-move="{ start, end, move }"
                 :class="{
                   drag: dragItem == 1,
                   opa0: dragCard == cards[1][i - 1] && enterItem >= 0,
+                  shanshuo: sign == cards[1][i - 1],
                 }"
-              >
-                <CardImage
-                  :card-id="cards[1][i - 1]"
-                  :class="{
-                    shanshuo: sign == cards[1][i - 1],
-                    drag: dragItem == 1,
-                  }"
-                />
-              </div>
+                :card-id="cards[1][i - 1]"
+              />
             </li>
             <li
               class="m-0 center"
@@ -103,24 +89,20 @@
               >
                 <span class="m-0">{{ types[i - 1] + "A" }}</span>
               </div>
-              <div
+              <CardImage
                 v-for="item in cards[i + 1]"
                 :key="item + (fresh[i + 1] * 3 + 2) * number"
                 class="card m-0 abso"
                 style="top: 11.25rem; width: 25%"
-                v-move="{ start, end, move }"
                 :style="{ left: (i - 1) * 25 + '%' }"
-                :class="{ drag: dragItem == i + 1 }"
-              >
-                <CardImage
-                  :card-id="item"
-                  :class="{
-                    shanshuo: sign == item,
-                    drag: dragItem == i + 1,
-                    opa0: dragCard == item && enterItem >= 0,
-                  }"
-                />
-              </div>
+                v-move="{ start, end, move }"
+                :class="{
+                  drag: dragItem == i + 1,
+                  shanshuo: sign == item,
+                  opa0: dragCard == item && enterItem >= 0,
+                }"
+                :card-id="item"
+              />
               <CardImage
                 :card-id="dragCard"
                 :style="{ left: (i - 1) * 25 + '%' }"
@@ -146,10 +128,10 @@
               @mouseleave="leave(i + 5)"
               @touchleave="leave(i + 5)"
             >
-              <div
-                class="m-0 card abso"
+              <CardImage
                 v-for="(item, j) in cards[i + 5]"
                 :key="item + (fresh[i + 5] * 3 + 3) * number"
+                class="m-0 card abso"
                 style="width: 25%; height: 9.375rem"
                 :style="{
                   top: (j * 30 + 360) / 16 + 'rem',
@@ -158,15 +140,12 @@
                 :class="{
                   drag: dragItem == i + 5,
                   opa0: dragItem == i + 5 && dragCard >= item && enterItem >= 0,
+                  shanshuo: sign == item,
                 }"
                 v-move="{ start, end, move }"
                 ref="down"
-              >
-                <CardImage
-                  :card-id="item"
-                  :class="{ shanshuo: sign == item, drag: dragItem == i + 5 }"
-                />
-              </div>
+                :card-id="item"
+              />
               <CardImage
                 v-for="(item, j) in cards[dragItem]"
                 :key="j + 8"

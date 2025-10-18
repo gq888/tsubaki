@@ -504,15 +504,37 @@ const Spider = {
       );
     },
     start(e) {
-      let item = e.detail.vnode.key % this.number;
-      if (!this.canOperate) {
+      // 方法1：尝试从绑定的组件实例获取数据
+      let item = -1;
+      
+      // 检查e.detail.binding.value，这可能包含组件的props数据
+      if (e.detail.binding && e.detail.binding.value && e.detail.binding.value.cardId !== undefined) {
+        item = parseInt(e.detail.binding.value.cardId);
+      }
+      
+      // 方法2：尝试从vnode上下文获取数据
+      if (item < 0 && e.detail.vnode && e.detail.vnode.componentInstance) {
+        const vm = e.detail.vnode.componentInstance;
+        if (vm.cardId !== undefined) {
+          item = parseInt(vm.cardId);
+        }
+      }
+      
+      // 方法3：使用Vue的数据属性机制
+      if (item < 0 && e.detail.el.dataset.cardId) {
+        item = parseInt(e.detail.el.dataset.cardId);
+      }
+      
+      // 如果仍然无法获取有效ID，返回
+      if (!this.canOperate || item < 0) {
         return false;
       }
+      
       let drag = this.findPos(item);
       if (drag < 0 && item != this.cards[1][0]) {
         return;
       }
-      let data = e.detail.vnode._moveData;
+      let data = e.detail.el._moveData;
       data.offsetLeft = e.detail.el.offsetLeft;
       data.offsetTop = e.detail.el.offsetTop;
       this.dragItem = drag;
@@ -530,7 +552,7 @@ const Spider = {
       if (drag == 1 && this.dragCard != this.cards[1][0]) {
         return;
       }
-      let data = e.detail.vnode._moveData;
+      let data = e.detail.el._moveData;
       let left = data.offsetX + data.offsetLeft;
       let top = data.offsetY + data.offsetTop;
       let index = Math.floor((left + 50) / this.cardWidth);
@@ -571,7 +593,7 @@ const Spider = {
       if (this.dragItem == 1 && this.dragCard != this.cards[1][0]) {
         return;
       }
-      let data = e.detail.vnode._moveData;
+      let data = e.detail.el._moveData;
       let left = data.offsetX + data.offsetLeft;
       let top = data.offsetY + data.offsetTop;
       let index = Math.floor((left + 50) / this.cardWidth);
@@ -587,12 +609,12 @@ const Spider = {
         let index = this.cards[this.dragItem].indexOf(this.dragCard);
         let j = 0;
         for (let down of this.$refs.down) {
-          let res = down.className.match("drag");
+          let res = down.$el._cardImageRoot.className.match("drag");
           if (!res || ++j <= index) {
             continue;
           }
-          down.style.left = (data.offsetX + data.offsetLeft) / 16 + "rem";
-          down.style.top =
+          down.$el._cardImageRoot.style.left = (data.offsetX + data.offsetLeft) / 16 + "rem";
+          down.$el._cardImageRoot.style.top =
             (data.offsetY + data.offsetTop + (j - index - 1) * 30) / 16 + "rem";
         }
       }

@@ -17,22 +17,14 @@
             class="cardsul flex-row center"
             style="padding-left: 0; margin: 0"
           >
-            <div
+            <CardImage
               v-for="(item, i) in cards1"
               :key="i"
               class="card m-0 radius"
               style="max-width: 25%"
-            >
-              <CardImage
-                :card-id="item"
-                v-if="sign == item || sign2 == item || cards2[item]"
-              />
-              <CardImage
-                card-id="bg"
-                v-else
-                @click="canOperate && clickCard(item, i)"
-              />
-            </div>
+              :card-id="sign == item || sign2 == item || cards2[item] ? item : 'bg'"
+              @click="(sign != item && sign2 != item && !cards2[item]) && canOperate && clickCard(item, i)"
+            />
           </ul>
         </div>
       </div>
