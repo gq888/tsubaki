@@ -9,7 +9,7 @@ import { setSeed } from "./help.js";
  */
 const gameRules = {
   // 月份游戏
-  month: "The game has 13 positions (12 months + 1 deck). Each turn, take the top card from the current position and move it to the position corresponding to its value. If any month position (0-11) reaches 5 cards, the game ends.",
+  month: "The game has 13 positions (12 months + 1 deck). Each turn, take the top card from the current position and move it to the position corresponding to its value. If the deck reaches 4 cards, the game ends.",
   
   // 钓鱼游戏
   fish: "A 4-player game where each player starts with cards. On your turn, draw the top card from your deck. If it matches a card in the center, collect those cards. Special cards let you take cards from other players. The player who collects all cards wins.",
@@ -236,7 +236,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           loseflag: this.loseflag,
           drawflag: this.drawflag,
           step: this.step,
-          gameRule: gameRules[currentGame] || '暂无游戏规则说明',
+          gameRule: gameRules[currentGame],
         };
       },
 
