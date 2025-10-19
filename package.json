@@ -90,7 +90,7 @@
     "components": {
       "total": 9,
       "games": [
-        "Chess",
+        "GridBattle",
         "Sum",
         "Point24",
         "Fish",

@@ -209,7 +209,7 @@ export default {
         { path: '/Sort', icon: '🐗' },
         { path: '/Pairs', icon: '🐰' },
         { path: '/Spider', icon: '🕷️' },
-        { path: '/Chess', icon: '♟️' },
+        { path: '/GridBattle', icon: '⚔️' },
       ],
     };
   },

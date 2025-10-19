@@ -83,8 +83,8 @@
 </template>
 
 <script>
-import ChessComponent from "./Chess.js";
-export default ChessComponent;
+import GridBattleComponent from "./Chess.js";
+export default GridBattleComponent;
 </script>
 
 <style scoped>

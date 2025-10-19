@@ -7,7 +7,7 @@ import Tortoise from "@/components/Tortoise.vue";
 import Sort from "@/components/Sort.vue";
 import Pairs from "@/components/Pairs.vue";
 import Spider from "@/components/Spider.vue";
-import Chess from "@/components/Chess.vue";
+import GridBattle from "@/components/Chess.vue";
 
 const routes = [
   {
@@ -47,8 +47,8 @@ const routes = [
     component: Spider,
   },
   {
-    path: "/Chess",
-    component: Chess,
+    path: "/GridBattle",
+    component: GridBattle,
   },
 ];
 

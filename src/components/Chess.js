@@ -11,11 +11,11 @@ let _modes = [
   [3, 3],
 ];
 
-const Chess = {
-  name: "Chess",
+const GridBattle = {
+  name: "GridBattle",
   data() {
     return {
-      title: "Chess",
+      title: "GridBattle",
       cards1: [],
       cards2: [],
       // 移除arr数组，因为现在由GameStateManager管理历史记录
@@ -362,5 +362,5 @@ const Chess = {
   },
 };
 
-// 使用工厂函数创建增强的Chess组件并导出
-export default GameComponentPresets.cardGame(Chess, 500);
+// 使用工厂函数创建增强的GridBattle组件并导出
+export default GameComponentPresets.cardGame(GridBattle, 500);

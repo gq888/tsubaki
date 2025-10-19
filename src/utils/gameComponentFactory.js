@@ -30,7 +30,7 @@ const gameRules = {
   Spider: "A classic Spider Solitaire game with 52 standard playing cards. Arrange cards in descending order by number. Cards can be moved in sequences to build foundations. The goal is to sort all cards by suit and rank to win.",
   
   // 国际象棋（策略游戏）
-  Chess: "A strategy game on a 6x6 grid with two types of pieces: high (1) and low (0) grade. Pieces move according to specific rules defined by their positions. Win by eliminating all opponent's pieces of the opposite grade, or reach a draw when only one of each remains.",
+  GridBattle: "A strategy game on a 6x6 grid with two types of pieces: high (1) and low (0) grade. Pieces move according to specific rules defined by their positions. Win by eliminating all opponent's pieces of the opposite grade, or reach a draw when only one of each remains.",
   
   // 21点（BlackJack）
   blackjack: "A card game using a 54-card deck. The goal is to get as close to 21 as possible without exceeding it. Cards 2-10 are worth their face value, J/Q/K are worth 10, and Aces can be worth 1 or 11. If your score exceeds 21, you bust. Both player and dealer start with 2 cards."
@@ -226,6 +226,9 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
 
       // GameLayout通用属性配置
       gameLayoutProps() {
+        // 获取当前游戏名称
+        const currentGame = this.$route?.path?.substring(1) || '';
+        
         return {
           title: this.title,
           gameControlsConfig: this.gameControlsConfig,
@@ -233,6 +236,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           loseflag: this.loseflag,
           drawflag: this.drawflag,
           step: this.step,
+          gameRule: gameRules[currentGame] || '暂无游戏规则说明',
         };
       },
 
@@ -610,7 +614,7 @@ export function generateGameTemplate(options = {}) {
  * export default GameComponentPresets.simpleGame(fish, 1000);
  *
  * // 3. 自定义配置
- * export default createEnhancedGameComponent(Chess, {
+ * export default createEnhancedGameComponent(GridBattle, {
  *   autoStepDelay: 500,
  *   hasUndo: true,
  *   customInit() {

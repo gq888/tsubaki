@@ -503,7 +503,7 @@ async function main() {
   if (args.length < 2) {
     console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>] [--continue] [--output=<path>]');
     console.log('\n基础示例:');
-    console.log('  node renderToString-method-tester.js src/components/Chess.js init 0');
+    console.log('  node renderToString-method-tester.js src/components/Chess.js init 0'); // 注意：文件名为Chess.js但内部组件已重命名为GridBattle
     console.log('  node renderToString-method-tester.js Spider.js clickCard 0');
     console.log('\n参数格式示例:');
     console.log('  基本类型: node ... clickCard 0 1 true "hello"');
