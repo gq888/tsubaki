@@ -549,6 +549,21 @@ const Sort = {
             allCandidates.splice(allCandidates.indexOf(candidateInfo), 1);
             continue;
           }
+
+          // 排除规则1：候选卡的rank等于同匹配组位置号-1的卡的rank-1
+          // 找到候选卡所在列的位置号-1的卡
+          const prevPosInCandidateCol = currentTargetIdx - 1;
+          const prevCardInCandidateCol = this.cards1[prevPosInCandidateCol];
+          if (prevCardInCandidateCol >= 0) {
+            const prevRankInCandidateCol = prevCardInCandidateCol >> 2;
+            const prevSuitInCandidateCol = prevCardInCandidateCol % 4;
+            const prevGroupInCandidateCol = prevSuitInCandidateCol % this.matchMode;
+            
+            // 如果是同匹配组，且候选卡rank = 该卡rank - 1，则排除
+            if (targetCard % this.matchMode === prevGroupInCandidateCol && (targetCard >> 2) === prevRankInCandidateCol - 1) {
+              continue;
+            }
+          }
           
           // 使用导入的工具函数创建候选对象，传入rule-based评分
           const currentCandidate = createCandidate(targetCard, t.index, this, candidatePriority, t, currentTargetIdx, ruleBasedScore);

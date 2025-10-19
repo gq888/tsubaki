@@ -341,10 +341,9 @@ calculateRuleBasedPriority(context, slotId, slotInfo, candidateCard, candidateId
     // return candidateScore;
   }
   
-  // 2.3 优先选择规则：候选卡的rank等于同匹配组位置号+1的卡的rank+1，
-  // 同时位置号-1的卡的卡片号是rank最小的卡
+  // 2.3 优先选择规则：候选卡的rank等于同匹配组位置号+1的卡的rank+1
   let matchNextCardScore = 0;
-  if (candidateRow < number) { // 确保有位置号+1
+  if (candidateRow < number) {
     const nextPosInCandidateCol = candidateIdx + 1;
     const nextCardInCandidateCol = cards1[nextPosInCandidateCol];
     if (nextCardInCandidateCol >= 0) {
@@ -354,15 +353,16 @@ calculateRuleBasedPriority(context, slotId, slotInfo, candidateCard, candidateId
       
       // 检查是否满足：同匹配组且候选卡rank = 该卡rank + 1
       if (candidateGroup === nextGroupInCandidateCol && candidateRank === nextRankInCandidateCol + 1) {
-        matchNextCardScore = 10000; // 给予高分
+        // 基础分：10000（回到原来的值）
+        matchNextCardScore = 10000;
+        // 行号越小越好（靠近列顶部）
         matchNextCardScore -= candidateRow * 100;
-        // 同时检查位置号-1的卡是否是rank最小的卡
+        // 前一张卡的rank越小越好
         if (candidateRow > 0) {
           const prevPosInCandidateCol = candidateIdx - 1;
           const prevCardInCandidateCol = cards1[prevPosInCandidateCol];
           const prevRankInCandidateCol = prevCardInCandidateCol >> 2;
-          // 检查是否是该匹配组中rank最小的（rank=0是A，最小）
-          matchNextCardScore -= prevRankInCandidateCol
+          matchNextCardScore -= prevRankInCandidateCol;
         }
       }
     }
