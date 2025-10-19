@@ -38,6 +38,7 @@
       :currentGame="currentGameName"
       @close="closeSettings"
       @settings-saved="handleSettingsSaved"
+      ref="gameSettings"
     />
 
     <!-- 帮助弹窗 -->
@@ -359,6 +360,19 @@ export default {
     // 触发一次请求，让已存在的GameControls组件更新配置
     setTimeout(() => {
       eventBus.emit('game-layout:request-update');
+      
+      // 检查是否首次访问该游戏，如果是则打开帮助弹窗
+      const currentGame = this.currentGameName;
+      if (currentGame) {
+        const visitedKey = `game-visited-${currentGame}`;
+        if (!localStorage.getItem(visitedKey)) {
+          console.log('首次访问游戏，显示帮助弹窗');
+          setTimeout(() => {
+            this.openHelp();
+            this.$refs.gameSettings.recordGameVisit();
+          }, 500); // 延迟打开，确保组件完全初始化
+        }
+      }
     }, 100);
   },
   beforeUnmount() {

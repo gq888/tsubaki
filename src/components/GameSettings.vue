@@ -79,6 +79,16 @@ export default {
   },
   methods: {
     /**
+     * 记录游戏访问状态到localStorage
+     */
+    recordGameVisit() {
+      if (this.currentGame) {
+        const visitedKey = `game-visited-${this.currentGame}`;
+        localStorage.setItem(visitedKey, 'true');
+      }
+    },
+
+    /**
      * 将滑动条值 (0-100) 转换为实际延迟时间 (100-2000ms)
      * 0 -> 100ms (最快)
      * 100 -> 2000ms (最慢)
