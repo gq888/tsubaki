@@ -12,6 +12,8 @@
 </template>
 
 <script>
+import eventBus from "../utils/eventBus.js";
+
 export default {
   name: "GameControls",
   props: {
@@ -19,6 +21,11 @@ export default {
     buttons: {
       type: Array,
       default: () => [],
+    },
+    // 组件唯一标识，用于事件总线通信
+    instanceId: {
+      type: String,
+      default: () => `gameControls_${Math.random().toString(36).substr(2, 9)}`,
     },
 
     // 以下属性保持向后兼容性
@@ -60,6 +67,22 @@ export default {
       default: false,
     },
   },
+  
+  // 使用watch监听按钮配置变化
+  watch: {
+    displayButtons: {
+      handler(newButtons) {
+        // 向事件总线广播按钮配置
+        eventBus.emit('game-controls:buttons-updated', {
+          instanceId: this.instanceId,
+          buttons: newButtons
+        });
+      },
+      deep: true,
+      immediate: true
+    }
+  },
+  
   computed: {
     // 根据buttons数组或单独的show属性生成要显示的按钮列表
     displayButtons() {
@@ -125,6 +148,21 @@ export default {
     pass() {
       this.$emit("auto");
     },
+  },
+  
+  mounted() {
+    // 组件挂载时通知事件总线
+    eventBus.emit('game-controls:mounted', {
+      instanceId: this.instanceId,
+      buttons: this.displayButtons
+    });
+  },
+  
+  beforeUnmount() {
+    // 组件卸载时通知事件总线
+    eventBus.emit('game-controls:unmounted', {
+      instanceId: this.instanceId
+    });
   },
 };
 </script>
