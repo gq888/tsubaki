@@ -8,19 +8,64 @@
  * @param {number} candidatePriority - 候选优先级
  * @param {Object} t - 临时对象信息
  * @param {number} currentTargetIdx - 当前目标索引
+ * @param {Object} ruleBasedScore - 基于规则的评分对象（可选）
  * @returns {Object} 候选对象
  */
-export function createCandidate(targetCard, slotIndex, context, candidatePriority, t, currentTargetIdx) {
+export function createCandidate(targetCard, slotIndex, context, candidatePriority, t, currentTargetIdx, ruleBasedScore = null) {
   const currentCandidate = {
     targetCard,
     slotIndex,
+    ruleBasedScore: ruleBasedScore,  // 保存rule-based评分
     // 统一使用大于比较，对需要小于比较的特征取反
     _getters: [
-      // 优先级 (正常比较)
+      // 【新规则第1优先级】空位优先级（rank越小越优先）
+      () => {
+        if (ruleBasedScore) {
+          return ruleBasedScore.slotPriority;
+        }
+        // 如果没有rule-based评分，使用原有的priority
+        return candidatePriority;
+      },
+      // 【新规则第2优先级】排除标记（被排除的候选排在后面）
+      () => {
+        if (ruleBasedScore && ruleBasedScore.excludeReason) {
+          return -1000000; // 大负数使其排在最后
+        }
+        return 0;
+      },
+      // 卡片在列中的位置 (d=0.057, ↓)
+      () => {
+          if (currentCandidate._feature2 === undefined) {
+          currentCandidate._feature2 = currentTargetIdx % (context.number + 1);
+          }
+          return -currentCandidate._feature2;
+      },
+      // 【新规则第3优先级】matchNextCard得分
+      () => {
+        if (ruleBasedScore) {
+          return ruleBasedScore.matchNextCard;
+        }
+        return 0;
+      },
+      // 【新规则第4优先级】候选卡所在列前后相邻的空位数
+      () => {
+        if (ruleBasedScore) {
+          return ruleBasedScore.adjacentEmptyCount;
+        }
+        return 0;
+      },
+      // 【新规则第5优先级】候选卡所在列空位总数
+      () => {
+        if (ruleBasedScore) {
+          return ruleBasedScore.columnEmptyCount;
+        }
+        return 0;
+      },
+      // 【原算法优先级】保留作为后续tiebreaker
       () => {
         return candidatePriority;
       },
-      // 深度 (正常比较)
+      // 【原算法深度】
       () => {
         if (!currentCandidate._deep) {
           currentCandidate._deep = t.deep;
@@ -61,13 +106,6 @@ export function createCandidate(targetCard, slotIndex, context, candidatePriorit
             currentCandidate._feature1 = targetCard % 4;
             }
             return currentCandidate._feature1;
-        },
-        // 3. 卡片在列中的位置 (d=0.057, ↓)
-        () => {
-            if (currentCandidate._feature2 === undefined) {
-            currentCandidate._feature2 = currentTargetIdx % (context.number + 1);
-            }
-            return -currentCandidate._feature2;
         },
         // 4. 空位在列中的位置 (d=0.213, ↓)
         () => {
@@ -241,6 +279,152 @@ export function isBetterCandidate(candidateA, candidateB) {
  * 游戏状态评估工具方法集合
  */
 export const gameEvaluationMethods = {
+/**
+ * 基于规则的候选卡片优先级计算
+ * @param {Object} context - 游戏上下文
+ * @param {number} slotId - 空位ID（-1到-4）
+ * @param {Object} slotInfo - 空位信息 {index, card}
+ * @param {number} candidateCard - 候选卡片
+ * @param {number} candidateIdx - 候选卡片索引
+ * @returns {Object} 优先级评分对象
+ */
+calculateRuleBasedPriority(context, slotId, slotInfo, candidateCard, candidateIdx) {
+  const { cards1, number, matchMode } = context;
+  const slotIndex = slotInfo.index;
+  const slotPrevCard = slotInfo.card;
+  
+  // 计算列号和行号
+  const colSize = number + 1;
+  // const slotCol = Math.floor(slotIndex / colSize);
+  const slotRow = slotIndex % colSize;
+  const candidateCol = Math.floor(candidateIdx / colSize);
+  const candidateRow = candidateIdx % colSize;
+  
+  const slotPrevRank = slotPrevCard >> 2;
+  const candidateRank = candidateCard >> 2;
+  const candidateSuit = candidateCard % 4;
+  const candidateGroup = candidateSuit % matchMode;
+  
+  // 1. 空位优先级：空位位置号-1的卡的rank（越小越优先）
+  const slotPriority = -slotPrevRank; // 取负数使rank小的优先
+  
+  // 2. 候选卡优先级评分
+  let candidateScore = {
+    slotPriority: slotPriority,
+    excludeReason: null,
+    matchNextCard: 0,
+    adjacentEmptyCount: 0,
+    columnEmptyCount: 0,
+  };
+  
+  // 2.1 排除规则1：候选卡的rank等于同匹配组位置号-1的卡的rank-1
+  // 找到候选卡所在列的位置号-1的卡
+  if (candidateRow > 0) {
+    const prevPosInCandidateCol = candidateIdx - 1;
+    const prevCardInCandidateCol = cards1[prevPosInCandidateCol];
+    if (prevCardInCandidateCol >= 0) {
+      const prevRankInCandidateCol = prevCardInCandidateCol >> 2;
+      const prevSuitInCandidateCol = prevCardInCandidateCol % 4;
+      const prevGroupInCandidateCol = prevSuitInCandidateCol % matchMode;
+      
+      // 如果是同匹配组，且候选卡rank = 该卡rank - 1，则排除
+      if (candidateGroup === prevGroupInCandidateCol && candidateRank === prevRankInCandidateCol - 1) {
+        candidateScore.excludeReason = 'rule1_same_group_rank_minus_1';
+        // return candidateScore;
+      }
+    }
+  }
+  
+  // 2.2 排除规则2：对应空位号的行号>候选卡的行号
+  if (slotRow < candidateRow) {
+    candidateScore.excludeReason = 'rule2_slot_row_greater';
+    // return candidateScore;
+  }
+  
+  // 2.3 优先选择规则：候选卡的rank等于同匹配组位置号+1的卡的rank+1，
+  // 同时位置号-1的卡的卡片号是rank最小的卡
+  let matchNextCardScore = 0;
+  if (candidateRow < number) { // 确保有位置号+1
+    const nextPosInCandidateCol = candidateIdx + 1;
+    const nextCardInCandidateCol = cards1[nextPosInCandidateCol];
+    if (nextCardInCandidateCol >= 0) {
+      const nextRankInCandidateCol = nextCardInCandidateCol >> 2;
+      const nextSuitInCandidateCol = nextCardInCandidateCol % 4;
+      const nextGroupInCandidateCol = nextSuitInCandidateCol % matchMode;
+      
+      // 检查是否满足：同匹配组且候选卡rank = 该卡rank + 1
+      if (candidateGroup === nextGroupInCandidateCol && candidateRank === nextRankInCandidateCol + 1) {
+        matchNextCardScore = 10000; // 给予高分
+        matchNextCardScore -= candidateRow * 100;
+        // 同时检查位置号-1的卡是否是rank最小的卡
+        if (candidateRow > 0) {
+          const prevPosInCandidateCol = candidateIdx - 1;
+          const prevCardInCandidateCol = cards1[prevPosInCandidateCol];
+          const prevRankInCandidateCol = prevCardInCandidateCol >> 2;
+          // 检查是否是该匹配组中rank最小的（rank=0是A，最小）
+          matchNextCardScore -= prevRankInCandidateCol
+        }
+      }
+    }
+  }
+  candidateScore.matchNextCard = matchNextCardScore;
+  
+  // 2.4 候选卡所在列前后相邻的空位数（越多越好）
+  let adjacentEmptyCount = 0;
+  if (candidateRow > 0 && cards1[candidateIdx - 1] < 0) {
+    adjacentEmptyCount++;
+  }
+  if (candidateRow < number && cards1[candidateIdx + 1] < 0) {
+    adjacentEmptyCount++;
+  }
+  candidateScore.adjacentEmptyCount = adjacentEmptyCount;
+  
+  // 2.5 候选卡所在列空位总数（越多越好）
+  let columnEmptyCount = 0;
+  const colStart = candidateCol * colSize;
+  for (let i = colStart; i < colStart + colSize; i++) {
+    if (cards1[i] < 0) columnEmptyCount++;
+  }
+  candidateScore.columnEmptyCount = columnEmptyCount;
+  
+  return candidateScore;
+},
+
+/**
+ * 比较两个候选卡片的优先级（基于新规则）
+ * @param {Object} scoreA - 候选A的评分
+ * @param {Object} scoreB - 候选B的评分
+ * @returns {number} >0表示A更优，<0表示B更优，0表示相等
+ */
+compareRuleBasedPriority(scoreA, scoreB) {
+  // 1. 先比较空位优先级（rank越小越优先）
+  if (scoreA.slotPriority !== scoreB.slotPriority) {
+    return scoreA.slotPriority - scoreB.slotPriority;
+  }
+  
+  // 2. 排除的候选排在后面
+  if (scoreA.excludeReason && !scoreB.excludeReason) return 1;
+  if (!scoreA.excludeReason && scoreB.excludeReason) return -1;
+  if (scoreA.excludeReason && scoreB.excludeReason) return 0;
+  
+  // 3. 比较matchNextCard（越高越好）
+  if (scoreA.matchNextCard !== scoreB.matchNextCard) {
+    return scoreB.matchNextCard - scoreA.matchNextCard;
+  }
+  
+  // 4. 比较相邻空位数（越多越好）
+  if (scoreA.adjacentEmptyCount !== scoreB.adjacentEmptyCount) {
+    return scoreB.adjacentEmptyCount - scoreA.adjacentEmptyCount;
+  }
+  
+  // 5. 比较列空位总数（越多越好）
+  if (scoreA.columnEmptyCount !== scoreB.columnEmptyCount) {
+    return scoreB.columnEmptyCount - scoreA.columnEmptyCount;
+  }
+  
+  return 0;
+},
+
 
     // === 辅助函数：特征计算 ===
 

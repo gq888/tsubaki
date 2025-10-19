@@ -14,14 +14,12 @@ const Sort = {
       n: 0,
       sign_index: -1,
       matchMode: 1,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
-      stateHashHistory: [],
     };
   },
   methods: {
     init() {
       this.sign_index = -1;
       this.cards1.splice(0);
-      this.stateHashHistory = [];  // 记录状态哈希历史
       let cards = this.cards1;
       for (let i = 0; i < this.number * 4; i++) {
         cards.push(i);
@@ -43,17 +41,12 @@ const Sort = {
     
     // 检查当前状态哈希是否已存在
     isStateHashRepeated(hash) {
-      if (!this.stateHashHistory) return false;
-      return this.stateHashHistory.includes(hash);
+      return this.gameManager.history.find((record) => record.stateHash == hash);
     },
     // 记录移动操作
     recordMove(from, to, card, sign) {
       // 计算并记录当前状态的哈希
       const stateHash = this.calculateStateHash();
-      if (!this.stateHashHistory) {
-        this.stateHashHistory = [];
-      }
-      this.stateHashHistory.push(stateHash);
       
       this.gameManager.recordOperation({
         type: "move",
@@ -129,7 +122,6 @@ const Sort = {
         // 保存故障状态
         const errorState = {
           cards1: [...this.cards1],
-          stateHashHistory: [...(this.stateHashHistory || [])],
           next: this.next,
           sign_index: this.sign_index,
           n: this.n,
@@ -402,46 +394,6 @@ const Sort = {
           return maxPriority;
         };
         if (card >= 4) {
-          let i = index - 1;
-          let cardGroup = card % this.matchMode;  // 牌的分组
-          // 查找所有同组的前一张牌候选
-          let prevCandidates = this.findAllCardsByRankOffset(card, -1);
-          
-          // 检查是否形成递减序列（点数递减，颜色相同）
-          while (i >= 0) {
-            let expected_rank = this.number - 1 - (i % (this.number + 1));
-            let card_at_i = this.cards1[i];
-            if (card_at_i >= 0 && 
-                (card_at_i >> 2) == expected_rank && 
-                (card_at_i % this.matchMode) == cardGroup) {
-              i--;
-            } else {
-              break;
-            }
-          }
-          
-          if (i < 0 || i % (this.number + 1) == this.number) {
-            // 快速胜利检测：检查每个候选是否可以立即移动
-            for (let prevCandidate of prevCandidates) {
-              let next_i = prevCandidate.idx;
-              let prevCard = prevCandidate.card;
-
-              if (card >> 2 == this.cards1[next_i - 1] >> 2) continue;
-              
-              // 查找同颜色的前两个点数的牌（用于检查是否已有连续序列）
-              let card_minus_2_idx = this.findCardByRankOffset(card, -2);
-              let card_minus_2 = card_minus_2_idx >= 0 ? this.cards1[card_minus_2_idx] : -999;
-              
-              if (
-                card < 8 ||
-                next_i % (this.number + 1) == this.number ||
-                this.cards1[next_i + 1] == card_minus_2
-              ) {
-                this.next = [prevCard, index];
-                return;
-              }
-            }
-          }
           over = false;
         }
         nextFn(index, id, 0);
@@ -468,10 +420,20 @@ const Sort = {
               // 从深度搜索中获取该候选的优先级
               let candidatePriority = candidatePriorities.get(candidate.card) || 0;
               
+              // 计算基于新规则的优先级评分
+              const ruleBasedScore = this.calculateRuleBasedPriority(
+                this,
+                id,
+                { index: index, card: card },
+                candidate.card,
+                candidate.idx
+              );
+              
               candidatesWithPriority.push({
                 card: candidate.card,
                 idx: candidate.idx,
                 priority: candidatePriority,
+                ruleBasedScore: ruleBasedScore,  // 新增：基于规则的评分
                 stateHash: simulatedHash  // 保存状态哈希用于后续过滤
               });
             }
@@ -574,6 +536,7 @@ const Sort = {
         for (let candidateInfo of allCandidates) {
           let targetCard = candidateInfo.card;
           let candidatePriority = candidateInfo.priority;
+          let ruleBasedScore = candidateInfo.ruleBasedScore; // 获取基于规则的评分
           
           // 验证：targetCard 是否存在
           let currentTargetIdx = this.cards1.indexOf(targetCard);
@@ -587,8 +550,8 @@ const Sort = {
             continue;
           }
           
-          // 使用导入的工具函数创建候选对象
-          const currentCandidate = createCandidate(targetCard, t.index, this, candidatePriority, t, currentTargetIdx);
+          // 使用导入的工具函数创建候选对象，传入rule-based评分
+          const currentCandidate = createCandidate(targetCard, t.index, this, candidatePriority, t, currentTargetIdx, ruleBasedScore);
           
           // 判断是否替换最佳候选
           if (!bestCandidate || isBetterCandidate(currentCandidate, bestCandidate)) {
@@ -617,25 +580,6 @@ const Sort = {
               allPrioritiesZero = false;
             }
           }
-        }
-        
-        
-        // 保存调试状态
-        const debugState = {
-          cards1: [...this.cards1],
-          stateHashHistory: [...(this.stateHashHistory || [])],
-          next: this.next,
-          sign_index: this.sign_index,
-          n: this.n,
-          emptySlots: {}
-        };
-        for (let i = -4; i < 0; i++) {
-          debugState.emptySlots[i] = {
-            card: temp[i].card,
-            priority: temp[i].priority,
-            bestCard: temp[i].bestCard,
-            index: temp[i].index
-          };
         }
         
         // 计算已完成的牌数
