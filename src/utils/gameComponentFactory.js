@@ -4,6 +4,39 @@ import { defineAsyncComponent } from "vue";
 import { setSeed } from "./help.js";
 
 /**
+ * 游戏规则说明映射
+ * 为每个游戏提供简要的规则说明
+ */
+const gameRules = {
+  // 月份游戏
+  month: "The game has 13 positions (12 months + 1 deck). Each turn, take the top card from the current position and move it to the position corresponding to its value. If any month position (0-11) reaches 5 cards, the game ends.",
+  
+  // 钓鱼游戏
+  fish: "A 4-player game where each player starts with cards. On your turn, draw the top card from your deck. If it matches a card in the center, collect those cards. Special cards let you take cards from other players. The player who collects all cards wins.",
+  
+  // 24点游戏
+  point24: "Use 4 given numbers and apply +, -, ×, ÷ operations to make the result equal to 24. Each number can be used exactly once. You can combine numbers by selecting an operator and clicking cards to perform calculations.",
+  
+  // 龟兔赛跑（卡片配对游戏）
+  Tortoise: "A card matching game with hierarchical dependencies. Cards have z-index priorities and connection requirements. Match cards of the same value pair (cards with same base number). Cards can only be matched when all their prerequisite cards are already matched. Complete all pairs to win.",
+  
+  // 排序游戏
+  Sort: "A card sorting puzzle with 3 difficulty modes: simple (by number), medium (by color), and hard (by suit). Move cards to empty slots following specific rules. Cards can only be placed in valid positions. The goal is to arrange all cards in the correct order.",
+  
+  // 配对游戏
+  Pairs: "A memory matching game with 48 cards. Flip cards to find pairs. Cards are paired based on their base value (4 cards share the same base value). Find all matching pairs as quickly as possible to win.",
+  
+  // 蜘蛛纸牌
+  Spider: "A classic Spider Solitaire game with 52 standard playing cards. Arrange cards in descending order by number. Cards can be moved in sequences to build foundations. The goal is to sort all cards by suit and rank to win.",
+  
+  // 国际象棋（策略游戏）
+  Chess: "A strategy game on a 6x6 grid with two types of pieces: high (1) and low (0) grade. Pieces move according to specific rules defined by their positions. Win by eliminating all opponent's pieces of the opposite grade, or reach a draw when only one of each remains.",
+  
+  // 21点（BlackJack）
+  blackjack: "A card game using a 54-card deck. The goal is to get as close to 21 as possible without exceeding it. Cards 2-10 are worth their face value, J/Q/K are worth 10, and Aces can be worth 1 or 11. If your score exceeds 21, you bust. Both player and dealer start with 2 cards."
+};
+
+/**
  * 组件定义 - 根据环境选择 Mock 或真实组件
  */
 let GameResultModal, GameControls, GameLayout, CardImage;

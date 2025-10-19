@@ -223,6 +223,11 @@ export default {
       type: Object,
       default: () => ({ width: "100%" }),
     },
+    // 游戏规则说明
+    gameRule: {
+      type: String,
+      default: "",
+    },
 
     // 控制按钮相关
     showTopControls: {
@@ -600,25 +605,26 @@ export default {
     
     // 打开帮助弹窗
     openHelp() {
-      // 按钮功能说明映射
+      // 按钮说明映射
       const buttonDescriptions = {
         undo: "CANCEL THE LAST MOVE",
         goon: "RESTART THE GAME",
+        restart: "RESTART THE GAME",
+        hint: "GET A HINT",
         step: "EXECUTE THE NEXT MOVE",
         auto: "AUTO EXECUTE/STOP AUTO EXECUTE",
         hitBtn: "DRAW A NEW CARD",
         passBtn: "STOP DRAWING CARDS"
       };
       
-      // 从事件总线收集的按钮配置中去重
+      // 收集所有GameControls实例的按钮配置
       const uniqueButtons = new Map();
       
-      // 遍历所有从事件总线收集到的按钮配置
+      // 从事件总线收集的按钮配置（优先使用）
       Object.values(this.gameControlsButtons).forEach(buttons => {
         if (buttons && Array.isArray(buttons)) {
           buttons.forEach(button => {
-            // 使用action作为唯一标识符
-            if (button.action && !uniqueButtons.has(button.action)) {
+            if (button.action) {
               uniqueButtons.set(button.action, button);
             }
           });
@@ -642,22 +648,36 @@ export default {
         });
       }
       
+      // 初始化帮助内容
+      this.helpContent = [];
+      
+      // 添加游戏规则说明（作为一个特殊的帮助项）
+      if (this.gameRule) {
+        this.helpContent.push({
+          label: "📋",
+          description: `RULE: ${this.gameRule}`
+        });
+      }
+      
+      // 添加按钮操作说明
       if (uniqueButtons.size > 0) {
         console.log("通过事件总线获取到的按钮配置:", Array.from(uniqueButtons.values()));
-        // 从Map转换为数组
-        this.helpContent = Array.from(uniqueButtons.values()).map(button => ({
-          label: button.label,
+        // 从Map转换为数组并添加到帮助内容中
+        const buttonItems = Array.from(uniqueButtons.values()).map(button => ({
+          label: button.label || button.action.toUpperCase(),
           description: buttonDescriptions[button.action] || '未知功能'
         }));
+        this.helpContent.push(...buttonItems);
       } else {
         console.log("未获取到游戏按钮配置，使用默认按钮说明");
         // 如果无法直接获取，使用默认的按钮说明
-        this.helpContent = [
-          { label: "◀︎", description: buttonDescriptions["undo"] },
-          { label: "RESTART", description: buttonDescriptions["goon"] },
-          { label: "AUTO/STOP", description: buttonDescriptions["auto"] },
-          { label: "►", description: buttonDescriptions["step"] }
+        const defaultButtonItems = [
+          { label: "◀︎", description: buttonDescriptions.undo },
+          { label: "RESTART", description: buttonDescriptions.restart },
+          { label: "AUTO/STOP", description: buttonDescriptions.auto },
+          { label: "►", description: buttonDescriptions.step }
         ];
+        this.helpContent.push(...defaultButtonItems);
       }
       
       this.showHelp = true;
