@@ -5,7 +5,16 @@
     :data-card-id="cardId"
     :card-id="cardId"
   >
-    <img v-if="!hide" :src="imageSrc" :data-card-id="cardId" />
+    <div v-if="!hide && !imageLoaded" class="card-placeholder">
+      {{ cardPlaceholderText }}
+    </div>
+    <img 
+      v-if="!hide" 
+      :src="imageSrc" 
+      :data-card-id="cardId" 
+      :style="{ display: imageLoaded ? 'block' : 'none' }"
+      @load="imageLoaded = true"
+    />
     <slot v-else></slot>
   </div>
 </template>
@@ -15,6 +24,13 @@ export default {
   name: "CardImage",
   // 启用inheritAttrs，这样属性会直接传递到DOM元素上
   inheritAttrs: true,
+  data() {
+    return {
+      types: ["♥", "♠", "♦", "♣"],
+      point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "JOKER"],
+      imageLoaded: false,
+    }
+  },
   props: {
     cardId: {
       type: [Number, String],
@@ -29,6 +45,12 @@ export default {
   computed: {
     imageSrc() {
       return `./static/${this.cardId}.webp`;
+    },
+    cardPlaceholderText() {
+      if (typeof this.cardId === 'number') {
+        return `${(this.cardId < 52 ? this.types[this.cardId % 4] : "")}${this.point[this.cardId >> 2]}`;
+      }
+      return '';
     },
   },
   mounted() {
