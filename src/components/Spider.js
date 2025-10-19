@@ -15,7 +15,6 @@ const Spider = {
       dragItem: -99,
       enterItem: -99,
       turn: 1,
-      types: ["♥", "♠", "♦", "♣"],
       number: 52,
     };
   },

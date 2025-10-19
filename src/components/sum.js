@@ -7,8 +7,6 @@ const Sum = {
     return {
       title: "BlackJack",
       cardsChg: [],
-      types: ["♠", "♥", "♦", "♣"],
-      point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
       arr1: [],
       arr2: [],
     };
@@ -29,15 +27,6 @@ const Sum = {
       this.hit(cards, this.arr2);
       this.hit(cards, this.arr1);
       this.hit(cards, this.arr2);
-    },
-    // 获取牌库
-    getCards(cards) {
-      for (let i in this.types) {
-        for (let j in this.point) {
-          cards.push(this.types[i] + this.point[j]);
-        }
-      }
-      return cards;
     },
     // 摸牌
     hit(cards, arr) {

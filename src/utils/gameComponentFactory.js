@@ -125,6 +125,8 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       const baseData = baseComponent.data ? baseComponent.data.call(this) : {};
       
       return {
+        types: ["♥", "♠", "♦", "♣"],
+        point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
         ...baseData,
         gameManager: new GameStateManager({
           autoStepDelay,
