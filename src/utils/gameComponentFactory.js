@@ -2,6 +2,7 @@ import GameStateManager from "./gameStateManager.js";
 import gameSettingsManager from "./gameSettingsManager.js";
 import { defineAsyncComponent } from "vue";
 import { setSeed } from "./help.js";
+import { CARD_TYPES, CARD_POINTS, getCardPlaceholderText } from "./cardUtils.js";
 
 /**
  * 游戏规则说明映射
@@ -125,8 +126,8 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       const baseData = baseComponent.data ? baseComponent.data.call(this) : {};
       
       return {
-        types: ["♥", "♠", "♦", "♣"],
-        point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "JOKER"],
+        types: CARD_TYPES,
+        point: CARD_POINTS,
         ...baseData,
         gameManager: new GameStateManager({
           autoStepDelay,
@@ -212,6 +213,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     computed: {
       // 使用GameStateManager的默认计算属性
       ...GameStateManager.getDefaultComputedProperties(),
+      getCardPlaceholderText,
 
       // 游戏控制配置
       gameControlsConfig() {

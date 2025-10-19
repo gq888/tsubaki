@@ -20,14 +20,16 @@
 </template>
 
 <script>
+import { CARD_TYPES, CARD_POINTS, getCardPlaceholderText, getCardImageSrc } from '../utils/cardUtils.js';
+
 export default {
   name: "CardImage",
   // 启用inheritAttrs，这样属性会直接传递到DOM元素上
   inheritAttrs: true,
   data() {
     return {
-      types: ["♥", "♠", "♦", "♣"],
-      point: ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "JOKER"],
+      types: CARD_TYPES,
+      point: CARD_POINTS,
       imageLoaded: false,
     }
   },
@@ -44,13 +46,10 @@ export default {
   },
   computed: {
     imageSrc() {
-      return `./static/${this.cardId}.webp`;
+      return getCardImageSrc(this.cardId);
     },
     cardPlaceholderText() {
-      if (typeof this.cardId === 'number') {
-        return `${(this.cardId < 52 ? this.types[this.cardId % 4] : "")}${this.point[this.cardId >> 2]}`;
-      }
-      return '';
+      return getCardPlaceholderText(this.cardId);
     },
   },
   mounted() {
@@ -67,4 +66,8 @@ export default {
 
 <style scoped>
 @import url("./sum.css");
+.card-placeholder {
+  background-color: #dfcdc3;
+  color: #719192;
+}
 </style>
