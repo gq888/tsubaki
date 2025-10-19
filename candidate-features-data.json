@@ -1,0 +1,446 @@
+[
+  {
+    "seed": 1,
+    "step": 9,
+    "candidates": [
+      {
+        "card": 8,
+        "cardIdx": 10,
+        "cardRank": 2,
+        "cardSuit": 0,
+        "cardPosition": 4,
+        "slotId": -3,
+        "slotIdx": 8,
+        "slotPosition": 2,
+        "slotPrevRank": 3,
+        "slot_score": 33,
+        "afterMoves": 0,
+        "win": true
+      },
+      {
+        "card": 9,
+        "cardIdx": 22,
+        "cardRank": 2,
+        "cardSuit": 1,
+        "cardPosition": 4,
+        "slotId": -3,
+        "slotIdx": 8,
+        "slotPosition": 2,
+        "slotPrevRank": 3,
+        "slot_score": 33,
+        "afterMoves": 0,
+        "win": false
+      }
+    ]
+  },
+  {
+    "seed": 3,
+    "step": 3,
+    "candidates": [
+      {
+        "card": 9,
+        "cardIdx": 20,
+        "cardRank": 2,
+        "cardSuit": 1,
+        "cardPosition": 2,
+        "slotId": -1,
+        "slotIdx": 2,
+        "slotPosition": 2,
+        "slotPrevRank": 3,
+        "slot_score": 33,
+        "afterMoves": 2,
+        "win": false
+      },
+      {
+        "card": 6,
+        "cardIdx": 8,
+        "cardRank": 1,
+        "cardSuit": 2,
+        "cardPosition": 2,
+        "slotId": -4,
+        "slotIdx": 21,
+        "slotPosition": 3,
+        "slotPrevRank": 2,
+        "slot_score": 22,
+        "afterMoves": 0,
+        "win": true
+      }
+    ]
+  },
+  {
+    "seed": 4,
+    "step": 8,
+    "candidates": [
+      {
+        "card": 13,
+        "cardIdx": 16,
+        "cardRank": 3,
+        "cardSuit": 1,
+        "cardPosition": 4,
+        "slotId": -1,
+        "slotIdx": 1,
+        "slotPosition": 1,
+        "slotPrevRank": 4,
+        "slot_score": 44,
+        "afterMoves": 0,
+        "win": false
+      },
+      {
+        "card": 13,
+        "cardIdx": 16,
+        "cardRank": 3,
+        "cardSuit": 1,
+        "cardPosition": 4,
+        "slotId": -2,
+        "slotIdx": 13,
+        "slotPosition": 1,
+        "slotPrevRank": 4,
+        "slot_score": 44,
+        "afterMoves": 0,
+        "win": true
+      }
+    ]
+  },
+  {
+    "seed": 5,
+    "step": 1,
+    "candidates": [
+      {
+        "card": 6,
+        "cardIdx": 13,
+        "cardRank": 1,
+        "cardSuit": 2,
+        "cardPosition": 1,
+        "slotId": -3,
+        "slotIdx": 8,
+        "slotPosition": 2,
+        "slotPrevRank": 2,
+        "slot_score": 32,
+        "afterMoves": 0,
+        "win": true
+      },
+      {
+        "card": 6,
+        "cardIdx": 13,
+        "cardRank": 1,
+        "cardSuit": 2,
+        "cardPosition": 1,
+        "slotId": -4,
+        "slotIdx": 10,
+        "slotPosition": 4,
+        "slotPrevRank": 2,
+        "slot_score": 12,
+        "afterMoves": 0,
+        "win": false
+      },
+      {
+        "card": 1,
+        "cardIdx": 16,
+        "cardRank": 0,
+        "cardSuit": 1,
+        "cardPosition": 4,
+        "slotId": -1,
+        "slotIdx": 14,
+        "slotPosition": 2,
+        "slotPrevRank": 1,
+        "slot_score": 31,
+        "afterMoves": 0,
+        "win": false
+      }
+    ]
+  },
+  {
+    "seed": 6,
+    "step": 0,
+    "candidates": [
+      {
+        "card": 10,
+        "cardIdx": 16,
+        "cardRank": 2,
+        "cardSuit": 2,
+        "cardPosition": 4,
+        "slotId": -2,
+        "slotIdx": 11,
+        "slotPosition": 5,
+        "slotPrevRank": 3,
+        "slot_score": 3,
+        "afterMoves": 0,
+        "win": true
+      },
+      {
+        "card": 10,
+        "cardIdx": 16,
+        "cardRank": 2,
+        "cardSuit": 2,
+        "cardPosition": 4,
+        "slotId": -3,
+        "slotIdx": 15,
+        "slotPosition": 3,
+        "slotPrevRank": 3,
+        "slot_score": 23,
+        "afterMoves": 2,
+        "win": false
+      },
+      {
+        "card": 10,
+        "cardIdx": 16,
+        "cardRank": 2,
+        "cardSuit": 2,
+        "cardPosition": 4,
+        "slotId": -1,
+        "slotIdx": 21,
+        "slotPosition": 3,
+        "slotPrevRank": 3,
+        "slot_score": 23,
+        "afterMoves": 0,
+        "win": false
+      }
+    ]
+  },
+  {
+    "seed": 9,
+    "step": 3,
+    "candidates": [
+      {
+        "card": 6,
+        "cardIdx": 21,
+        "cardRank": 1,
+        "cardSuit": 2,
+        "cardPosition": 3,
+        "slotId": -3,
+        "slotIdx": 5,
+        "slotPosition": 5,
+        "slotPrevRank": 2,
+        "slot_score": 2,
+        "afterMoves": 0,
+        "win": true
+      },
+      {
+        "card": 6,
+        "cardIdx": 21,
+        "cardRank": 1,
+        "cardSuit": 2,
+        "cardPosition": 3,
+        "slotId": -1,
+        "slotIdx": 11,
+        "slotPosition": 5,
+        "slotPrevRank": 2,
+        "slot_score": 2,
+        "afterMoves": 0,
+        "win": false
+      }
+    ]
+  },
+  {
+    "seed": 10,
+    "step": 5,
+    "candidates": [
+      {
+        "card": 0,
+        "cardIdx": 4,
+        "cardRank": 0,
+        "cardSuit": 0,
+        "cardPosition": 4,
+        "slotId": -2,
+        "slotIdx": 21,
+        "slotPosition": 3,
+        "slotPrevRank": 1,
+        "slot_score": 21,
+        "afterMoves": 2,
+        "win": false
+      },
+      {
+        "card": 1,
+        "cardIdx": 15,
+        "cardRank": 0,
+        "cardSuit": 1,
+        "cardPosition": 3,
+        "slotId": -2,
+        "slotIdx": 21,
+        "slotPosition": 3,
+        "slotPrevRank": 1,
+        "slot_score": 21,
+        "afterMoves": 2,
+        "win": false
+      },
+      {
+        "card": 3,
+        "cardIdx": 8,
+        "cardRank": 0,
+        "cardSuit": 3,
+        "cardPosition": 2,
+        "slotId": -2,
+        "slotIdx": 21,
+        "slotPosition": 3,
+        "slotPrevRank": 1,
+        "slot_score": 21,
+        "afterMoves": 0,
+        "win": true
+      }
+    ]
+  },
+  {
+    "seed": 12,
+    "step": 2,
+    "candidates": [
+      {
+        "card": 9,
+        "cardIdx": 7,
+        "cardRank": 2,
+        "cardSuit": 1,
+        "cardPosition": 1,
+        "slotId": -3,
+        "slotIdx": 14,
+        "slotPosition": 2,
+        "slotPrevRank": 3,
+        "slot_score": 33,
+        "afterMoves": 0,
+        "win": false
+      },
+      {
+        "card": 15,
+        "cardIdx": 13,
+        "cardRank": 3,
+        "cardSuit": 3,
+        "cardPosition": 1,
+        "slotId": -2,
+        "slotIdx": 19,
+        "slotPosition": 1,
+        "slotPrevRank": 4,
+        "slot_score": 44,
+        "afterMoves": 0,
+        "win": true
+      }
+    ]
+  },
+  {
+    "seed": 13,
+    "step": 1,
+    "candidates": [
+      {
+        "card": 2,
+        "cardIdx": 22,
+        "cardRank": 0,
+        "cardSuit": 2,
+        "cardPosition": 4,
+        "slotId": -3,
+        "slotIdx": 3,
+        "slotPosition": 3,
+        "slotPrevRank": 1,
+        "slot_score": 21,
+        "afterMoves": 2,
+        "win": false
+      },
+      {
+        "card": 4,
+        "cardIdx": 2,
+        "cardRank": 1,
+        "cardSuit": 0,
+        "cardPosition": 2,
+        "slotId": -2,
+        "slotIdx": 5,
+        "slotPosition": 5,
+        "slotPrevRank": 2,
+        "slot_score": 2,
+        "afterMoves": 1,
+        "win": true
+      },
+      {
+        "card": 10,
+        "cardIdx": 4,
+        "cardRank": 2,
+        "cardSuit": 2,
+        "cardPosition": 4,
+        "slotId": -1,
+        "slotIdx": 11,
+        "slotPosition": 5,
+        "slotPrevRank": 3,
+        "slot_score": 3,
+        "afterMoves": 1,
+        "win": false
+      }
+    ]
+  },
+  {
+    "seed": 16,
+    "step": 0,
+    "candidates": [
+      {
+        "card": 8,
+        "cardIdx": 20,
+        "cardRank": 2,
+        "cardSuit": 0,
+        "cardPosition": 2,
+        "slotId": -1,
+        "slotIdx": 2,
+        "slotPosition": 2,
+        "slotPrevRank": 3,
+        "slot_score": 33,
+        "afterMoves": 0,
+        "win": false
+      },
+      {
+        "card": 15,
+        "cardIdx": 1,
+        "cardRank": 3,
+        "cardSuit": 3,
+        "cardPosition": 1,
+        "slotId": -3,
+        "slotIdx": 19,
+        "slotPosition": 1,
+        "slotPrevRank": 4,
+        "slot_score": 44,
+        "afterMoves": 1,
+        "win": false
+      },
+      {
+        "card": 4,
+        "cardIdx": 13,
+        "cardRank": 1,
+        "cardSuit": 0,
+        "cardPosition": 1,
+        "slotId": -4,
+        "slotIdx": 21,
+        "slotPosition": 3,
+        "slotPrevRank": 2,
+        "slot_score": 22,
+        "afterMoves": 2,
+        "win": true
+      }
+    ]
+  },
+  {
+    "seed": 19,
+    "step": 2,
+    "candidates": [
+      {
+        "card": 12,
+        "cardIdx": 2,
+        "cardRank": 3,
+        "cardSuit": 0,
+        "cardPosition": 2,
+        "slotId": -1,
+        "slotIdx": 1,
+        "slotPosition": 1,
+        "slotPrevRank": 4,
+        "slot_score": 44,
+        "afterMoves": 1,
+        "win": true
+      },
+      {
+        "card": 12,
+        "cardIdx": 2,
+        "cardRank": 3,
+        "cardSuit": 0,
+        "cardPosition": 2,
+        "slotId": -2,
+        "slotIdx": 13,
+        "slotPosition": 1,
+        "slotPrevRank": 4,
+        "slot_score": 44,
+        "afterMoves": 0,
+        "win": false
+      }
+    ]
+  }
+]
