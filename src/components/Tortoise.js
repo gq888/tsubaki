@@ -194,12 +194,11 @@ const Tortoise = {
     },
     
     /**
-     * 渲染文本视图 - 显示当前游戏状态
-     * 用于终端交互式游戏
+     * 渲染文本视图 - 字符画形式显示当前游戏状态
+     * 通过16格子(4x4)系统模拟浏览器渲染效果，使用细线边框
+     * 画布20x20，卡牌4x4，后渲染的自然覆盖先渲染的
      */
     renderTextView() {
-      // getCardPlaceholderText 从 cardUtils 导入
-      
       console.log('\n╔════════════════════════════════════════════════╗');
       console.log('║              龟兔赛跑 (Tortoise)              ║');
       console.log('╚════════════════════════════════════════════════╝');
@@ -212,56 +211,136 @@ const Tortoise = {
         console.log(`🎯 当前选中: ${signCard} (位置 ${signIndex})\n`);
       }
       
-      // 按 z-index 分层显示
-      const maxZ = Math.max(...this.map.map(m => m["z-index"]));
+      // 创建字符画布：20行 × 20列
+      const CANVAS_ROWS = 20;
+      const CANVAS_COLS = 20;
+      const canvas = Array(CANVAS_ROWS).fill(null).map(() => Array(CANVAS_COLS).fill(' '));
       
-      for (let z = 0; z <= maxZ; z++) {
-        console.log(`\n━━━ 第 ${z} 层 (z-index=${z}) ━━━`);
-        
-        const cardsInLayer = [];
-        this.cards1.forEach((cardId, posIdx) => {
-          if (this.map[posIdx]["z-index"] === z && !this.done(cardId)) {
-            cardsInLayer.push({ cardId, posIdx });
-          }
-        });
-        
-        if (cardsInLayer.length === 0) {
-          console.log('  (本层无剩余卡片)');
-          continue;
-        }
-        
-        // 按卡片ID分组显示
-        const groups = {};
-        cardsInLayer.forEach(({ cardId, posIdx }) => {
-          const rank = cardId >> 2;
-          if (!groups[rank]) {
-            groups[rank] = [];
-          }
-          groups[rank].push({ cardId, posIdx });
-        });
-        
-        Object.keys(groups).sort((a, b) => a - b).forEach(rank => {
-          const cards = groups[rank];
-          const cardTexts = cards.map(({ cardId, posIdx }) => {
-            const cardText = getCardPlaceholderText(cardId);
-            const canClick = this.check(posIdx);
-            const isSelected = cardId === this.sign;
-            
-            if (isSelected) {
-              return `[${cardText}✓]`;
-            } else if (canClick) {
-              return `<${cardText}>`;
-            } else {
-              return `(${cardText})`;
-            }
-          }).join(' ');
+      // 卡牌尺寸（字符单位）
+      const CARD_ROWS = 4;  // 4行
+      const CARD_COLS = 4;  // 4列
+      
+      // 布局参数（来自CSS）
+      const LAYOUT_WIDTH = 100;  // 100%
+      const LAYOUT_HEIGHT = 46.875; // rem
+      
+      // 收集所有未完成的卡牌，按z-index排序（从低到高）
+      const activeCards = [];
+      this.cards1.forEach((cardId, posIdx) => {
+        if (!this.done(cardId)) {
+          const mapInfo = this.map[posIdx];
+          const canClick = this.check(posIdx);
+          const isSelected = cardId === this.sign;
           
-          console.log(`  点数${rank}: ${cardTexts}`);
-        });
-      }
+          activeCards.push({
+            cardId,
+            posIdx,
+            left: parseFloat(mapInfo.left),
+            top: parseFloat(mapInfo.top),
+            zIndex: mapInfo["z-index"],
+            canClick,
+            isSelected,
+            cardText: getCardPlaceholderText(cardId)
+          });
+        }
+      });
       
+      // 按z-index升序排列（底层先渲染）
+      activeCards.sort((a, b) => a.zIndex - b.zIndex);
+      
+      // 逐层渲染卡牌（后渲染的自然覆盖先渲染的）
+      activeCards.forEach(card => {
+        // 计算卡牌在字符画布中的位置
+        const startCol = Math.round((card.left / LAYOUT_WIDTH) * (CANVAS_COLS - CARD_COLS));
+        const startRow = Math.round((card.top / LAYOUT_HEIGHT) * (CANVAS_ROWS - CARD_ROWS));
+        
+        // 确保位置在有效范围内
+        const safeStartRow = Math.max(0, Math.min(startRow, CANVAS_ROWS - CARD_ROWS));
+        const safeStartCol = Math.max(0, Math.min(startCol, CANVAS_COLS - CARD_COLS));
+        
+        // 渲染16格子卡牌
+        for (let row = 0; row < CARD_ROWS; row++) {
+          for (let col = 0; col < CARD_COLS; col++) {
+            const canvasRow = safeStartRow + row;
+            const canvasCol = safeStartCol + col;
+            
+            if (canvasRow < CANVAS_ROWS && canvasCol < CANVAS_COLS) {
+              let char = ' ';
+              
+              if (row === 0) {
+                // 第一行：上边框
+                if (col === 0) {
+                  char = '┌'; // 左上角
+                } else if (col === CARD_COLS - 1) {
+                  char = '┐'; // 右上角
+                } else {
+                  char = '──'; // 上边框（占2个字符宽度）
+                }
+              } else if (row === CARD_ROWS - 1) {
+                // 最后一行：下边框
+                if (col === 0) {
+                  char = '└'; // 左下角
+                } else if (col === CARD_COLS - 1) {
+                  char = '┘'; // 右下角
+                } else {
+                  char = '──'; // 下边框（占2个字符宽度）
+                }
+              } else if (col === 0 || col === CARD_COLS - 1) {
+                // 左右边框
+                char = '│';
+              } else if (card.canClick) {
+                // 可点击卡牌的内部内容
+                if (row === 1 && col === 1) {
+                  char = card.cardText[0] || ' '; // 花色
+                } else if (row === 1 && col === 2) {
+                  char = card.cardText[1] || ' '; // 点数
+                } else if (row === 2 && col === 1) {
+                  char = card.cardText[1] || ' '; // 下方点数
+                } else if (row === 2 && col === 2) {
+                  char = card.cardText[0] || ' '; // 下方花色
+                }
+              } else {
+                // 不可点击卡牌的内部内容
+                if (row === 1 && (col === 1 || col === 2)) {
+                  char = '·'; // 中间点
+                } else if (row === 2 && (col === 1 || col === 2)) {
+                  char = '·'; // 下方点
+                }
+              }
+              
+              // 处理双字符边框
+              if (char === '──') {
+                canvas[canvasRow][canvasCol] = '─';
+                if (canvasCol + 1 < CANVAS_COLS) {
+                  canvas[canvasRow][canvasCol + 1] = '─';
+                }
+              } else {
+                canvas[canvasRow][canvasCol] = char;
+              }
+            }
+          }
+        }
+      });
+      
+      // 输出字符画
+      console.log('\n━━━ 游戏布局 (字符画) ━━━');
+      console.log('画布: 20行 × 20列，每张卡牌: 4行 × 4列\n');
+      
+      // 添加边框
+      const borderedCanvas = [];
+      borderedCanvas.push('┌' + '─'.repeat(CANVAS_COLS) + '┐');
+      
+      canvas.forEach(row => {
+        borderedCanvas.push('│' + row.join('') + '│');
+      });
+      
+      borderedCanvas.push('└' + '─'.repeat(CANVAS_COLS) + '┘');
+      
+      console.log(borderedCanvas.join('\n'));
+      
+      // 图例
       console.log('\n图例:');
-      console.log('  <卡片> = 可点击  (卡片) = 被覆盖  [卡片✓] = 已选中');
+      console.log('  ┌──┐ = 卡牌边框  ♥5 = 可点击卡牌内容  ·· = 不可点击卡牌');
       
       // 显示下一步提示
       if (this.next && this.next.length > 0) {
@@ -269,7 +348,7 @@ const Tortoise = {
         console.log(`\n💡 提示: 可配对的卡片点数 ${this.next[0] >> 2}: ${nextCards}`);
       }
       
-      return '渲染完成';
+      return '字符画渲染完成';
     },
     
     /**
