@@ -100,7 +100,7 @@ export default class GameStateManager {
     this.emit("autoStart");
 
     let stepCount = 0;
-    const maxSteps = 1000; // 防止无限循环
+    const maxSteps = 400; // 防止无限循环
 
     try {
       while (

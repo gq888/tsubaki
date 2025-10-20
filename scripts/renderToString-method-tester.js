@@ -10,7 +10,7 @@ import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { writeFileSync, readFileSync } from 'fs';
+import { writeFileSync, readFileSync, watchFile, unwatchFile } from 'fs';
 import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -239,12 +239,77 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
 }
 
 /**
+ * 等待文件变化（用于异步方法完成检测）
+ * @param {string} filePath - 要监听的文件路径
+ * @param {number} timeout - 超时时间（毫秒）
+ * @returns {Promise<boolean>} - 是否在超时前检测到文件变化
+ */
+async function waitForFileChange(filePath, timeout = 60000) {
+  return new Promise((resolve) => {
+    let fileChanged = false;
+    let timer;
+    let watchListener;
+    
+    // 获取文件初始状态
+    let initialMtime = 0;
+    let initialSize = 0;
+    let fileExists = false;
+    try {
+      const stats = readFileSync(filePath);
+      initialMtime = stats.mtime ? stats.mtime.getTime() : 0;
+      initialSize = stats.size;
+      fileExists = true;
+    } catch (error) {
+      // 文件不存在，初始状态为0
+      console.log('📝 文件不存在，将等待文件创建或更新: ', error.message);
+    }
+    
+    // 设置超时
+    timer = setTimeout(() => {
+      if (!fileChanged) {
+        if (watchListener) {
+          unwatchFile(filePath);
+        }
+        console.log(`⏱️  文件变化监听超时 (${timeout}ms)`);
+        resolve(false);
+      }
+    }, timeout);
+    
+    // 监听文件变化
+    watchListener = (curr, prev) => {
+      if (!fileChanged) {
+        // 安全地获取修改时间，处理mtime可能为undefined的情况
+        const currMtime = curr.mtime ? curr.mtime.getTime() : 0;
+        const mtimeChanged = currMtime !== initialMtime;
+        const sizeChanged = curr.size !== initialSize;
+        
+        if (mtimeChanged || sizeChanged) {
+          fileChanged = true;
+          clearTimeout(timer);
+          unwatchFile(filePath);
+          console.log('✓ 检测到文件变化，异步方法执行完成');
+          resolve(true);
+        }
+      }
+    };
+    
+    watchFile(filePath, { interval: 100 }, watchListener);
+    
+    // 如果文件已存在，立即检查一次是否需要等待变化
+    if (fileExists) {
+      console.log('⏳ 文件已存在，开始监听...');
+    }
+  });
+}
+
+/**
  * 使用renderToString执行组件方法
  * @param {number} timeout - 超时时间（毫秒），默认30秒
  * @param {number} seed - 随机数种子
  * @param {string} outputFile - 输出状态文件路径
+ * @param {boolean} waitForAsync - 是否等待异步方法完成（交互模式专用）
  */
-async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 30000, seed = null, outputFile = DEFAULT_STATE_FILE) {
+async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 60000, seed = null, outputFile = DEFAULT_STATE_FILE) {
   try {
     console.log(`正在通过renderToString执行方法: ${methodName}`);
     console.log(`组件路径: ${componentPath}`);
@@ -500,7 +565,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
 /**
  * 交互式游戏循环
  */
-async function interactiveGameLoop(componentPath, seed = null, outputFile = DEFAULT_STATE_FILE) {
+async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, outputFile = DEFAULT_STATE_FILE) {
   try {
     // 使用统一的路径规范化函数
     const absolutePath = getAbsoluteComponentPath(componentPath);
@@ -513,7 +578,7 @@ async function interactiveGameLoop(componentPath, seed = null, outputFile = DEFA
     
     // 先执行 init 方法初始化游戏
     console.log('\n🎮 初始化游戏...');
-    await executeMethodWithRenderToString(componentPath, 'init', currentState, [], 30000, seed, outputFile);
+    await executeMethodWithRenderToString(componentPath, 'init', currentState, [], timeout, seed, outputFile);
     
     // 读取初始化后的状态
     const stateContent = readFileSync(outputFile, 'utf-8');
@@ -556,8 +621,8 @@ async function interactiveGameLoop(componentPath, seed = null, outputFile = DEFA
           'renderTextView', 
           currentState, 
           [], 
-          5000, 
-          null, 
+          timeout, 
+          seed, 
           outputFile
         );
         
@@ -584,8 +649,8 @@ async function interactiveGameLoop(componentPath, seed = null, outputFile = DEFA
           'getAvailableActions',
           currentState,
           [],
-          5000,
-          null,
+          timeout,
+          seed,
           outputFile
         );
         
@@ -636,6 +701,9 @@ async function interactiveGameLoop(componentPath, seed = null, outputFile = DEFA
         console.log('\n❌ 无效的选择，请重试');
         continue;
       }
+        
+      // 如果是异步方法且需要等待完成，在方法执行前就开始监听文件变化
+      let fileWatchPromise = waitForFileChange(outputFile, timeout);
       
       // 执行选择的操作
       console.log(`\n⚙️  执行: ${selectedAction.label}`);
@@ -645,10 +713,16 @@ async function interactiveGameLoop(componentPath, seed = null, outputFile = DEFA
           selectedAction.method,
           currentState,
           selectedAction.args || [],
-          30000,
-          null,
+          timeout,
+          seed,
           outputFile
         );
+
+        // 如果检测到异步方法且需要等待，等待文件变化监听结果
+        if (fileWatchPromise) {
+          // 等待文件变化监听结果
+          const fileChanged = await fileWatchPromise;
+        }
         
         // 重新读取更新后的状态
         const updatedStateContent = readFileSync(outputFile, 'utf-8');
@@ -689,7 +763,7 @@ async function main() {
     console.log('  JSON数组: node ... method \'[1,2,3]\'');
     console.log('  混合参数: node ... method 0 \'{"x":10}\' \'[1,2]\'');
     console.log('\n高级选项:');
-    console.log('  --timeout=60000      设置超时（默认30000ms）');
+    console.log('  --timeout=60000      设置超时（默认60000ms）');
     console.log('  --seed=12345         设置随机种子（可重现测试）');
     console.log('  --continue           使用上次保存的状态');
     console.log('  --state=\'{"..."}\'    直接传入状态JSON');
@@ -711,6 +785,7 @@ async function main() {
   if (isInteractive) {
     // 交互模式
     let seed = null;
+    let timeout = 60000;
     let outputFile = DEFAULT_STATE_FILE;
     
     for (let i = 1; i < args.length; i++) {
@@ -721,6 +796,12 @@ async function main() {
           console.error('错误: seed必须是整数');
           process.exit(1);
         }
+      } else if (arg.startsWith('--timeout=')) {
+        timeout = parseInt(arg.split('=')[1], 10);
+          if (isNaN(timeout) || timeout <= 0) {
+            console.error('错误: timeout必须是正整数');
+          process.exit(1);
+        }
       } else if (arg.startsWith('--output=')) {
         outputFile = arg.substring('--output='.length);
         if (!path.isAbsolute(outputFile)) {
@@ -729,7 +810,7 @@ async function main() {
       }
     }
     
-    await interactiveGameLoop(componentPath, seed, outputFile);
+    await interactiveGameLoop(componentPath, seed, timeout, outputFile);
     return;
   }
   
@@ -743,7 +824,7 @@ async function main() {
   const methodName = args[1];
   
   // 提取timeout、state、state-file、seed、continue和output参数
-  let timeout = 30000;
+  let timeout = 60000;
   let currentState = {};
   let seed = null;
   let outputFile = DEFAULT_STATE_FILE;
