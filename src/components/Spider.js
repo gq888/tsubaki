@@ -1,6 +1,7 @@
 import { shuffleCards, wait, checkDeadForeach } from "../utils/help.js";
 import move from "../directives/move.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { getCardPlaceholderText } from "../utils/cardUtils.js";
 
 const Spider = {
   name: "Spider",
@@ -617,6 +618,115 @@ const Spider = {
             (data.offsetY + data.offsetTop + (j - index - 1) * 30) / 16 + "rem";
         }
       }
+    },
+    
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║            蜘蛛纸牌 (Spider)                  ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      
+      // 统计信息
+      const totalCards = this.cards.slice(1).reduce((sum, col) => sum + col.length, 0);
+      const deckCards = this.cards[0].length;
+      console.log(`\n步数: ${this.step} | 牌堆剩余: ${deckCards} 张 | 场上: ${totalCards} 张\n`);
+      
+      // 显示牌堆
+      console.log('━━━ 牌堆 ━━━');
+      if (deckCards > 0) {
+        console.log(`  [0] 🂠 ${deckCards} 张 (点击发牌)`);
+      } else {
+        console.log('  [0] (空)');
+      }
+      console.log('');
+      
+      // 显示9列卡片（cards数组索引1-9）
+      for (let i = 1; i < this.cards.length; i++) {
+        const col = this.cards[i];
+        console.log(`━━━ 第 ${i} 列 ━━━`);
+        
+        if (col.length === 0) {
+          console.log('  (空列)');
+        } else {
+          // 只显示最后5张牌，避免输出过长
+          const displayCount = Math.min(5, col.length);
+          const startIdx = col.length - displayCount;
+          
+          if (startIdx > 0) {
+            console.log(`  ... (隐藏 ${startIdx} 张)`);
+          }
+          
+          for (let j = startIdx; j < col.length; j++) {
+            const card = col[j];
+            const cardText = getCardPlaceholderText(card);
+            const isLast = j === col.length - 1;
+            console.log(`  [${j}] ${cardText}${isLast ? ' ←' : ''}`);
+          }
+        }
+        console.log('');
+      }
+      
+      console.log('提示: ← 表示该列顶牌');
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 撤销按钮
+      actions.push({
+        id: 1,
+        label: '撤销 (◀︎)',
+        method: 'undo',
+        args: [],
+        disabled: !this.canUndo
+      });
+      
+      // 重新开始按钮
+      actions.push({
+        id: 2,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 单步执行按钮
+      actions.push({
+        id: 3,
+        label: '单步执行 (►)',
+        method: 'stepFn',
+        args: []
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 4,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
+      // 发牌按钮（如果牌堆有牌）
+      if (this.cards[0].length > 0) {
+        actions.push({
+          id: 5,
+          label: '从牌堆发牌',
+          method: 'clickCard',
+          args: [0]
+        });
+      }
+      
+      // 过滤掉禁用的按钮
+      return actions.filter(a => !a.disabled);
     },
   },
   computed: {

@@ -1,5 +1,6 @@
 import { shuffleCards, wait } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { getCardPlaceholderText } from "../utils/cardUtils.js";
 
 const Pairs = {
   name: "Pairs",
@@ -104,6 +105,91 @@ const Pairs = {
           return await this.clickCard(c);
         }
       }
+    },
+    
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║              配对游戏 (Pairs)                 ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      
+      // 统计信息
+      const matched = this.cards2.filter(m => m).length;
+      console.log(`\n时间: ${this.time}秒 | 已配对: ${matched}/48 张\n`);
+      
+      // 按6x8网格显示
+      const cols = 8;
+      const rows = 6;
+      
+      for (let row = 0; row < rows; row++) {
+        let line = '  ';
+        for (let col = 0; col < cols; col++) {
+          const idx = row * cols + col;
+          const cardId = this.cards1[idx];
+          
+          if (this.cards2[idx]) {
+            // 已配对
+            line += '[✓] ';
+          } else if (this.arr[idx] || idx === this.sign || idx === this.sign2) {
+            // 已翻开或当前选中
+            const cardText = getCardPlaceholderText(cardId);
+            const prefix = idx === this.sign ? '>' : idx === this.sign2 ? '*' : '';
+            line += `${prefix}${cardText.padEnd(3)} `;
+          } else {
+            // 未翻开
+            line += '[?] ';
+          }
+        }
+        console.log(line);
+      }
+      
+      console.log('\n图例:');
+      console.log('  [?] = 未翻开  [✓] = 已配对  > = 第一张  * = 第二张');
+      
+      if (this.sign >= 0) {
+        const signCard = getCardPlaceholderText(this.cards1[this.sign]);
+        console.log(`\n当前选中: ${signCard} (需要配对)`);
+      }
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 重新开始按钮
+      actions.push({
+        id: 1,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 单步执行按钮（自动翻一张牌）
+      actions.push({
+        id: 2,
+        label: '单步执行 (►)',
+        method: 'stepFn',
+        args: []
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 3,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
+      return actions;
     },
   },
 };

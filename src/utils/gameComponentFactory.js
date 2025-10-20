@@ -264,9 +264,35 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       // 统一的自动模式方法
       async pass() {
         this.gameManager.isAutoRunning ? this.gameManager.stopAuto() : await this.gameManager.startAuto(async () => {
-          const beforeState = JSON.stringify(this.$data);
+          // 使用replacer处理循环引用和特殊对象
+          let seen = new WeakMap(); // 使用WeakMap记录路径
+          let pathStack = []; // 记录当前路径
+          
+          const replacer = function(key, value) {
+            // 跳过以_开头的属性
+            if (typeof key === 'string' && key.startsWith('_')) {
+              return undefined;
+            }
+            
+            // 处理对象循环引用
+            if (typeof value === 'object' && value !== null) {
+              if (seen.has(value)) {
+                return undefined; // 跳过循环引用
+              }
+              
+              const currentPath = pathStack.join('.') + (key ? '.' + key : '');
+              seen.set(value, currentPath);
+              pathStack.push(key);
+            }
+            
+            return value;
+          };
+          const beforeState = JSON.stringify(this.$data, replacer);
           await this.stepFn();
-          const afterState = JSON.stringify(this.$data);
+          this.renderTextView() 
+          seen = new WeakMap(); // 使用WeakMap记录路径
+          pathStack = []; // 记录当前路径
+          const afterState = JSON.stringify(this.$data, replacer);
           
           // 如果状态没变，说明移动无效
           if (beforeState === afterState) {
@@ -421,9 +447,9 @@ export const GameComponentPresets = {
         this.difficulty = "normal";
         this.setDifficulty = function (level) {
           this.difficulty = level;
-          this.gameManager.setAutoStepDelay(
-            level === "easy" ? 1500 : level === "hard" ? 800 : 1200,
-          );
+          // this.gameManager.setAutoStepDelay(
+          //   level === "easy" ? 1500 : level === "hard" ? 800 : 1200,
+          // );
         };
       },
     }),

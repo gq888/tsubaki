@@ -601,18 +601,6 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
       console.log(`第 ${turnCount} 回合`);
       console.log('='.repeat(60));
       
-      // 检查游戏是否结束
-      if (currentState.gameManager) {
-        const { winflag, loseflag, drawflag } = currentState.gameManager;
-        if (winflag || loseflag || drawflag) {
-          console.log('\n🏁 游戏结束!');
-          if (winflag) console.log('🎉 你赢了！');
-          if (loseflag) console.log('😢 你输了！');
-          if (drawflag) console.log('🤝 平局！');
-          break;
-        }
-      }
-      
       // 调用游戏的 renderTextView 方法显示当前状态
       console.log('\n📊 当前游戏状态:');
       try {
@@ -635,6 +623,18 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
           step: currentState.step || 0,
           title: currentState.title
         });
+      }
+      
+      // 检查游戏是否结束
+      if (currentState.gameManager) {
+        const { winflag, loseflag, drawflag } = currentState.gameManager;
+        if (winflag || loseflag || drawflag) {
+          console.log('\n🏁 游戏结束!');
+          if (winflag) console.log('🎉 你赢了！');
+          if (loseflag) console.log('😢 你输了！');
+          if (drawflag) console.log('🤝 平局！');
+          break;
+        }
       }
       
       // 获取可用操作

@@ -1,6 +1,7 @@
 import { shuffleCards, wait, checkDeadForeach } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 import { createCandidate, isBetterCandidate, gameEvaluationMethods } from "./candidateUtils.js";
+import { getCardPlaceholderText } from "../utils/cardUtils.js";
 
 const Sort = {
   name: "Sort",
@@ -629,6 +630,135 @@ const Sort = {
         4: '困难(花色匹配) - 必须同花色才能连接'
       };
       return descriptions[this.matchMode] || '未知难度';
+    },
+    
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║                排序游戏 (Sort)                ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      console.log(`\n难度: ${this.getMatchModeDescription()}`);
+      console.log(`完成度: ${this.n} / ${(this.number + 1) * 4} 张\n`);
+      
+      // 按列显示卡片
+      const colWidth = this.number + 1;
+      
+      for (let col = 0; col < 4; col++) {
+        console.log(`━━━ 第 ${col + 1} 列 ━━━`);
+        
+        const colCards = [];
+        for (let row = 0; row < colWidth; row++) {
+          const idx = col * colWidth + row;
+          const card = this.cards1[idx];
+          colCards.push({ card, idx, row });
+        }
+        
+        // 显示该列的卡片
+        colCards.forEach(({ card, idx, row }) => {
+          if (card < 0) {
+            // 空位
+            const emptyLabel = ['[-1]', '[-2]', '[-3]', '[-4]'][Math.abs(card) - 1];
+            
+            // 检查前一张卡片
+            const prevCard = idx > 0 ? this.cards1[idx - 1] : -999;
+            let canReceive = '';
+            if (prevCard >= 4) {
+              const candidates = this.findAllCardsByRankOffset(prevCard, -1);
+              if (candidates.length > 0) {
+                const cardTexts = candidates.map(c => getCardPlaceholderText(c.card)).join('/');
+                canReceive = ` <- 可放: ${cardTexts}`;
+              }
+            }
+            
+            console.log(`  [${row}] ${emptyLabel}${canReceive}`);
+          } else {
+            // 有效卡片
+            const cardText = getCardPlaceholderText(card);
+            const canMove = this.canMoveCard(card);
+            const isTarget = this.next && this.next[0] === card;
+            
+            let prefix = '  ';
+            if (isTarget) {
+              prefix = '→ '; // 下一步建议
+            } else if (canMove) {
+              prefix = '* '; // 可移动
+            }
+            
+            console.log(`${prefix}[${row}] ${cardText}`);
+          }
+        });
+        console.log('');
+      }
+      
+      console.log('图例:');
+      console.log('  [-n] = 空位  * = 可移动  → = 推荐移动');
+      
+      // 显示下一步提示
+      if (this.next && this.next[0] >= 0) {
+        const targetCard = getCardPlaceholderText(this.next[0]);
+        const targetSlot = ['[-1]', '[-2]', '[-3]', '[-4]'][Math.abs(this.cards1[this.next[1]]) - 1];
+        console.log(`\n💡 建议移动: ${targetCard} → ${targetSlot}`);
+      }
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 撤销按钮
+      actions.push({
+        id: 1,
+        label: '撤销 (◀︎)',
+        method: 'undo',
+        args: [],
+        disabled: !this.canUndo
+      });
+      
+      // 重新开始按钮
+      actions.push({
+        id: 2,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 单步执行按钮
+      const hasValidMove = this.next && this.next[0] >= 0;
+      actions.push({
+        id: 3,
+        label: '单步执行 (►)',
+        method: 'stepFn',
+        args: [],
+        disabled: !hasValidMove
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 4,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
+      // 切换难度按钮
+      actions.push({
+        id: 5,
+        label: '切换难度 (简单→中等→困难)',
+        method: 'setMatchMode',
+        args: [this.matchMode === 1 ? 2 : this.matchMode === 2 ? 4 : 1]
+      });
+      
+      // 过滤掉禁用的按钮
+      return actions.filter(a => !a.disabled);
     },
   },
 };

@@ -1,5 +1,6 @@
 import { shuffleCards, timeout } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { getCardPlaceholderText } from "../utils/cardUtils.js";
 import { defineAsyncComponent } from "vue";
 
 /**
@@ -82,9 +83,7 @@ const Point24 = {
       }
       shuffleCards(cards, this.number);
       this.arr.push(...cards.splice(0, 4));
-      console.log("初始化后的数组:", this.arr);
       this.autoCalc(); // 恢复autoCalc调用
-      console.log("autoCalc执行后的cards2:", this.cards2);
     },
     calc,
     first,
@@ -122,7 +121,6 @@ const Point24 = {
 
     // 重写clickCard方法，使用GameStateManager记录操作
     clickCard(card, i) {
-      console.log(`clickCard被调用: card=`, card, `i=${i}, sign=${this.sign}`);
       if (i == 0) {
         console.log(`索引为0，直接返回`);
         return;
@@ -159,25 +157,20 @@ const Point24 = {
           return;
         }
         let temp = this.cards2[this.step];
-        console.log(`执行第${this.step}步操作:`, temp);
         this.sign = 0;
         const index1 = this.arr.findIndex((a) => this.first(a) == this.first(temp[0]));
-        console.log(`temp[0]的索引:`, index1);
         this.clickCard(temp[0], index1);
         await timeout(() => {}, this.gameManager.autoStepDelay);
         this.clickSign(temp[1]);
         await timeout(() => {}, this.gameManager.autoStepDelay);
         const index2 = this.arr.findIndex((a) => this.first(a) == this.first(temp[2]));
         this.clickCard(temp[2], index2);
-        console.log(`第${this.step}步操作完成，当前数组:`, this.arr);
       });
     },
     autoCalc() {
-      console.log(`autoCalc被调用，步数: ${this.step}, 数组:`, this.arr);
       if (this.step >= 3) {
         try {
           const result = this.calc(this.arr[0]);
-          console.log(`计算结果: ${result}, 目标: 24`);
           if (result == 24) {
             console.log("游戏胜利！");
             this.gameManager.setWin();
@@ -236,6 +229,78 @@ const Point24 = {
             : temp00,
       );
       console.log(this.cards2);
+    },
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║              24点游戏 (Point24)               ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      console.log(`\n步数: ${this.step}\n`);
+      
+      // 显示4张牌
+      console.log('━━━ 当前牌面 ━━━');
+      const cards = [];
+      for (let i = 0; i < 4; i++) {
+        if (this.arr[i] !== undefined) {
+          const cardText = getCardPlaceholderText(this.first(this.arr[i]));
+          cards.push(`[${i}] ${cardText}`);
+        }
+      }
+      console.log(`  ${cards.join('  ')}\n`);
+      
+      // 显示运算符
+      console.log('━━━ 可用运算符 ━━━');
+      console.log('  [+] 加  [-] 减  [×] 乘  [÷] 除\n');
+      
+      // 显示计算历史
+      if (this.history && this.history.length > 0) {
+        console.log('━━━ 计算历史 ━━━');
+        this.history.forEach((h, idx) => {
+          console.log(`  ${idx + 1}. ${h}`);
+        });
+        console.log('');
+      }
+      
+      // 显示当前结果
+      if (this.result !== undefined && this.result !== null) {
+        console.log(`当前结果: ${this.result}`);
+        if (this.result === 24) {
+          console.log('🎉 恭喜！达到24点！');
+        }
+      }
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 撤销按钮
+      actions.push({
+        id: 1,
+        label: '撤销 (◀︎)',
+        method: 'undo',
+        args: [],
+        disabled: !this.canUndo
+      });
+      
+      // 重新开始按钮
+      actions.push({
+        id: 2,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 过滤掉禁用的按钮
+      return actions.filter(a => !a.disabled);
     },
   },
 };

@@ -1,5 +1,6 @@
 import { shuffleCards } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { getCardPlaceholderText } from "../utils/cardUtils.js";
 
 const Month = {
   name: "Month",
@@ -40,6 +41,82 @@ const Month = {
       this.arr[value].unshift(currentCard);
       this.month = value;
       this.cards2[value]++;
+    },
+    
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║              月份游戏 (Month)                 ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      console.log(`\n步数: ${this.step}\n`);
+      
+      // 显示牌堆
+      console.log('━━━ 牌堆 ━━━');
+      if (this.cards1.length > 0) {
+        const topCard = this.cards1[this.cards1.length - 1];
+        console.log(`  [牌堆] ${getCardPlaceholderText(topCard)} (剩余 ${this.cards1.length} 张)`);
+      } else {
+        console.log('  [牌堆] (空)');
+      }
+      console.log('');
+      
+      // 显示12个月份位置
+      const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+      for (let i = 0; i < 12; i++) {
+        const count = this.cards2[i];
+        console.log(`  [${months[i]}] ${count} 张${count >= 4 ? ' ⚠️ 失败!' : ''}`);
+      }
+      
+      // 显示第13个位置
+      const count13 = this.cards2[12];
+      console.log(`  [第13位] ${count13} 张${count13 >= 4 ? ' ⚠️ 失败!' : ''}`);
+      
+      if (count13 >= 4 || this.cards2.some(c => c >= 4)) {
+        console.log('\n❌ 游戏失败: 某个位置达到4张牌');
+      }
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 重新开始按钮
+      actions.push({
+        id: 1,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 单步执行按钮
+      const hasCards = this.cards1.length > 0;
+      actions.push({
+        id: 2,
+        label: '单步执行 (►) - 翻一张牌',
+        method: 'stepFn',
+        args: [],
+        disabled: !hasCards
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 3,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
+      // 过滤掉禁用的按钮
+      return actions.filter(a => !a.disabled);
     },
   },
 };

@@ -1,5 +1,6 @@
 import { shuffleCards } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { getCardPlaceholderText } from "../utils/cardUtils.js";
 
 const Tortoise = {
   name: "Tortoise",
@@ -190,6 +191,131 @@ const Tortoise = {
       if (m < 0) {
         this.gameManager.setLose();
       }
+    },
+    
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      // getCardPlaceholderText 从 cardUtils 导入
+      
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║              龟兔赛跑 (Tortoise)              ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      console.log(`\n步数: ${this.step} / ${this.number}`);
+      console.log(`已配对: ${this.step} 张 | 剩余: ${this.number - this.step} 张\n`);
+      
+      if (this.sign !== -1) {
+        const signIndex = this.cards1.indexOf(this.sign);
+        const signCard = getCardPlaceholderText(this.sign);
+        console.log(`🎯 当前选中: ${signCard} (位置 ${signIndex})\n`);
+      }
+      
+      // 按 z-index 分层显示
+      const maxZ = Math.max(...this.map.map(m => m["z-index"]));
+      
+      for (let z = 0; z <= maxZ; z++) {
+        console.log(`\n━━━ 第 ${z} 层 (z-index=${z}) ━━━`);
+        
+        const cardsInLayer = [];
+        this.cards1.forEach((cardId, posIdx) => {
+          if (this.map[posIdx]["z-index"] === z && !this.done(cardId)) {
+            cardsInLayer.push({ cardId, posIdx });
+          }
+        });
+        
+        if (cardsInLayer.length === 0) {
+          console.log('  (本层无剩余卡片)');
+          continue;
+        }
+        
+        // 按卡片ID分组显示
+        const groups = {};
+        cardsInLayer.forEach(({ cardId, posIdx }) => {
+          const rank = cardId >> 2;
+          if (!groups[rank]) {
+            groups[rank] = [];
+          }
+          groups[rank].push({ cardId, posIdx });
+        });
+        
+        Object.keys(groups).sort((a, b) => a - b).forEach(rank => {
+          const cards = groups[rank];
+          const cardTexts = cards.map(({ cardId, posIdx }) => {
+            const cardText = getCardPlaceholderText(cardId);
+            const canClick = this.check(posIdx);
+            const isSelected = cardId === this.sign;
+            
+            if (isSelected) {
+              return `[${cardText}✓]`;
+            } else if (canClick) {
+              return `<${cardText}>`;
+            } else {
+              return `(${cardText})`;
+            }
+          }).join(' ');
+          
+          console.log(`  点数${rank}: ${cardTexts}`);
+        });
+      }
+      
+      console.log('\n图例:');
+      console.log('  <卡片> = 可点击  (卡片) = 被覆盖  [卡片✓] = 已选中');
+      
+      // 显示下一步提示
+      if (this.next && this.next.length > 0) {
+        const nextCards = this.next.map(c => getCardPlaceholderText(c)).join(', ');
+        console.log(`\n💡 提示: 可配对的卡片点数 ${this.next[0] >> 2}: ${nextCards}`);
+      }
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 撤销按钮
+      actions.push({
+        id: 1,
+        label: '撤销 (◀︎)',
+        method: 'undo',
+        args: [],
+        disabled: !this.canUndo
+      });
+      
+      // 重新开始按钮
+      actions.push({
+        id: 2,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 单步执行按钮
+      actions.push({
+        id: 3,
+        label: '单步执行 (►)',
+        method: 'stepFn',
+        args: [],
+        disabled: this.step >= this.number
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 4,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
+      // 过滤掉禁用的按钮
+      return actions.filter(a => !a.disabled);
     },
   },
 };

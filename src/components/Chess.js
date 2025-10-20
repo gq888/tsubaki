@@ -356,11 +356,122 @@ const GridBattle = {
       if (suicide) {
         return await moveFn(suicide[0], suicide[1]);
       } else {
-        console.log("unkown error");
+        throw new Error("unkown error");
       }
+    },
+    
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║           国际象棋 (GridBattle)               ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      console.log(`\n步数: ${this.step}`);
+      console.log(`高子: ${this.highCount} | 低子: ${this.lowCount}\n`);
+      
+      // 显示6x6棋盘
+      console.log('    0   1   2   3   4   5');
+      console.log('  ┌───┬───┬───┬───┬───┬───┐');
+      
+      for (let row = 0; row < 6; row++) {
+        let line = `${row} │`;
+        for (let col = 0; col < 6; col++) {
+          const idx = row * 6 + col;
+          const card = this.cards1[idx];
+          
+          if (this.cards2[card]) {
+            // 已翻开
+            const grade = this.grades[card];
+            const symbol = grade === 1 ? ' H ' : ' L '; // H=高子，L=低子
+            const isSelected = idx === this.sign;
+            line += isSelected ? `[${symbol.trim()}]` : symbol;
+          } else if (this.cards1[idx] >= 0) {
+            // 未翻开
+            line += ' ? ';
+          } else {
+            // 空位置
+            line += ' - ';
+          }
+          line += '│';
+        }
+        console.log(line);
+        
+        if (row < 5) {
+          console.log('  ├───┼───┼───┼───┼───┼───┤');
+        }
+      }
+      console.log('  └───┴───┴───┴───┴───┴───┘');
+      
+      console.log('\n图例:');
+      console.log('  ? = 未翻开  - = 空位置  H = 高子  L = 低子  [H/L] = 已选中');
+      
+      if (this.sign >= 0) {
+        const row = Math.floor(this.sign / 6);
+        const col = this.sign % 6;
+        console.log(`\n当前选中: (${row},${col})`);
+        
+        const validMoves = this.validBoxes;
+        if (validMoves && validMoves.length > 0) {
+          const moves = validMoves.map(idx => {
+            const r = Math.floor(idx / 6);
+            const c = idx % 6;
+            return `(${r},${c})`;
+          }).join(', ');
+          console.log(`可移动到: ${moves}`);
+        }
+      }
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 撤销按钮
+      actions.push({
+        id: 1,
+        label: '撤销 (◀︎)',
+        method: 'undo',
+        args: [],
+        disabled: !this.canUndo
+      });
+      
+      // 重新开始按钮
+      actions.push({
+        id: 2,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 单步执行按钮
+      actions.push({
+        id: 3,
+        label: '单步执行 (►)',
+        method: 'stepFn',
+        args: []
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 4,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
+      // 过滤掉禁用的按钮
+      return actions.filter(a => !a.disabled);
     },
   },
 };
 
 // 使用工厂函数创建增强的GridBattle组件并导出
-export default GameComponentPresets.cardGame(GridBattle, 500);
+export default GameComponentPresets.strategyGame(GridBattle, 1200);

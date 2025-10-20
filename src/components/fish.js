@@ -1,6 +1,7 @@
-import { GameComponentPresets } from "../utils/gameComponentFactory.js";
-import { defineAsyncComponent } from "vue";
 import { shuffleCards } from "../utils/help.js";
+import { GameComponentPresets } from "../utils/gameComponentFactory.js";
+import { getCardPlaceholderText } from "../utils/cardUtils.js";
+import { defineAsyncComponent } from "vue";
 
 /**
  * message 组件 - 根据环境选择
@@ -94,6 +95,74 @@ const Fish = {
         this.ssArr.splice(0);
         cards.push(...arr.splice(index));
       }, this.gameManager.autoStepDelay);
+    },
+    /**
+     * 渲染文本视图 - 显示当前游戏状态
+     * 用于终端交互式游戏
+     */
+    renderTextView() {
+      console.log('\n╔════════════════════════════════════════════════╗');
+      console.log('║              钓鱼游戏 (Fish)                  ║');
+      console.log('╚════════════════════════════════════════════════╝');
+      console.log(`\n步数: ${this.step}\n`);
+      
+      // 显示4个玩家的牌
+      for (let i = 1; i <= 4; i++) {
+        const cards = this[`cards${i}`];
+        const playerName = i === 1 ? '玩家1 (你)' : `玩家${i}`;
+        console.log(`━━━ ${playerName} ━━━`);
+        if (cards.length > 0) {
+          console.log(`  ${cards.length}张`);
+        } else {
+          console.log('  (已出完)');
+        }
+      }
+      
+      // 显示中央区域
+      console.log('\n━━━ 中央区域 ━━━');
+      if (this.arr.length > 0) {
+        const cardTexts = this.arr.map(c => getCardPlaceholderText(c)).join(' ');
+        console.log(`  ${cardTexts}`);
+      } else {
+        console.log('  (空)');
+      }
+      
+      return '渲染完成';
+    },
+    
+    /**
+     * 获取当前可用的操作列表
+     * 用于终端交互式游戏
+     */
+    getAvailableActions() {
+      const actions = [];
+      
+      // 重新开始按钮
+      actions.push({
+        id: 1,
+        label: '重新开始 (RESTART)',
+        method: 'goon',
+        args: []
+      });
+      
+      // 单步执行按钮
+      actions.push({
+        id: 2,
+        label: '单步执行 (►)',
+        method: 'stepFn',
+        args: []
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 3,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
+      return actions;
     },
   },
   computed: {
