@@ -10,10 +10,27 @@ import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
+import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// 检测命令行参数中是否包含--interactive
+const isInteractiveMode = process.argv.includes('--interactive');
+
+// 规范化组件路径 - 全局函数，供所有地方使用
+function getAbsoluteComponentPath(relativePath) {
+  // 动态导入组件
+  let absolutePath;
+  if (path.isAbsolute(relativePath)) {
+    absolutePath = relativePath;
+  } else {
+    absolutePath = path.resolve(__dirname, '..', "src/components/" + relativePath);
+  }
+  
+  return absolutePath;
+}
 
 // 默认状态文件路径
 const DEFAULT_STATE_FILE = path.join(__dirname, '..', '.last-test-state.json');
@@ -131,8 +148,6 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
   
   // 处理数组
   if (Array.isArray(source) && Array.isArray(target)) {
-    console.log(`  深度覆盖数组: ${path}, source长度=${source.length}, target长度=${target.length}`);
-    
     // 处理source范围内的元素（递归更新）
     const minLength = Math.min(source.length, target.length);
     for (let i = 0; i < minLength; i++) {
@@ -145,7 +160,6 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
           deepOverwrite(targetItem, sourceItem, `${path}[${i}]`, visited);
         } else {
           // target不是对象，直接赋值（会丢失自定义类，但无法避免）
-          console.log(`  ${path}[${i}] target不是对象，直接赋值`);
           target[i] = sourceItem;
         }
       } else {
@@ -157,11 +171,9 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
     const diff = source.length - target.length;
     if (diff > 0) {
       // source更长：添加元素
-      console.log(`  ${path} source更长，直接添加多余的${diff}个元素`);
       target.splice(target.length, 0, ...source.slice(target.length));
     } else if (diff < 0) {
       // target更长：删除元素  
-      console.log(`  ${path} target更长，直接删除多余的${-diff}个元素`);
       target.splice(source.length, -diff);
     }
     
@@ -170,8 +182,6 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
   
   // 处理普通对象
   if (typeof source === 'object' && typeof target === 'object' && !Array.isArray(source) && !Array.isArray(target)) {
-    console.log(`  深度覆盖对象: ${path}`);
-    
     for (const key in source) {
       // 跳过原型链上的属性
       if (!source.hasOwnProperty(key)) {
@@ -189,7 +199,6 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
       
       // 如果target没有这个属性，直接赋值
       if (!(key in target)) {
-        console.log(`  添加新属性: ${currentPath}`);
         target[key] = sourceValue;
         continue;
       }
@@ -197,7 +206,6 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
       // 基本类型、null、undefined 直接赋值
       if (sourceValue === null || sourceValue === undefined || typeof sourceValue !== 'object') {
         if (target[key] !== sourceValue) {
-          console.log(`  覆盖基本类型: ${currentPath} = ${sourceValue}`);
           target[key] = sourceValue;
         }
         continue;
@@ -210,7 +218,6 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
           deepOverwrite(targetValue, sourceValue, currentPath, visited);
         } else {
           // 目标不是数组，直接替换
-          console.log(`  替换为数组: ${currentPath}`);
           target[key] = sourceValue;
         }
         continue;
@@ -223,7 +230,6 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
           deepOverwrite(targetValue, sourceValue, currentPath, visited);
         } else {
           // 目标不是对象，直接替换
-          console.log(`  替换为对象: ${currentPath}`);
           target[key] = sourceValue;
         }
         continue;
@@ -244,15 +250,8 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
     console.log(`组件路径: ${componentPath}`);
     console.log(`超时设置: ${timeout}ms`);
     
-    // 根据路径动态导入组件
-    // 如果是相对路径，转换为绝对路径
-    let absolutePath;
-    if (path.isAbsolute(componentPath)) {
-      absolutePath = componentPath;
-    } else {
-      // 相对于当前脚本目录的路径
-      absolutePath = path.resolve(__dirname, '..', "src/components/" + componentPath);
-    }
+  // 根据路径动态导入组件
+  let absolutePath = getAbsoluteComponentPath(componentPath);
     
     console.log(`绝对路径: ${absolutePath}`);
     
@@ -290,12 +289,11 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         
         return {
           ...initialData,
-          _testCapture: capturedState // 添加状态捕获对象
+          _testCapture: capturedState, // 添加状态捕获对象
+          jsonResult: "" // 添加jsonResult属性用于存储序列化结果
         };
       },
       async created() {
-        console.log('=== 修改后的created生命周期执行 ===');
-        
         // 执行原始的created函数（初始化所有对象）
         if (originalCreated) {
           if (originalCreated.constructor.name === 'AsyncFunction') {
@@ -304,30 +302,14 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
             originalCreated.call(this);
           }
         }
-        
-        console.log('原始created执行完成，开始状态恢复...');
-        
         // 如果有保存的状态，使用深度覆盖恢复所有数据
         if (currentData && Object.keys(currentData).length > 0) {
-          console.log('检测到保存的状态，开始深度恢复...');
-          console.log('保存状态的键:', Object.keys(currentData));
           
           // 使用深度覆盖函数恢复状态
           deepOverwrite(this, currentData, 'this');
           
-          // 打印恢复后的关键状态
-          console.log('✓ 状态恢复完成');
           if (this.gameManager) {
             console.log('  gameManager步数:', this.gameManager.getStepCount ? this.gameManager.getStepCount() : 'N/A');
-            console.log('  gameManager状态:', {
-              winflag: this.gameManager.winflag,
-              loseflag: this.gameManager.loseflag,
-              drawflag: this.gameManager.drawflag
-            });
-          }
-          if (this.arr) {
-            console.log('  arr数组长度:', this.arr.length);
-            console.log('  arr内容:', this.arr);
           }
         }
         
@@ -343,17 +325,10 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         // 执行目标方法
         try {
           if (this[methodName] && typeof this[methodName] === 'function') {
-            console.log(`开始执行${methodName}方法，当前游戏状态: win=${this.gameManager?.winflag}, lose=${this.gameManager?.loseflag}, draw=${this.gameManager?.drawflag}`);
-            console.log(`游戏步数: ${this.gameManager?.getStepCount()}, 自动运行状态: ${this.gameManager?.isAutoRunning}`);
-            
-            console.log('准备调用方法...');
             const methodPromise = this[methodName].apply(this, args);
-            console.log(`方法返回类型: ${typeof methodPromise}, 是否是Promise: ${methodPromise && typeof methodPromise.then === 'function'}`);
             
             // 检查返回值是否是 Promise
             if (methodPromise && typeof methodPromise.then === 'function') {
-              console.log('等待 Promise resolve...');
-              
               // 创建超时Promise
               const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => {
@@ -366,15 +341,13 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
                 methodPromise,
                 timeoutPromise
               ]);
-              
-              console.log('Promise 已 resolve');
+              // 标记为异步方法
+              this._testCapture.isAsync = true;
             } else {
               this._testCapture.result = methodPromise;
+              this._testCapture.isAsync = false;
               console.log('同步方法执行完成');
             }
-            
-            console.log(`${methodName}方法执行完成，最终游戏状态: win=${this.gameManager?.winflag}, lose=${this.gameManager?.loseflag}, draw=${this.gameManager?.drawflag}`);
-            console.log(`最终游戏步数: ${this.gameManager?.getStepCount()}, 自动运行状态: ${this.gameManager?.isAutoRunning}`);
           } else {
             throw new Error(`方法 ${methodName} 不存在`);
           }
@@ -393,7 +366,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           
           this._testCapture.error = error.message;
           this._testCapture.errorStack = error.stack;
-          console.error('错误堆栈:', error.stack);
         }
         
         // 捕获执行后状态 - 使用JSON深拷贝避免循环引用
@@ -403,11 +375,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         }));
         this._testCapture.after = afterState;
         
-        console.log('=== 状态捕获完成 ===');
         const gameManager = afterState.gameManager;
-        if (gameManager) {
-          console.log(`After状态: win=${gameManager.winflag}, lose=${gameManager.loseflag}, draw=${gameManager.drawflag}`);
-        }
         
         console.log('=== 方法执行完成 ===');
         
@@ -428,8 +396,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           testSuccess: (this._testCapture.after && (this._testCapture.after.winflag || this._testCapture.after.loseflag || this._testCapture.after.drawflag))
         };
         
-        console.log('\n=== 测试结果 ===');
-        
         // 使用自定义replacer处理循环引用和特殊对象
         const seen = new WeakMap();
         const pathStack = [];
@@ -447,7 +413,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
               const circularPath = seen.get(value);
               const currentPath = pathStack.join('.') + (key ? '.' + key : '');
               if (!hasCircular) {
-                console.warn(`\n⚠️  检测到循环引用:`);
                 hasCircular = true;
               }
               console.warn(`   字段: ${currentPath} -> 引用回: ${circularPath}`);
@@ -462,26 +427,64 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           return value;
         };
         
-        console.log(JSON.stringify(testResult, replacer, 2));
-        
         // 保存执行后的状态到文件
         if (this._testCapture.after) {
           saveStateToFile(this._testCapture.after, outputFile);
         }
         
-        process.exit(0);
+        // 只有在非交互式模式下才退出进程
+        // 在交互式模式下，需要让进程继续运行，以便后续操作
+        if (!isInteractiveMode) {
+          console.log(JSON.stringify(testResult, replacer, 2));
+          process.exit(0);
+        }
+        // 对于同步方法，返回过滤了循环引用的JSON序列化结果
+        if (!this._testCapture.isAsync && this._testCapture.result !== undefined) {
+          try {
+            // 使用与之前相同的replacer处理循环引用
+            const seen = new WeakMap();
+            const pathStack = [];
+            
+            const replacer = function(key, value) {
+              // 跳过以_开头的属性
+              if (typeof key === 'string' && key.startsWith('_')) {
+                return undefined;
+              }
+              
+              // 处理对象循环引用
+              if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) {
+                  return '[Circular]';
+                }
+                
+                const currentPath = pathStack.join('.') + (key ? '.' + key : '');
+                seen.set(value, currentPath);
+                pathStack.push(key);
+              }
+              
+              return value;
+            };
+            
+            // 将JSON编码为base64 ASCII格式，避免被渲染函数二次处理
+            const jsonStr = JSON.stringify(this._testCapture.result, replacer);
+            this.jsonResult = Buffer.from(jsonStr).toString('base64');
+          } catch (e) {
+            // 如果序列化失败，返回错误信息
+            this.jsonResult = e.message;
+          }
+        }
+        else this.jsonResult = "";
       },
-      // 简单的模板，不输出任何内容
-      template: '<div>Test completed</div>'
+      template: "<div>{{jsonResult}}</div>"
     };
     
     // 创建SSR应用并渲染
     const app = createSSRApp(modifiedComponent);
     const html = await renderToString(app);
-    
-    // 不需要返回详细信息，因为结果已经在created生命周期中打印了
+    // 返回详细信息，包括测试结果
     return {
       success: true,
+      html,
       note: "测试结果已通过console.log输出"
     };
     
@@ -495,13 +498,188 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
 }
 
 /**
+ * 交互式游戏循环
+ */
+async function interactiveGameLoop(componentPath, seed = null, outputFile = DEFAULT_STATE_FILE) {
+  try {
+    // 使用统一的路径规范化函数
+    const absolutePath = getAbsoluteComponentPath(componentPath);
+    
+    const componentModule = await import(`file://${absolutePath}`);
+    const gameComponent = componentModule.default || componentModule;
+    
+    // 初始化游戏状态
+    let currentState = {};
+    
+    // 先执行 init 方法初始化游戏
+    console.log('\n🎮 初始化游戏...');
+    await executeMethodWithRenderToString(componentPath, 'init', currentState, [], 30000, seed, outputFile);
+    
+    // 读取初始化后的状态
+    const stateContent = readFileSync(outputFile, 'utf-8');
+    currentState = JSON.parse(stateContent);
+    
+    // 创建 readline 接口
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    const question = (prompt) => new Promise((resolve) => rl.question(prompt, resolve));
+    
+    let gameRunning = true;
+    let turnCount = 0;
+    
+    while (gameRunning) {
+      turnCount++;
+      console.log('\n' + '='.repeat(60));
+      console.log(`第 ${turnCount} 回合`);
+      console.log('='.repeat(60));
+      
+      // 检查游戏是否结束
+      if (currentState.gameManager) {
+        const { winflag, loseflag, drawflag } = currentState.gameManager;
+        if (winflag || loseflag || drawflag) {
+          console.log('\n🏁 游戏结束!');
+          if (winflag) console.log('🎉 你赢了！');
+          if (loseflag) console.log('😢 你输了！');
+          if (drawflag) console.log('🤝 平局！');
+          break;
+        }
+      }
+      
+      // 调用游戏的 renderTextView 方法显示当前状态
+      console.log('\n📊 当前游戏状态:');
+      try {
+        const result = await executeMethodWithRenderToString(
+          componentPath, 
+          'renderTextView', 
+          currentState, 
+          [], 
+          5000, 
+          null, 
+          outputFile
+        );
+        
+        // 重新读取状态（renderTextView 可能会更新状态）
+        const newStateContent = readFileSync(outputFile, 'utf-8');
+        currentState = JSON.parse(newStateContent);
+      } catch (error) {
+        console.log('\n⚠️  renderTextView 方法未实现或执行出错');
+        console.log('当前状态摘要:', {
+          step: currentState.step || 0,
+          title: currentState.title
+        });
+      }
+      
+      // 获取可用操作
+      console.log('\n🎯 可用操作:');
+      let actions = [];
+      
+      try {
+        // 直接从executeMethodWithRenderToString的返回值中获取actions，而不是从文件读取
+        // 我们需要修改executeMethodWithRenderToString方法以返回测试结果
+        const actionsResult = await executeMethodWithRenderToString(
+          componentPath,
+          'getAvailableActions',
+          currentState,
+          [],
+          5000,
+          null,
+          outputFile
+        );
+        
+        // 直接使用html中的JSON数据作为actions
+        // html格式为<div>base64编码的JSON字符串</div>，需要解码后使用
+        if (actionsResult.html) {
+          try {
+            // 提取div标签中的内容
+            const jsonMatch = actionsResult.html.match(/<div>(.*?)<\/div>/);
+            if (jsonMatch && jsonMatch[1]) {
+              // 解码base64字符串为原始JSON
+              const decodedStr = Buffer.from(jsonMatch[1], 'base64').toString('utf-8');
+              const resultObj = JSON.parse(decodedStr);
+              if (Array.isArray(resultObj)) {
+                actions = resultObj;
+              } else if (resultObj && Array.isArray(resultObj.result)) {
+                actions = resultObj.result;
+              }
+            }
+          } catch (parseError) {
+            console.error('无法获取actions:', parseError.message);
+            console.error('错误详情:', parseError.stack);
+          }
+        }
+      } catch (error) {
+        // 如果没有实现 getAvailableActions，使用默认按钮
+        console.log('提示: 该游戏未实现 getAvailableActions 方法，使用默认操作');
+      }
+      
+      // 显示操作选项
+      actions.forEach(action => {
+        console.log(`  [${action.id}] ${action.label}`);
+      });
+      console.log('  [0] 退出游戏');
+      
+      // 获取用户输入
+      const input = await question('\n请选择操作 (输入数字): ');
+      const choice = parseInt(input);
+      
+      if (choice === 0) {
+        console.log('\n👋 退出游戏');
+        gameRunning = false;
+        break;
+      }
+      
+      const selectedAction = actions.find(a => a.id === choice);
+      if (!selectedAction) {
+        console.log('\n❌ 无效的选择，请重试');
+        continue;
+      }
+      
+      // 执行选择的操作
+      console.log(`\n⚙️  执行: ${selectedAction.label}`);
+      try {
+        await executeMethodWithRenderToString(
+          componentPath,
+          selectedAction.method,
+          currentState,
+          selectedAction.args || [],
+          30000,
+          null,
+          outputFile
+        );
+        
+        // 重新读取更新后的状态
+        const updatedStateContent = readFileSync(outputFile, 'utf-8');
+        currentState = JSON.parse(updatedStateContent);
+      } catch (error) {
+        console.log(`\n❌ 执行失败: ${error.message}`);
+      }
+    }
+    
+    rl.close();
+    console.log('\n✅ 交互式游戏结束');
+    process.exit(0);
+    
+  } catch (error) {
+    console.error('\n❌ 交互式游戏出错:', error.message);
+    console.error(error.stack);
+    process.exit(1);
+  }
+}
+
+/**
  * 主函数
  */
 async function main() {
   const args = process.argv.slice(2);
   
-  if (args.length < 2) {
-    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>] [--continue] [--output=<path>]');
+  if (args.length < 1) {
+    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>] [--continue] [--output=<path>] [--interactive]');
+    console.log('\n交互模式:');
+    console.log('  node renderToString-method-tester.js Tortoise.js --interactive');
+    console.log('  node renderToString-method-tester.js Sort.js --interactive --seed=12345');
     console.log('\n基础示例:');
     console.log('  node renderToString-method-tester.js src/components/Chess.js init 0'); // 注意：文件名为Chess.js但内部组件已重命名为GridBattle
     console.log('  node renderToString-method-tester.js Spider.js clickCard 0');
@@ -526,6 +704,42 @@ async function main() {
   }
   
   const componentPath = args[0];
+  
+  // 检查是否是交互模式
+  const isInteractive = args.includes('--interactive');
+  
+  if (isInteractive) {
+    // 交互模式
+    let seed = null;
+    let outputFile = DEFAULT_STATE_FILE;
+    
+    for (let i = 1; i < args.length; i++) {
+      const arg = args[i];
+      if (arg.startsWith('--seed=')) {
+        seed = parseInt(arg.split('=')[1], 10);
+        if (isNaN(seed)) {
+          console.error('错误: seed必须是整数');
+          process.exit(1);
+        }
+      } else if (arg.startsWith('--output=')) {
+        outputFile = arg.substring('--output='.length);
+        if (!path.isAbsolute(outputFile)) {
+          outputFile = path.join(__dirname, '..', outputFile);
+        }
+      }
+    }
+    
+    await interactiveGameLoop(componentPath, seed, outputFile);
+    return;
+  }
+  
+  // 非交互模式，需要至少2个参数
+  if (args.length < 2) {
+    console.log('错误: 非交互模式需要指定方法名');
+    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...]');
+    process.exit(1);
+  }
+  
   const methodName = args[1];
   
   // 提取timeout、state、state-file、seed、continue和output参数
