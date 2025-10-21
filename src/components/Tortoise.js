@@ -214,7 +214,7 @@ const Tortoise = {
       // 创建字符画布：20行 × 20列
       const CANVAS_ROWS = 20;
       const CANVAS_COLS = 20;
-      const canvas = Array(CANVAS_ROWS).fill(null).map(() => Array(CANVAS_COLS).fill(' '));
+      const canvas = Array(CANVAS_ROWS).fill(null).map(() => Array(CANVAS_COLS).fill('·'));
       
       // 卡牌尺寸（字符单位）
       const CARD_ROWS = 4;  // 4行
@@ -269,7 +269,9 @@ const Tortoise = {
               
               if (row === 0) {
                 // 第一行：上边框
-                if (col === 0) {
+                if (this.sign == card.cardId) {
+                  char = "▄";
+                } else if (col === 0) {
                   char = '┌'; // 左上角
                 } else if (col === CARD_COLS - 1) {
                   char = '┐'; // 右上角
@@ -278,7 +280,9 @@ const Tortoise = {
                 }
               } else if (row === CARD_ROWS - 1) {
                 // 最后一行：下边框
-                if (col === 0) {
+                if (this.sign == card.cardId) {
+                  char = "▀";
+                } else if (col === 0) {
                   char = '└'; // 左下角
                 } else if (col === CARD_COLS - 1) {
                   char = '┘'; // 右下角
@@ -287,7 +291,7 @@ const Tortoise = {
                 }
               } else if (col === 0 || col === CARD_COLS - 1) {
                 // 左右边框
-                char = '│';
+                char = this.sign == card.cardId? "█" : '│';
               } else if (card.canClick) {
                 // 可点击卡牌的内部内容
                 if (row === 1 && col === 1) {
@@ -340,12 +344,12 @@ const Tortoise = {
       
       // 图例
       console.log('\n图例:');
-      console.log('  ┌──┐ = 卡牌边框  ♥5 = 可点击卡牌内容  ·· = 不可点击卡牌');
+      console.log('  ┌──┐ = 卡牌边框  ▄ = 选中卡牌边框 ♥5 = 可点击卡牌内容  ·· = 不可点击卡牌');
       
       // 显示下一步提示
       if (this.next && this.next.length > 0) {
         const nextCards = this.next.map(c => getCardPlaceholderText(c)).join(', ');
-        console.log(`\n💡 提示: 可配对的卡片点数 ${this.next[0] >> 2}: ${nextCards}`);
+        console.log(`\n💡 提示: 可配对的卡片: ${nextCards}`);
       }
       
       return '字符画渲染完成';

@@ -118,7 +118,7 @@ const Pairs = {
       
       // 统计信息
       const matched = this.cards2.filter(m => m).length;
-      console.log(`\n时间: ${this.time}秒 | 已配对: ${matched}/48 张\n`);
+      console.log(`\n时间: ${this.time}秒 | 已配对: ${matched}/${this.number} 张\n`);
       
       // 按6x8网格显示
       const cols = 8;
@@ -130,14 +130,13 @@ const Pairs = {
           const idx = row * cols + col;
           const cardId = this.cards1[idx];
           
-          if (this.cards2[idx]) {
-            // 已配对
+          if (this.arr[idx]) {
             line += '[✓] ';
-          } else if (this.arr[idx] || idx === this.sign || idx === this.sign2) {
+          } else if (this.cards2[idx] || idx === this.sign || idx === this.sign2) {
             // 已翻开或当前选中
             const cardText = getCardPlaceholderText(cardId);
             const prefix = idx === this.sign ? '>' : idx === this.sign2 ? '*' : '';
-            line += `${prefix}${cardText.padEnd(3)} `;
+            line += `${(prefix + cardText).padEnd(3)} `;
           } else {
             // 未翻开
             line += '[?] ';
@@ -147,7 +146,7 @@ const Pairs = {
       }
       
       console.log('\n图例:');
-      console.log('  [?] = 未翻开  [✓] = 已配对  > = 第一张  * = 第二张');
+      console.log('  [?] = 未翻开  [✓] = 已看过  > = 第一张  * = 第二张');
       
       if (this.sign >= 0) {
         const signCard = getCardPlaceholderText(this.cards1[this.sign]);

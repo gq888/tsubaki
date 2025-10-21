@@ -106,17 +106,20 @@ const Fish = {
       console.log('╚════════════════════════════════════════════════╝');
       console.log(`\n步数: ${this.step}\n`);
       
-      // 显示4个玩家的牌
+      // 显示4个玩家的牌 - 两行表格格式
+      // console.log('┌─────────┬─────────┬─────────┬─────────┐');
+      console.log('│ 玩家1(你) │  玩家2  │  玩家3  │  玩家4  │');
+      // console.log('├─────────┼─────────┼─────────┼─────────┤');
+      
+      // 获取每个玩家的牌数
+      const cardCounts = [];
       for (let i = 1; i <= 4; i++) {
         const cards = this[`cards${i}`];
-        const playerName = i === 1 ? '玩家1 (你)' : `玩家${i}`;
-        console.log(`━━━ ${playerName} ━━━`);
-        if (cards.length > 0) {
-          console.log(`  ${cards.length}张`);
-        } else {
-          console.log('  (已出完)');
-        }
+        cardCounts.push(cards.length > 0 ? `${cards.length}张` : '已出完');
       }
+      
+      console.log(`│${cardCounts[0].padStart(9, ' ')}│${cardCounts[1].padStart(9, ' ')}│${cardCounts[2].padStart(9, ' ')}│${cardCounts[3].padStart(9, ' ')}│`);
+      // console.log('└─────────┴─────────┴─────────┴─────────┘');
       
       // 显示中央区域
       console.log('\n━━━ 中央区域 ━━━');

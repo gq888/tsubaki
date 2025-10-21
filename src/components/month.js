@@ -67,16 +67,12 @@ const Month = {
       const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
       for (let i = 0; i < 12; i++) {
         const count = this.cards2[i];
-        console.log(`  [${months[i]}] ${count} 张${count >= 4 ? ' ⚠️ 失败!' : ''}`);
+        console.log(`  [${months[i]}] ` + this.arr[i].map((c, i) => `${i < count || i >= 4 ? getCardPlaceholderText(c) : "[?]"}`).join(' ') + (count >= 4 ? ' [✓] 已完成' : ''));
       }
       
       // 显示第13个位置
       const count13 = this.cards2[12];
-      console.log(`  [第13位] ${count13} 张${count13 >= 4 ? ' ⚠️ 失败!' : ''}`);
-      
-      if (count13 >= 4 || this.cards2.some(c => c >= 4)) {
-        console.log('\n❌ 游戏失败: 某个位置达到4张牌');
-      }
+      console.log(`  [牌堆] ` + this.arr[12].map((c, i) => `${i < count13 || i >= 3 ? getCardPlaceholderText(c) : "[?]"}`).join(' ') + (count13 >= 4 ? ' [✓] 已完成' : `剩余 ${4 - count13} 次机会`));
       
       return '渲染完成';
     },
