@@ -213,7 +213,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     computed: {
       // 使用GameStateManager的默认计算属性
       ...GameStateManager.getDefaultComputedProperties(),
-      getCardPlaceholderText,
 
       // 游戏控制配置
       gameControlsConfig() {
@@ -250,6 +249,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
 
     // 扩展methods
     methods: {
+      getCardPlaceholderText,
       // 设置随机数种子
       setSeed(seed) {
         this.seed = seed;

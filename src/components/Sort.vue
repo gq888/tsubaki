@@ -43,9 +43,7 @@
               @click="canOperate && (item >= 0 ? clickCard(item) : cards1[i - 1] >= 4 && clickSign(i))"
               :class="{ shanshuo: item >= 0 && canMoveCard(item) }"
             >
-              <span v-if="cards1[i - 1] >= 4" class="m-0">{{
-                types[cards1[i - 1] % 4] + point[(cards1[i - 1] >> 2) - 1]
-              }}</span>
+              <span v-if="cards1[i - 1] >= 4" class="m-0">{{ getCurrentCandidateCard(i) }}</span>
             </CardImage>
           </ul>
         </div>

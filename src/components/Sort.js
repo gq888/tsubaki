@@ -13,6 +13,8 @@ const Sort = {
       n: 0,
       sign_index: -1,
       matchMode: 1,  // 1=简单(数值), 2=中等(颜色), 4=困难(花色)
+      candidateIntervals: {}, // 存储每个空位的候选卡牌循环定时器
+      currentCandidates: {}, // 存储每个空位当前显示的候选卡牌索引
     };
   },
   methods: {
@@ -31,6 +33,77 @@ const Sort = {
         cards.splice(i * (this.number + 1), 0, this.number * 4 - 4 + i);
       }
       this.autoCalc();
+      
+      // 初始化候选卡牌循环
+      this.$nextTick(() => {
+        this.updateAllCandidateCycling();
+      });
+    },
+
+    // 组件销毁时清理定时器
+    beforeDestroy() {
+      Object.keys(this.candidateIntervals).forEach(slotIndex => {
+        this.stopCandidateCycling(parseInt(slotIndex));
+      });
+    },
+
+    // 更新所有空位的候选卡牌循环
+    updateAllCandidateCycling() {
+      // 停止所有现有的循环
+      Object.keys(this.candidateIntervals).forEach(slotIndex => {
+        this.stopCandidateCycling(parseInt(slotIndex));
+      });
+      
+      // 为所有有空位的位置启动新的循环
+      for (let i = 0; i < this.cards1.length; i++) {
+        if (this.cards1[i] < 0 && i > 0 && this.cards1[i - 1] >= 4) {
+          this.startCandidateCycling(i);
+        }
+      }
+    },
+
+    // 获取指定空位的候选卡牌数组
+    getCandidateCardsForSlot(slotIndex) {
+      const prevCard = this.cards1[slotIndex - 1];
+      if (prevCard < 4) return []; // 如果前一个卡片不是有效卡片，返回空数组
+      
+      const candidates = this.findAllCardsByRankOffset(prevCard, -1);
+      return candidates.map(c => c.card);
+    },
+
+    // 开始候选卡牌循环显示
+    startCandidateCycling(slotIndex) {
+      this.stopCandidateCycling(slotIndex); // 先停止现有的循环
+      
+      const candidates = this.getCandidateCardsForSlot(slotIndex);
+      if (candidates.length === 0) return;
+      
+      this.currentCandidates[slotIndex] = 0; // 从第一个候选开始
+      
+      // 设置定时器循环显示候选卡牌
+      this.candidateIntervals[slotIndex] = setInterval(() => {
+        if (candidates.length > 0) {
+          this.currentCandidates[slotIndex] = (this.currentCandidates[slotIndex] + 1) % candidates.length;
+        }
+      }, this.gameManager.autoStepDelay);
+    },
+
+    // 停止候选卡牌循环显示
+    stopCandidateCycling(slotIndex) {
+      if (this.candidateIntervals[slotIndex]) {
+        clearInterval(this.candidateIntervals[slotIndex]);
+        delete this.candidateIntervals[slotIndex];
+        delete this.currentCandidates[slotIndex];
+      }
+    },
+
+    // 获取当前显示的候选卡牌
+    getCurrentCandidateCard(slotIndex) {
+      const candidates = this.getCandidateCardsForSlot(slotIndex);
+      if (candidates.length === 0) return '';
+      
+      const currentIndex = this.currentCandidates[slotIndex] || 0;
+      return this.getCardPlaceholderText(candidates[currentIndex]);
     },
     
     // 计算 cards1 的哈希值
@@ -643,63 +716,96 @@ const Sort = {
       console.log(`\n难度: ${this.getMatchModeDescription()}`);
       console.log(`完成度: ${this.n} / ${(this.number + 1) * 4} 张\n`);
       
-      // 按列显示卡片
+      // 表格格式显示所有列
       const colWidth = this.number + 1;
       
+      // 创建表头（带行号列）
+      let header = '┌────┬';
+      let headerRow = '│    │';
+      let separator = '├────┼';
+      let footer = '└────┴';
+      
       for (let col = 0; col < 4; col++) {
-        console.log(`━━━ 第 ${col + 1} 列 ━━━`);
+        header += '───────┬';
+        headerRow += `  列${col + 1}  │`;
+        separator += '───────┼';
+        footer += '───────┴';
+      }
+      
+      header = header.slice(0, -1) + '┐';
+      headerRow = headerRow.slice(0, -1) + '│';
+      separator = separator.slice(0, -1) + '┤';
+      footer = footer.slice(0, -1) + '┘';
+      
+      console.log(header);
+      console.log(headerRow);
+      console.log(separator);
+      
+      // 按行显示卡片（从上到下）
+      for (let row = 0; row < colWidth; row++) {
+        let rowStr = `│行${(row + 1).toString().padStart(2)}│`;
         
-        const colCards = [];
-        for (let row = 0; row < colWidth; row++) {
+        for (let col = 0; col < 4; col++) {
           const idx = col * colWidth + row;
           const card = this.cards1[idx];
-          colCards.push({ card, idx, row });
-        }
-        
-        // 显示该列的卡片
-        colCards.forEach(({ card, idx, row }) => {
+          
+          let cellContent = '';
+          let highlight = '';
+          
           if (card < 0) {
-            // 空位
-            const emptyLabel = ['[-1]', '[-2]', '[-3]', '[-4]'][Math.abs(card) - 1];
+            // 空位 - 检查是否有卡牌可以放入
+            const emptySlotIndex = Math.abs(card) - 1; // 0, 1, 2, 3
+            const prevCardIndex = idx - 1;
+            const prevCard = this.cards1[prevCardIndex];
+            // 没有可放入的卡牌，显示负数ID
+            const emptyLabel = ['[-1]', '[-2]', '[-3]', '[-4]'][emptySlotIndex];
+            cellContent = emptyLabel;
             
-            // 检查前一张卡片
-            const prevCard = idx > 0 ? this.cards1[idx - 1] : -999;
-            let canReceive = '';
-            if (prevCard >= 4) {
+            if (prevCard >= 4) { // 前面有有效卡牌
               const candidates = this.findAllCardsByRankOffset(prevCard, -1);
-              if (candidates.length > 0) {
-                const cardTexts = candidates.map(c => getCardPlaceholderText(c.card)).join('/');
-                canReceive = ` <- 可放: ${cardTexts}`;
+              if (candidates && candidates.length > 0) {
+                // 有可放入的卡牌，显示问号格式
+                const firstCandidate = candidates[0];
+                const candidateText = getCardPlaceholderText(firstCandidate.card);
+                cellContent = `[?${candidateText.slice(1)}]`; // 替换第一个字符为问号
               }
             }
-            
-            console.log(`  [${row}] ${emptyLabel}${canReceive}`);
           } else {
             // 有效卡片
             const cardText = getCardPlaceholderText(card);
             const canMove = this.canMoveCard(card);
             const isTarget = this.next && this.next[0] === card;
             
-            let prefix = '  ';
             if (isTarget) {
-              prefix = '→ '; // 下一步建议
+              highlight = '→'; // 下一步建议
+              cellContent = `${highlight}${cardText}`;
             } else if (canMove) {
-              prefix = '* '; // 可移动
+              highlight = '*'; // 可移动
+              cellContent = `${highlight}${cardText}`;
+            } else {
+              cellContent = cardText;
             }
-            
-            console.log(`${prefix}[${row}] ${cardText}`);
           }
-        });
-        console.log('');
+          
+          // 居中对齐
+          const padding = Math.max(0, 7 - cellContent.length);
+          const leftPad = Math.floor(padding / 2);
+          const rightPad = padding - leftPad;
+          
+          rowStr += ' '.repeat(leftPad) + cellContent + ' '.repeat(rightPad) + '│';
+        }
+        
+        console.log(rowStr);
       }
       
-      console.log('图例:');
-      console.log('  [-n] = 空位  * = 可移动  → = 推荐移动');
+      console.log(footer);
+      console.log('\n图例: [-n] = 无卡牌可放入  [?X] = 有卡牌可放入  * = 可移动  → = 推荐移动');
       
       // 显示下一步提示
       if (this.next && this.next[0] >= 0) {
         const targetCard = getCardPlaceholderText(this.next[0]);
-        const targetSlot = ['[-1]', '[-2]', '[-3]', '[-4]'][Math.abs(this.cards1[this.next[1]]) - 1];
+        const targetSlotCard = this.cards1[this.next[1]];
+        const targetSlot = targetSlotCard < 0 ? ['[-1]', '[-2]', '[-3]', '[-4]'][Math.abs(targetSlotCard) - 1] : `[${this.next[1]}]`;
         console.log(`\n💡 建议移动: ${targetCard} → ${targetSlot}`);
       }
       
@@ -760,6 +866,18 @@ const Sort = {
       // 过滤掉禁用的按钮
       return actions.filter(a => !a.disabled);
     },
+  },
+  
+  // 监听 cards1 数组变化
+  watch: {
+    cards1: {
+      handler() {
+        this.$nextTick(() => {
+          this.updateAllCandidateCycling();
+        });
+      },
+      deep: true
+    }
   },
 };
 
