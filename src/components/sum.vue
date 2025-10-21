@@ -60,7 +60,7 @@
             disabled: autoDisabled,
           },
         ]"
-        @hitBtn="hit(cardsChg, arr2)"
+        @hitBtn="handleHitBtn"
         @passBtn="pass"
       />
     </template>

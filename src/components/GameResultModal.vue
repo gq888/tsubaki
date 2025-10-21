@@ -23,7 +23,7 @@
       </div>
        
        <!-- 底部空白区域，高度等于footerHeight -->
-       <div class="modal-footer-spacer" :style="spacerStyle"></div>
+       <!-- <div class="modal-footer-spacer" :style="spacerStyle"></div> -->
     </div>
   </transition>
 </template>

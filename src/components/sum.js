@@ -14,27 +14,49 @@ const Sum = {
   },
   component: [],
   methods: {
-    init(cards) {
-      this.cardsChg = [];
-      cards = this.cardsChg;
+    init() {
+      // 重置玩家牌组
       this.arr1.splice(0);
       this.arr2.splice(0);
-      for (let i = 0; i < 54; i++) {
-        cards.push(i);
+      
+      // 只有在牌堆为空时才重新初始化
+      if (this.cardsChg.length === 0) {
+        this.refillCards();
+      } else {
+        console.log('使用现有牌堆，剩余:', this.cardsChg.length, '张');
       }
-      shuffleCards(cards, 53);
-      console.log(cards);
-      this.hit(cards, this.arr1);
-      this.hit(cards, this.arr2);
-      this.hit(cards, this.arr1);
-      this.hit(cards, this.arr2);
+      
+      // 发初始牌
+      this.hit(this.arr1);
+      this.hit(this.arr2);
+      this.hit(this.arr1);
+      this.hit(this.arr2);
     },
     // 摸牌
-    hit(cards, arr) {
-      var currentCard = cards.shift();
+    hit(arr) {
+      // 如果牌堆空了，重新洗牌
+      if (this.cardsChg.length === 0) {
+        console.log('牌堆已空，重新洗牌...');
+        this.refillCards();
+      }
+      
+      var currentCard = this.cardsChg.shift();
       var value = currentCard >> 2;
       arr.push({ id: currentCard, value: ++value > 10 ? 10 : value });
       this.gameManager.recordOperation();
+    },
+    
+    // 重新填充牌堆
+    refillCards() {
+      // 清空已使用记录
+      this.cardsChg.splice(0);
+      for (let i = 0; i < 54; i++) {
+        this.cardsChg.push(i);
+      }
+      
+      // 洗牌
+      shuffleCards(this.cardsChg, this.cardsChg.length);
+      console.log('重新洗牌完成，新牌堆:', this.cardsChg.length, '张');
     },
     // 计算点数
     getScore(player) {
@@ -47,7 +69,6 @@ const Sum = {
           flag = true;
         }
       }
-      console.log(flag);
       if (score <= 11 && flag === true) {
         score += 10;
       } else if (score > 21) {
@@ -61,10 +82,14 @@ const Sum = {
       if (this.score1 === this.score2) {
         this.gameManager.setDraw();
       } else if (this.score1 < this.score2) {
-        this.hit(this.cardsChg, this.arr1);
+        this.hit(this.arr1);
       } else if (this.score1 > this.score2) {
         this.gameManager.setLose();
       }
+    },
+    // 点击摸牌按钮
+    handleHitBtn() {
+      this.hit(this.arr2);
     },
     
     /**
@@ -77,24 +102,24 @@ const Sum = {
       console.log('╚════════════════════════════════════════════════╝');
       console.log(`\n步数: ${this.step}\n`);
       
-      // 显示庄家（玩家2）
+      // 显示（玩家1）
       console.log('━━━ 庄家 ━━━');
-      const dealerScore = this.getScore(2);
-      if (this.arr2 && this.arr2.length > 0) {
-        const dealerCards = this.arr2.map(c => getCardPlaceholderText(c.id)).join(' ');
-        console.log(`  ${dealerCards}`);
-        console.log(`  分数: ${dealerScore}${dealerScore > 21 ? ' 💥 爆牌!' : ''}\n`);
-      } else {
-        console.log('  (无牌)\n');
-      }
-      
-      // 显示玩家（玩家1）
-      console.log('━━━ 玩家 ━━━');
       const playerScore = this.getScore(1);
       if (this.arr1 && this.arr1.length > 0) {
         const playerCards = this.arr1.map(c => getCardPlaceholderText(c.id)).join(' ');
         console.log(`  ${playerCards}`);
         console.log(`  分数: ${playerScore}${playerScore > 21 ? ' 💥 爆牌!' : playerScore === 21 ? ' 🎉 BlackJack!' : ''}\n`);
+      } else {
+        console.log('  (无牌)\n');
+      }
+      
+      // 显示（玩家2）
+      console.log('━━━ 玩家 ━━━');
+      const dealerScore = this.getScore(2);
+      if (this.arr2 && this.arr2.length > 0) {
+        const dealerCards = this.arr2.map(c => getCardPlaceholderText(c.id)).join(' ');
+        console.log(`  ${dealerCards}`);
+        console.log(`  分数: ${dealerScore}${dealerScore > 21 ? ' 💥 爆牌!' : ''}\n`);
       } else {
         console.log('  (无牌)\n');
       }
@@ -131,8 +156,8 @@ const Sum = {
         actions.push({
           id: 2,
           label: '摘牌 (HIT)',
-          method: 'hit',
-          args: [this.cardsChg, this.arr1]
+          method: 'handleHitBtn',
+          args: []
         });
       }
       
