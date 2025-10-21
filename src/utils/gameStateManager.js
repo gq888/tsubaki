@@ -19,6 +19,7 @@ export default class GameStateManager {
     this.isAutoRunning = false;
     this.autoInterval = null;
     this.autoStepDelay = options.autoStepDelay / 10 || 500; // 默认单步延迟500ms，测试时除以10以缩短测试时间
+    this.maxSteps = options.maxSteps || 400; // 防止无限循环的最大步数，默认为400
 
     // 事件监听器
     this._listeners = {};
@@ -100,7 +101,6 @@ export default class GameStateManager {
     this.emit("autoStart");
 
     let stepCount = 0;
-    const maxSteps = 400; // 防止无限循环
 
     try {
       while (
@@ -108,7 +108,7 @@ export default class GameStateManager {
         !this.winflag &&
         !this.loseflag &&
         !this.drawflag &&
-        stepCount < maxSteps
+        stepCount < this.maxSteps
       ) {
         await stepCallback();
         stepCount++;
@@ -116,8 +116,8 @@ export default class GameStateManager {
         await wait(this.autoStepDelay);
       }
 
-      if (stepCount >= maxSteps) {
-        console.log(`达到最大步数${maxSteps}`);
+      if (stepCount >= this.maxSteps) {
+        console.log(`达到最大步数${this.maxSteps}`);
         this.stopAuto();
       }
     } catch (error) {
@@ -160,6 +160,22 @@ export default class GameStateManager {
    */
   getAutoStepDelay() {
     return this.autoStepDelay;
+  }
+
+  /**
+   * 设置最大步数
+   * @param {number} maxSteps - 最大步数
+   */
+  setMaxSteps(maxSteps) {
+    this.maxSteps = maxSteps;
+  }
+
+  /**
+   * 获取最大步数
+   * @returns {number} 最大步数
+   */
+  getMaxSteps() {
+    return this.maxSteps;
   }
 
   /**
