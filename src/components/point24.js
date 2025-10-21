@@ -53,7 +53,6 @@ function calc(a) {
 }
 
 function first(i) {
-  console.log(i);
   return Number.isFinite(i) ? i : first(i[0]);
 }
 
@@ -135,7 +134,6 @@ const Point24 = {
         this.arr.splice(0, 1, combined);
         this.sign = 0;
         this.cards2.splice(this.step, 1, combined);
-        console.log(`组合后数组:`, this.arr);
         this.recordOperation("combine", {
           left: left,
           right: right,
@@ -228,8 +226,28 @@ const Point24 = {
               : temp00[0]
             : temp00,
       );
-      console.log(this.cards2);
     },
+    /**
+     * 将公式结构转换为可读字符串
+     * 递归处理嵌套的公式结构，类似于point24card组件的渲染方式
+     */
+    formulaToString(formula) {
+      if (Number.isFinite(formula)) {
+        // 如果是数字，直接返回牌的文本表示
+        return getCardPlaceholderText(formula);
+      } else if (Array.isArray(formula) && formula.length === 3) {
+        // 如果是数组 [左操作数, 运算符, 右操作数]
+        const [left, operator, right] = formula;
+        const operatorSymbol = this.signs[operator] || this.signs[0];
+        const leftStr = this.formulaToString(left);
+        const rightStr = this.formulaToString(right);
+        return `(${leftStr} ${operatorSymbol} ${rightStr})`;
+      } else {
+        // 其他情况，返回字符串表示
+        return String(formula);
+      }
+    },
+
     /**
      * 渲染文本视图 - 显示当前游戏状态
      * 用于终端交互式游戏
@@ -240,13 +258,13 @@ const Point24 = {
       console.log('╚════════════════════════════════════════════════╝');
       console.log(`\n步数: ${this.step}\n`);
       
-      // 显示4张牌
+      // 显示4张牌（显示完整公式而不仅仅是第一张牌）
       console.log('━━━ 当前牌面 ━━━');
       const cards = [];
       for (let i = 0; i < 4; i++) {
         if (this.arr[i] !== undefined) {
-          const cardText = getCardPlaceholderText(this.first(this.arr[i]));
-          cards.push(`[${i}] ${cardText}`);
+          const formulaStr = this.formulaToString(this.arr[i]);
+          cards.push(`[${i}] ${formulaStr}`);
         }
       }
       console.log(`  ${cards.join('  ')}\n`);
