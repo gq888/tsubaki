@@ -122,6 +122,7 @@
         :buttons="winButtons || defaultWinButtons"
         :modalStyle="winModalStyle"
         :customClass="winCustomClass"
+        :footerHeight="footerHeight"
       >
         <template v-if="$slots['win-content']" v-slot:content>
           <slot name="win-content"></slot>
@@ -139,6 +140,7 @@
         :buttons="loseButtons || defaultLoseButtons"
         :modalStyle="loseModalStyle || { backgroundColor: 'rgba(0,0,0,0.5)' }"
         :customClass="loseCustomClass"
+        :footerHeight="footerHeight"
       >
         <template v-if="$slots['lose-content']" v-slot:content>
           <slot name="lose-content"></slot>
@@ -156,6 +158,7 @@
         :buttons="drawButtons || defaultDrawButtons"
         :modalStyle="drawModalStyle || { backgroundColor: 'rgba(0,0,0,0.5)' }"
         :customClass="drawCustomClass"
+        :footerHeight="footerHeight"
       >
         <template v-if="$slots['draw-content']" v-slot:content>
           <slot name="draw-content"></slot>

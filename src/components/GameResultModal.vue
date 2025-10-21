@@ -1,6 +1,6 @@
 <template>
   <transition>
-    <div v-if="true" :class="['lose', customClass]" :style="modalStyle">
+    <div v-if="true" :class="['lose', customClass]" :style="computedModalStyle">
       <h1 v-if="title">{{ title }}</h1>
       <h1 v-if="subtitle" class="small">{{ subtitle }}</h1>
 
@@ -21,6 +21,9 @@
           class="modal-button"
         />
       </div>
+       
+       <!-- 底部空白区域，高度等于footerHeight -->
+       <div class="modal-footer-spacer" :style="spacerStyle"></div>
     </div>
   </transition>
 </template>
@@ -49,7 +52,24 @@ export default {
       type: String,
       default: "",
     },
+    footerHeight: {
+      type: Number,
+      default: 50, // 默认50px，转换为rem是3.125rem
+    },
   },
+  computed: {
+    computedModalStyle() {
+      return {
+        ...this.modalStyle,
+        paddingBottom: `${this.footerHeight / 16}rem`
+      };
+    },
+    spacerStyle() {
+      return {
+        height: `${this.footerHeight / 16}rem`
+      };
+    }
+  }
 };
 </script>
 
