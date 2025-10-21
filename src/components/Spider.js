@@ -41,7 +41,7 @@ const Spider = {
   },
   beforeUnmount() {
     this.gameManager.off("stateChange");
-    if (!this.$refs.middleBox || !this.$refs.downBox) return;
+    if (!this.$refs.middleBox || !this.$refs.downBox || !this.middleEnters || !this.downEnters) return;
     for (let i = 0; i < 4; i++) {
       let middle = this.$refs.middleBox[i];
       let down = this.$refs.downBox[i];
@@ -238,7 +238,6 @@ const Spider = {
         this.skipCheck = false;
         this.sign = -99;
         await this.clickCard(next[0] < 0 ? 1 : next[0]);
-        console.log(next, this.sign);
         await wait(this.gameManager.autoStepDelay);
         await this.clickCard(next[1]);
       });
@@ -634,42 +633,76 @@ const Spider = {
       const deckCards = this.cards[0].length;
       console.log(`\n步数: ${this.step} | 牌堆剩余: ${deckCards} 张 | 场上: ${totalCards} 张\n`);
       
-      // 显示牌堆
-      console.log('━━━ 牌堆 ━━━');
-      if (deckCards > 0) {
-        console.log(`  [0] 🂠 ${deckCards} 张 (点击发牌)`);
-      } else {
-        console.log('  [0] (空)');
-      }
-      console.log('');
+      // 创建表格显示
+      console.log('┌──────────────┬──────────────┬──────────────┬──────────────┐');
       
-      // 显示9列卡片（cards数组索引1-9）
-      for (let i = 1; i < this.cards.length; i++) {
+      // 第一行：牌堆 + 第1列最后3张牌
+      const col1 = this.cards[1];
+      const deckDisplay = deckCards > 0 ? `🂠 ${deckCards}张` : '(空)';
+      const col1Last3 = col1.slice(0, 3).map((card) => {
+        const cardText = getCardPlaceholderText(card);
+        // const actualIdx = col1.length - 3 + idx;
+        const isSelected = this.sign === card;
+        return `${cardText}${isSelected ? ' ←' : ''}`;
+      });
+      
+      console.log(`│ 牌堆: ${deckDisplay.padEnd(5)} │ ${(col1Last3[0] || "").padEnd(12)} │ ${(col1Last3[1] || "").padEnd(12)} │ ${(col1Last3[2] || "").padEnd(12)} │`);
+      console.log('├──────────────┼──────────────┼──────────────┼──────────────┤');
+      
+      // 第二行：第2-5列（每列显示剩余张数+最后一张牌）
+      const row2Data = [];
+      for (let i = 2; i <= 5; i++) {
         const col = this.cards[i];
-        console.log(`━━━ 第 ${i} 列 ━━━`);
-        
         if (col.length === 0) {
-          console.log('  (空列)');
+          row2Data.push("-:" + this.types[i - 2] + '?');
         } else {
-          // 只显示最后5张牌，避免输出过长
-          const displayCount = Math.min(5, col.length);
-          const startIdx = col.length - displayCount;
+          const lastCard = col[col.length - 1];
+          const cardText = getCardPlaceholderText(lastCard);
+          const isSelected = this.sign === lastCard;
+          row2Data.push(`${col.length - 1}:${cardText}${isSelected ? ' ←' : ''}`);
+        }
+      }
+      
+      console.log(`│ ${row2Data[0].padEnd(12)} │ ${row2Data[1].padEnd(12)} │ ${row2Data[2].padEnd(12)} │ ${row2Data[3].padEnd(12)} │`);
+      console.log('├──────────────┼──────────────┼──────────────┼──────────────┤');
+      
+      // 第三行：第6-9列（每列显示总张数+纵向最多5张牌）
+      const row3Data = [];
+      for (let i = 6; i <= 9; i++) {
+        const col = this.cards[i];
+        if (col.length === 0) {
+          row3Data.push("");
+        } else {
+          const cardsDisplay = [];
           
-          if (startIdx > 0) {
-            console.log(`  ... (隐藏 ${startIdx} 张)`);
-          }
-          
-          for (let j = startIdx; j < col.length; j++) {
+          for (let j = 0; j < col.length; j++) {
             const card = col[j];
             const cardText = getCardPlaceholderText(card);
-            const isLast = j === col.length - 1;
-            console.log(`  [${j}] ${cardText}${isLast ? ' ←' : ''}`);
+            const isSelected = this.sign === card;
+            cardsDisplay.push(`${j}:${cardText}${isSelected ? ' ←' : ''}`);
           }
+          
+          row3Data.push(`${cardsDisplay.join('\n')}`);
         }
-        console.log('');
       }
       
-      console.log('提示: ← 表示该列顶牌');
+      // 处理多行显示，确保对齐
+      const maxLines = Math.max(...row3Data.map(data => data.split('\n').length));
+      const paddedData = row3Data.map(data => {
+        const lines = data.split('\n');
+        while (lines.length < maxLines) {
+          lines.push('');
+        }
+        return lines;
+      });
+      
+      for (let lineIdx = 0; lineIdx < maxLines; lineIdx++) {
+        const lineContent = paddedData.map(data => data[lineIdx].padEnd(12));
+        console.log(`│ ${lineContent.join(' │ ')} │`);
+      }
+      
+      console.log('└──────────────┴──────────────┴──────────────┴──────────────┘');
+      console.log('提示: ← 表示选中的牌');
       
       return '渲染完成';
     },

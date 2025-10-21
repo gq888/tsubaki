@@ -53,16 +53,6 @@ const Month = {
       console.log('╚════════════════════════════════════════════════╝');
       console.log(`\n步数: ${this.step}\n`);
       
-      // 显示牌堆
-      console.log('━━━ 牌堆 ━━━');
-      if (this.cards1.length > 0) {
-        const topCard = this.cards1[this.cards1.length - 1];
-        console.log(`  [牌堆] ${getCardPlaceholderText(topCard)} (剩余 ${this.cards1.length} 张)`);
-      } else {
-        console.log('  [牌堆] (空)');
-      }
-      console.log('');
-      
       // 显示12个月份位置
       const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
       for (let i = 0; i < 12; i++) {
