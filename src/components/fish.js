@@ -31,6 +31,7 @@ const Fish = {
       flyout1: [],
       flyout2: [],
       arr: [],
+      number: 54,
     };
   },
   // 初始化
@@ -42,10 +43,10 @@ const Fish = {
       this.cards4.splice(0);
       let cards = this.cards1;
       this.arr.splice(0);
-      for (let i = 0; i < 54; i++) {
+      for (let i = 0; i < this.number; i++) {
         cards.push(i);
       }
-      shuffleCards(cards, 53);
+      shuffleCards(cards, this.number);
       this.cards2.push(...cards.splice(-14));
       this.cards3.push(...cards.splice(-13));
       this.cards4.push(...cards.splice(-13));

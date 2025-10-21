@@ -10,6 +10,7 @@ const Sum = {
       cardsChg: [],
       arr1: [],
       arr2: [],
+      number: 54,
     };
   },
   component: [],
@@ -50,7 +51,7 @@ const Sum = {
     refillCards() {
       // 清空已使用记录
       this.cardsChg.splice(0);
-      for (let i = 0; i < 54; i++) {
+      for (let i = 0; i < this.number; i++) {
         this.cardsChg.push(i);
       }
       
