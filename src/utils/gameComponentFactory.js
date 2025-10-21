@@ -332,24 +332,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         }
       },
 
-      /**
-       * 设置最大步数
-       * @param {number} maxSteps - 最大步数
-       */
-      setMaxSteps(maxSteps) {
-        if (this.gameManager) {
-          this.gameManager.setMaxSteps(maxSteps);
-        }
-      },
-
-      /**
-       * 获取最大步数
-       * @returns {number} 最大步数
-       */
-      getMaxSteps() {
-        return this.gameManager ? this.gameManager.getMaxSteps() : 400;
-      },
-
       ...baseComponent.methods,
       ...methods,
     },

@@ -309,7 +309,7 @@ async function waitForFileChange(filePath, timeout = 60000) {
  * @param {string} outputFile - 输出状态文件路径
  * @param {boolean} waitForAsync - 是否等待异步方法完成（交互模式专用）
  */
-async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 60000, seed = null, outputFile = DEFAULT_STATE_FILE) {
+async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 60000, seed = null, outputFile = DEFAULT_STATE_FILE, maxSteps = null) {
   try {
     console.log(`正在通过renderToString执行方法: ${methodName}`);
     console.log(`组件路径: ${componentPath}`);
@@ -350,6 +350,10 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         // 如果提供了种子，设置种子值
         if (seed !== null) {
           initialData.seed = seed;
+        }
+
+        if (maxSteps !== null) {
+          initialData.gameManager.maxSteps = maxSteps;
         }
         
         return {
@@ -750,7 +754,7 @@ async function main() {
   const args = process.argv.slice(2);
   
   if (args.length < 1) {
-    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>] [--continue] [--output=<path>] [--interactive]');
+    console.log('用法: node renderToString-method-tester.js <component-path> <method-name> [args...] [--timeout=<ms>] [--state=<json>] [--state-file=<path>] [--seed=<number>] [--continue] [--output=<path>] [--interactive] [--set-max-steps=<number>]');
     console.log('\n交互模式:');
     console.log('  node renderToString-method-tester.js Tortoise.js --interactive');
     console.log('  node renderToString-method-tester.js Sort.js --interactive --seed=12345');
@@ -769,6 +773,7 @@ async function main() {
     console.log('  --state=\'{"..."}\'    直接传入状态JSON');
     console.log('  --state-file=x.json  从文件读取状态');
     console.log('  --output=out.json    指定输出文件（默认: .last-test-state.json）');
+    console.log('  --set-max-steps=N    设置自动模式最大步数（用于测试自动停止）');
     console.log('\n说明:');
     console.log('  • 参数会自动尝试JSON解析，失败则作为字符串');
     console.log('  • 支持相对路径和绝对路径');
@@ -823,11 +828,12 @@ async function main() {
   
   const methodName = args[1];
   
-  // 提取timeout、state、state-file、seed、continue和output参数
+  // 提取timeout、state、state-file、seed、continue、output和set-max-steps参数
   let timeout = 60000;
   let currentState = {};
   let seed = null;
   let outputFile = DEFAULT_STATE_FILE;
+  let maxSteps = null; // 新增：最大步数参数
   const methodArgs = [];
   
   for (let i = 2; i < args.length; i++) {
@@ -884,6 +890,13 @@ async function main() {
         console.error('错误: 无法读取状态文件:', error.message);
         process.exit(1);
       }
+    } else if (arg.startsWith('--set-max-steps=')) {
+      maxSteps = parseInt(arg.split('=')[1], 10);
+      if (isNaN(maxSteps) || maxSteps <= 0) {
+        console.error('错误: set-max-steps必须是正整数');
+        process.exit(1);
+      }
+      console.log('✓ 将设置最大步数为:', maxSteps);
     } else {
       methodArgs.push(arg);
     }
@@ -898,7 +911,7 @@ async function main() {
     }
   });
   
-  await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed, outputFile);
+  await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed, outputFile, maxSteps);
 }
 
 // 直接调用main函数

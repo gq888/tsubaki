@@ -163,22 +163,6 @@ export default class GameStateManager {
   }
 
   /**
-   * 设置最大步数
-   * @param {number} maxSteps - 最大步数
-   */
-  setMaxSteps(maxSteps) {
-    this.maxSteps = maxSteps;
-  }
-
-  /**
-   * 获取最大步数
-   * @returns {number} 最大步数
-   */
-  getMaxSteps() {
-    return this.maxSteps;
-  }
-
-  /**
    * 执行单步操作
    * @param {Function} stepCallback - 单步操作的回调函数
    */
