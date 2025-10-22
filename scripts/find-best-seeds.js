@@ -39,11 +39,12 @@ const GAME_NAMES = {
 };
 
 // 测试配置
-const DDFAULT_START_SEED = 100; // 默认起始种子
-const DEFAULT_MAX_SEEDS = 200; // 默认最大种子数量
+const DDFAULT_START_SEED = 330; // 默认起始种子
+const DEFAULT_MAX_SEEDS = 400; // 默认最大种子数量
 const EXTENDED_MAX_SEEDS = 500; // 扩展搜索时的最大种子数量
-const FIND_MIN_STEPS = 3; // 找到的种子必须执行的最小步数
+const MIN_STEPS = 3; // 找到的种子必须执行的最小步数
 const IS_FIND_MIN = true; // 是否找最小步数
+const MAX_STEPS = 109; // 400; // 默认最大步数
 
 /**
  * 执行测试命令并解析结果
@@ -52,7 +53,7 @@ const IS_FIND_MIN = true; // 是否找最小步数
 function runTest(game, seed) {
   try {
     // 使用pass方法运行游戏直到结束（pass内部调用startAuto）
-    const cmd = `npm run test ${game} pass -- --seed=${seed} 2>&1`;
+    const cmd = `npm run test ${game} pass -- --seed=${seed} --set-max-steps=${MAX_STEPS} 2>&1`;
     const output = execSync(cmd, {
       cwd: path.join(__dirname, '..'),
       encoding: 'utf-8',
@@ -113,7 +114,7 @@ const find_min_steps = (a, b) => a.steps - b.steps;
  */
 function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS, startSeed = DDFAULT_START_SEED) {
   console.log(`\n🎮 测试游戏: ${GAME_NAMES[game]}`);
-  console.log(`   搜索范围: 1-${maxSeeds}`);
+  console.log(`   搜索范围: ${startSeed}-${maxSeeds}`);
   
   const results = {
     win: [],
@@ -149,7 +150,7 @@ function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS, startSeed = DDFAULT_ST
     else if (drawflag) gameResult = 'draw';
     
     // 只关心步数>=3且游戏已结束的结果
-    if (steps < FIND_MIN_STEPS || !gameResult) continue;
+    if (steps < MIN_STEPS || !gameResult) continue;
     
     const resultData = {
       seed,
@@ -187,7 +188,7 @@ function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS, startSeed = DDFAULT_ST
     bestSeed = results.draw[0];
     console.log(`   ⚠️  无获胜/失败种子，找到 ${results.draw.length} 个平局种子，最佳: 种子=${bestSeed.seed}, 步数=${bestSeed.steps}`);
   } else {
-    console.log(`   ❌ 未找到任何有效种子（步数>=3）`);
+    console.log(`   ❌ 未找到任何有效种子（${MIN_STEPS}<=步数<=${MAX_STEPS}）`);
   }
   
   return bestSeed;
@@ -224,7 +225,7 @@ async function main() {
     console.log(`\n🔍 扩展搜索 ${failedGames.length} 个未找到种子的游戏...`);
     
     for (const game of failedGames) {
-      const bestSeed = findBestSeed(game, EXTENDED_MAX_SEEDS);
+      const bestSeed = findBestSeed(game, EXTENDED_MAX_SEEDS, DEFAULT_MAX_SEEDS);
       
       if (bestSeed) {
         allResults.push({
