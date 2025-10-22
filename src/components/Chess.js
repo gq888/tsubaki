@@ -1,4 +1,4 @@
-import { shuffleCards, wait, seededRandom } from "../utils/help.js";
+import { shuffleCards, seededRandom } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
 let _modes = [
@@ -120,7 +120,7 @@ const GridBattle = {
         this.sign = -1;
         if (!isAuto) {
           this.gameManager.step(async () => {
-            await wait(this.gameManager.autoStepDelay);
+            await this.wait();
             await this.stepFn();
           });
         }
@@ -166,7 +166,7 @@ const GridBattle = {
           }
           if (!isAuto) {
             this.gameManager.step(async () => {
-              await wait(this.gameManager.autoStepDelay);
+              await this.wait();
               await this.stepFn();
             });
           }
@@ -180,7 +180,7 @@ const GridBattle = {
     async stepTwiceFn() {
       await this.gameManager.step(async () => {
         await this.stepFn();
-        await wait(this.gameManager.autoStepDelay);
+        await this.wait();
         await this.stepFn();
       });
     },
@@ -222,7 +222,7 @@ const GridBattle = {
       let moveFn = async function (from, to) {
         _this.sign = -1;
         await _this.clickCard(from, true);
-        await wait(_this.gameManager.autoStepDelay);
+        await _this.wait();
         await _this.clickCard(to, true);
       };
       for (let i = 0; i < this.cards1.length; i++) {

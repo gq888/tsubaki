@@ -10,19 +10,6 @@ export function shuffleCards(cards, num) {
   return cards;
 }
 
-export function timeout(handle, time) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-      handle();
-    }, time);
-  });
-}
-
-export function wait(time) {
-  return new Promise((r) => setTimeout(r, time));
-}
-
 export function preload(cb) {
   let arr = [];
   for (let i = 0; i < 54; i++) {

@@ -1,5 +1,3 @@
-import { wait } from "./help.js";
-
 /**
  * 游戏状态管理类
  * 统一管理游戏状态、历史记录、撤销重做等功能
@@ -113,7 +111,7 @@ export default class GameStateManager {
         await stepCallback();
         stepCount++;
 
-        await wait(this.autoStepDelay);
+        await this.wait();
       }
 
       if (stepCount >= this.maxSteps) {
@@ -160,6 +158,21 @@ export default class GameStateManager {
    */
   getAutoStepDelay() {
     return this.autoStepDelay;
+  }
+
+  /**
+   * 等待指定时间，并在等待前触发事件
+   * @param {number} delay - 延迟时间（毫秒），如果为null则使用autoStepDelay
+   * @returns {Promise} 等待完成的Promise
+   */
+  async wait(delay = null) {
+    const actualDelay = delay !== null ? delay : this.autoStepDelay;
+    
+    // 触发等待前事件
+    this.emit("beforeWait", actualDelay);
+    
+    // 执行实际的等待
+    return new Promise(resolve => setTimeout(resolve, actualDelay));
   }
 
   /**

@@ -152,6 +152,13 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       // 设置事件监听
       this.handleUndo && this.gameManager.on("undo", this.handleUndo);
 
+      // 注册beforeWait事件监听 - 在wait前调用renderTextView
+      this.gameManager.on("beforeWait", () => {
+        if (this.renderTextView && typeof this.renderTextView === 'function') {
+          this.renderTextView();
+        }
+      });
+
       // 设置historyUpdate事件监听
       this.gameManager.on("historyUpdate", () => {
         // 先执行各页面自定义的handleHistoryUpdate方法
@@ -191,6 +198,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
 
       // 清理事件监听
       this.gameManager.off("undo");
+      this.gameManager.off("beforeWait");
       this.gameManager.off("historyUpdate");
 
       // 移除设置变化监听器
@@ -256,6 +264,11 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         setSeed(seed);
       },
       
+      // 统一的等待方法 - 委托给gameManager处理
+      async wait(delay = null) {
+        return this.gameManager.wait(delay);
+      },
+      
       // 统一的撤销方法
       undo() {
         this.gameManager.undo();
@@ -289,7 +302,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           };
           const beforeState = JSON.stringify(this.$data, replacer);
           await this.stepFn();
-          this.renderTextView() 
           seen = new WeakMap(); // 使用WeakMap记录路径
           pathStack = []; // 记录当前路径
           const afterState = JSON.stringify(this.$data, replacer);

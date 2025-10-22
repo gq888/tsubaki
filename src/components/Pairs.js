@@ -1,4 +1,4 @@
-import { shuffleCards, wait } from "../utils/help.js";
+import { shuffleCards } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 import { getCardPlaceholderText } from "../utils/cardUtils.js";
 
@@ -57,7 +57,7 @@ const Pairs = {
       }
       this.gameManager.hitflag = false;
       this.sign2 = card;
-      await wait(this.gameManager.autoStepDelay);
+      await this.wait();
       this.sign = -1;
       this.sign2 = -1;
       this.gameManager.hitflag = true;

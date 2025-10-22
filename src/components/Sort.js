@@ -1,4 +1,4 @@
-import { shuffleCards, wait, checkDeadForeach } from "../utils/help.js";
+import { shuffleCards, checkDeadForeach } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 import { createCandidate, isBetterCandidate, gameEvaluationMethods } from "./candidateUtils.js";
 import { getCardPlaceholderText } from "../utils/cardUtils.js";
@@ -218,7 +218,7 @@ const Sort = {
       
       await this.gameManager.step(async () => {
         this.clickSign(this.next[1])
-        await wait(this.gameManager.autoStepDelay);
+        await this.wait();
         this.executeMove(this.next[0], this.next[1]);
       });
     },

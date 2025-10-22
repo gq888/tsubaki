@@ -1,4 +1,4 @@
-import { shuffleCards, wait, checkDeadForeach } from "../utils/help.js";
+import { shuffleCards, checkDeadForeach } from "../utils/help.js";
 import move from "../directives/move.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 import { getCardPlaceholderText } from "../utils/cardUtils.js";
@@ -238,7 +238,7 @@ const Spider = {
         this.skipCheck = false;
         this.sign = -99;
         await this.clickCard(next[0] < 0 ? 1 : next[0]);
-        await wait(this.gameManager.autoStepDelay);
+        await this.wait();
         await this.clickCard(next[1]);
       });
     },
@@ -303,7 +303,7 @@ const Spider = {
             this.skipCheck = false;
             this.sign = -99;
             await this.clickCard(next[0]);
-            await wait(this.gameManager.autoStepDelay);
+            await this.wait();
             await this.clickCard(next[1]);
             for (let k = 6; k < 10; k++) {
               if (this.cards[k].length <= 0) {
