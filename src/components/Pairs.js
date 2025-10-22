@@ -120,6 +120,11 @@ const Pairs = {
       const matched = this.cards2.filter(m => m).length;
       console.log(`\n时间: ${this.time}秒 | 已配对: ${matched}/${this.number} 张\n`);
       
+      console.log('\n图例:');
+      console.log('  [?] = 未翻开  [✓] = 已看过  > = 第一张  * = 第二张');
+      
+      console.log(this.sign >= 0 ? `\n当前选中: ${getCardPlaceholderText(this.sign)} (需要配对)` : '\n');
+      
       // 按6x8网格显示 - 与Vue模板保持一致
       const cols = 8;
       const rows = 6;
@@ -148,11 +153,6 @@ const Pairs = {
         }
         console.log(line);
       }
-      
-      console.log('\n图例:');
-      console.log('  [?] = 未翻开  [✓] = 已看过  > = 第一张  * = 第二张');
-      
-      console.log(this.sign >= 0 ? `\n当前选中: ${getCardPlaceholderText(this.sign)} (需要配对)` : '\n');
       
       return '渲染完成';
     },

@@ -18,11 +18,11 @@ const GAMES = [
   // 'sum.js',÷\
   // 'point24.js',
   // 'fish.js',
-  // 'Spider.js',
+  'Spider.js',
   // 'Tortoise.js',
   // 'Sort.js',
   // 'Pairs.js',
-  'month.js'
+  // 'month.js'
 ];
 
 // 游戏显示名称映射
@@ -39,8 +39,11 @@ const GAME_NAMES = {
 };
 
 // 测试配置
-const DEFAULT_MAX_SEEDS = 100; // 默认最大种子数量
+const DDFAULT_START_SEED = 100; // 默认起始种子
+const DEFAULT_MAX_SEEDS = 200; // 默认最大种子数量
 const EXTENDED_MAX_SEEDS = 500; // 扩展搜索时的最大种子数量
+const FIND_MIN_STEPS = 3; // 找到的种子必须执行的最小步数
+const IS_FIND_MIN = true; // 是否找最小步数
 
 /**
  * 执行测试命令并解析结果
@@ -102,10 +105,13 @@ function runTest(game, seed) {
   }
 }
 
+const find_max_steps = (a, b) => b.steps - a.steps;
+const find_min_steps = (a, b) => a.steps - b.steps;
+
 /**
  * 为单个游戏查找最佳种子
  */
-function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS) {
+function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS, startSeed = DDFAULT_START_SEED) {
   console.log(`\n🎮 测试游戏: ${GAME_NAMES[game]}`);
   console.log(`   搜索范围: 1-${maxSeeds}`);
   
@@ -116,7 +122,7 @@ function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS) {
   };
   
   // 测试所有种子
-  for (let seed = 1; seed <= maxSeeds; seed++) {
+  for (let seed = startSeed; seed <= maxSeeds; seed++) {
     if (seed % 10 === 0) {
       process.stdout.write(`\r   进度: ${seed}/${maxSeeds}`);
     }
@@ -143,7 +149,7 @@ function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS) {
     else if (drawflag) gameResult = 'draw';
     
     // 只关心步数>=3且游戏已结束的结果
-    if (steps < 3 || !gameResult) continue;
+    if (steps < FIND_MIN_STEPS || !gameResult) continue;
     
     const resultData = {
       seed,
@@ -167,17 +173,17 @@ function findBestSeed(game, maxSeeds = DEFAULT_MAX_SEEDS) {
   
   if (results.win.length > 0) {
     // 找步数最少的win种子
-    results.win.sort((a, b) => b.steps - a.steps);
+    results.win.sort(IS_FIND_MIN ? find_min_steps : find_max_steps);
     bestSeed = results.win[0];
     console.log(`   ✅ 找到 ${results.win.length} 个获胜种子，最佳: 种子=${bestSeed.seed}, 步数=${bestSeed.steps}`);
   } else if (results.lose.length > 0) {
     // 找步数最少的lose种子
-    results.lose.sort((a, b) => b.steps - a.steps);
+    results.lose.sort(IS_FIND_MIN ? find_min_steps : find_max_steps);
     bestSeed = results.lose[0];
     console.log(`   ⚠️  无获胜种子，找到 ${results.lose.length} 个失败种子，最佳: 种子=${bestSeed.seed}, 步数=${bestSeed.steps}`);
   } else if (results.draw.length > 0) {
     // 找步数最少的draw种子
-    results.draw.sort((a, b) => a.steps - b.steps);
+    results.draw.sort(IS_FIND_MIN ? find_min_steps : find_max_steps);
     bestSeed = results.draw[0];
     console.log(`   ⚠️  无获胜/失败种子，找到 ${results.draw.length} 个平局种子，最佳: 种子=${bestSeed.seed}, 步数=${bestSeed.steps}`);
   } else {

@@ -715,6 +715,15 @@ const Sort = {
       console.log('╚════════════════════════════════════════════════╝');
       console.log(`\n难度: ${this.getMatchModeDescription()}`);
       console.log(`完成度: ${this.n} / ${(this.number + 1) * 4} 张\n`);
+      console.log('\n图例: [-n] = 无卡牌可放入  [?X] = 有卡牌可放入  * = 可移动  → = 推荐移动');
+      
+      // 显示下一步提示
+      if (this.next && this.next[0] >= 0) {
+        const targetCard = getCardPlaceholderText(this.next[0]);
+        const targetSlotCard = this.cards1[this.next[1]];
+        const targetSlot = targetSlotCard < 0 ? ['[-1]', '[-2]', '[-3]', '[-4]'][Math.abs(targetSlotCard) - 1] : `[${this.next[1]}]`;
+        console.log(`\n💡 建议移动: ${targetCard} → ${targetSlot}`);
+      }
       
       // 表格格式显示所有列
       const colWidth = this.number + 1;
@@ -799,15 +808,6 @@ const Sort = {
       }
       
       console.log(footer);
-      console.log('\n图例: [-n] = 无卡牌可放入  [?X] = 有卡牌可放入  * = 可移动  → = 推荐移动');
-      
-      // 显示下一步提示
-      if (this.next && this.next[0] >= 0) {
-        const targetCard = getCardPlaceholderText(this.next[0]);
-        const targetSlotCard = this.cards1[this.next[1]];
-        const targetSlot = targetSlotCard < 0 ? ['[-1]', '[-2]', '[-3]', '[-4]'][Math.abs(targetSlotCard) - 1] : `[${this.next[1]}]`;
-        console.log(`\n💡 建议移动: ${targetCard} → ${targetSlot}`);
-      }
       
       return '渲染完成';
     },

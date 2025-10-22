@@ -630,6 +630,7 @@ const Spider = {
       const totalCards = this.cards.slice(1).reduce((sum, col) => sum + col.length, 0);
       const deckCards = this.cards[0].length;
       console.log(`\n步数: ${this.step} | 牌堆剩余: ${deckCards} 张 | 场上: ${totalCards} 张\n`);
+      console.log('提示: ← 表示选中的牌');
       
       // 创建表格显示
       console.log('┌──────────────┬──────────────┬──────────────┬──────────────┐');
@@ -700,7 +701,6 @@ const Spider = {
       }
       
       console.log('└──────────────┴──────────────┴──────────────┴──────────────┘');
-      console.log('提示: ← 表示选中的牌');
       
       return '渲染完成';
     },

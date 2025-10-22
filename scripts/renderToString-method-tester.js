@@ -114,7 +114,6 @@ function saveStateToFile(state, filePath) {
     }
     
     writeFileSync(filePath, result, 'utf-8');
-    console.log(`\n✓ 状态已保存到: ${filePath}`);
   } catch (error) {
     console.error(`\n✗ 保存状态失败: ${error.message}`);
   }
@@ -415,7 +414,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
             } else {
               this._testCapture.result = methodPromise;
               this._testCapture.isAsync = false;
-              console.log('同步方法执行完成');
             }
           } else {
             throw new Error(`方法 ${methodName} 不存在`);
@@ -443,10 +441,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           return value;
         }));
         this._testCapture.after = afterState;
-        
-        const gameManager = afterState.gameManager;
-        
-        console.log('=== 方法执行完成 ===');
         
         // 直接打印测试结果，而不是通过模板
         const testResult = {
@@ -625,10 +619,9 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
       if (currentState.gameManager) {
         const { winflag, loseflag, drawflag } = currentState.gameManager;
         if (winflag || loseflag || drawflag) {
-          console.log('\n🏁 游戏结束!');
-          if (winflag) console.log('🎉 你赢了！');
-          if (loseflag) console.log('😢 你输了！');
-          if (drawflag) console.log('🤝 平局！');
+          if (winflag) console.log('\n🎉 你赢了！');
+          if (loseflag) console.log('\n😢 你输了！');
+          if (drawflag) console.log('\n🤝 平局！');
           break;
         }
       }
@@ -729,7 +722,6 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
     }
     
     rl.close();
-    console.log('\n✅ 交互式游戏结束');
     process.exit(0);
     
   } catch (error) {

@@ -317,6 +317,24 @@ const Point24 = {
         args: []
       });
       
+      // 单步执行按钮
+      actions.push({
+        id: 3,
+        label: '单步执行 (►)',
+        method: 'stepFn',
+        args: [],
+        disabled: this.step >= this.number
+      });
+      
+      // 自动运行按钮
+      const isAutoRunning = this.gameManager?.isAutoRunning || false;
+      actions.push({
+        id: 4,
+        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
+        method: 'pass',
+        args: []
+      });
+      
       // 过滤掉禁用的按钮
       return actions.filter(a => !a.disabled);
     },

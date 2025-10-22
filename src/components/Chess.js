@@ -371,6 +371,25 @@ const GridBattle = {
       console.log(`\n步数: ${this.step}`);
       console.log(`高子: ${this.highCount} | 低子: ${this.lowCount}\n`);
       
+      console.log('\n图例:');
+      console.log('  ? = 未翻开  - = 空位置  H = 高子  L = 低子  [H/L] = 已选中');
+      
+      if (this.sign >= 0) {
+        const row = Math.floor(this.sign / 6);
+        const col = this.sign % 6;
+        console.log(`\n当前选中: (${row},${col})`);
+        
+        const validMoves = this.validBoxes;
+        if (validMoves && validMoves.length > 0) {
+          const moves = validMoves.map(idx => {
+            const r = Math.floor(idx / 6);
+            const c = idx % 6;
+            return `(${r},${c})`;
+          }).join(', ');
+          console.log(`可移动到: ${moves}`);
+        }
+      }
+      
       // 显示6x6棋盘
       console.log('    0   1   2   3   4   5');
       console.log('  ┌───┬───┬───┬───┬───┬───┐');
@@ -403,25 +422,6 @@ const GridBattle = {
         }
       }
       console.log('  └───┴───┴───┴───┴───┴───┘');
-      
-      console.log('\n图例:');
-      console.log('  ? = 未翻开  - = 空位置  H = 高子  L = 低子  [H/L] = 已选中');
-      
-      if (this.sign >= 0) {
-        const row = Math.floor(this.sign / 6);
-        const col = this.sign % 6;
-        console.log(`\n当前选中: (${row},${col})`);
-        
-        const validMoves = this.validBoxes;
-        if (validMoves && validMoves.length > 0) {
-          const moves = validMoves.map(idx => {
-            const r = Math.floor(idx / 6);
-            const c = idx % 6;
-            return `(${r},${c})`;
-          }).join(', ');
-          console.log(`可移动到: ${moves}`);
-        }
-      }
       
       return '渲染完成';
     },

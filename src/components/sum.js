@@ -103,6 +103,14 @@ const Sum = {
       console.log('╚════════════════════════════════════════════════╝');
       console.log(`\n步数: ${this.step}\n`);
       
+      // 显示游戏规则
+      console.log('规则: 点数接近21获胜，超过21爆牌');
+      
+      // 显示剩余牌堆
+      console.log('━━━ 牌堆 ━━━');
+      const remainingCards = this.cardsChg ? this.cardsChg.length : 0;
+      console.log(`  剩余: ${remainingCards} 张\n`);
+      
       // 显示（玩家1）
       console.log('━━━ 庄家 ━━━');
       const playerScore = this.getScore(1);
@@ -124,14 +132,6 @@ const Sum = {
       } else {
         console.log('  (无牌)\n');
       }
-      
-      // 显示剩余牌堆
-      console.log('━━━ 牌堆 ━━━');
-      const remainingCards = this.cardsChg ? this.cardsChg.length : 0;
-      console.log(`  剩余: ${remainingCards} 张\n`);
-      
-      // 显示游戏规则
-      console.log('规则: 点数接近21获胜，超过21爆牌');
       
       return '渲染完成';
     },

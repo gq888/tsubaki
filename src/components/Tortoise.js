@@ -205,6 +205,16 @@ const Tortoise = {
       console.log(`\n步数: ${this.step} / ${this.number}`);
       console.log(`已配对: ${this.step} 张 | 剩余: ${this.number - this.step} 张\n`);
       
+      // 图例
+      console.log('\n图例:');
+      console.log('  ┌──┐ = 卡牌边框  ▄ = 选中卡牌边框 ♥5 = 可点击卡牌内容  ·· = 不可点击卡牌');
+      
+      // 显示下一步提示
+      if (this.next && this.next.length > 0) {
+        const nextCards = this.next.map(c => getCardPlaceholderText(c)).join(', ');
+        console.log(`\n💡 提示: 可配对的卡片: ${nextCards}`);
+      }
+      
       if (this.sign !== -1) {
         const signIndex = this.cards1.indexOf(this.sign);
         const signCard = getCardPlaceholderText(this.sign);
@@ -341,16 +351,6 @@ const Tortoise = {
       borderedCanvas.push('└' + '─'.repeat(CANVAS_COLS) + '┘');
       
       console.log(borderedCanvas.join('\n'));
-      
-      // 图例
-      console.log('\n图例:');
-      console.log('  ┌──┐ = 卡牌边框  ▄ = 选中卡牌边框 ♥5 = 可点击卡牌内容  ·· = 不可点击卡牌');
-      
-      // 显示下一步提示
-      if (this.next && this.next.length > 0) {
-        const nextCards = this.next.map(c => getCardPlaceholderText(c)).join(', ');
-        console.log(`\n💡 提示: 可配对的卡片: ${nextCards}`);
-      }
       
       return '字符画渲染完成';
     },
