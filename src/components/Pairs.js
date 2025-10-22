@@ -120,22 +120,26 @@ const Pairs = {
       const matched = this.cards2.filter(m => m).length;
       console.log(`\n时间: ${this.time}秒 | 已配对: ${matched}/${this.number} 张\n`);
       
-      // 按6x8网格显示
+      // 按6x8网格显示 - 与Vue模板保持一致
       const cols = 8;
       const rows = 6;
       
       for (let row = 0; row < rows; row++) {
         let line = '  ';
         for (let col = 0; col < cols; col++) {
-          const idx = row * cols + col;
-          const cardId = this.cards1[idx];
+          const position = row * cols + col;
+          const cardId = this.cards1[position]; // 获取该位置的牌ID
           
-          if (this.cards2[idx] || idx === this.sign || idx === this.sign2) {
+          // 检查这张牌是否被翻开或选中
+          const isFlipped = this.cards2[cardId] || cardId === this.sign || cardId === this.sign2;
+          const isSeen = this.arr[cardId];
+          
+          if (isFlipped) {
             // 已翻开或当前选中
             const cardText = getCardPlaceholderText(cardId);
-            const prefix = idx === this.sign ? '>' : idx === this.sign2 ? '*' : '';
+            const prefix = cardId === this.sign ? '>' : cardId === this.sign2 ? '*' : '';
             line += `${(prefix + cardText).padEnd(3)} `;
-          } else if (this.arr[idx]) {
+          } else if (isSeen) {
             line += '[✓] ';
           } else {
             // 未翻开
@@ -148,7 +152,7 @@ const Pairs = {
       console.log('\n图例:');
       console.log('  [?] = 未翻开  [✓] = 已看过  > = 第一张  * = 第二张');
       
-      console.log(this.sign >= 0 ? `\n当前选中: ${getCardPlaceholderText(this.cards1[this.sign])} (需要配对)` : '\n');
+      console.log(this.sign >= 0 ? `\n当前选中: ${getCardPlaceholderText(this.sign)} (需要配对)` : '\n');
       
       return '渲染完成';
     },
