@@ -42,18 +42,13 @@
     />
 
     <!-- 帮助弹窗 -->
-    <div v-if="showHelp" class="help-modal" @click="closeHelp">
-      <div class="help-content" @click.stop>
-        <h3>GUIDE</h3>
-        <div class="button-help-list">
-          <div v-for="(btn, index) in helpContent" :key="index" class="button-help-item">
-            <span class="button-label">{{ btn.label }}</span>
-            <span class="button-description">{{ btn.description }}</span>
-          </div>
-        </div>
-        <button class="close-btn" @click="closeHelp">CLOSE</button>
-      </div>
-    </div>
+    <GameHelp 
+      :visible="showHelp" 
+      :gameRule="gameRule"
+      :gameControlsButtons="gameControlsButtons"
+      :gameControlsRefs="{ gameControls: $refs.gameControls, bottomGameControls: $refs.bottomGameControls }"
+      @close="closeHelp"
+    />
 
     <!-- Fixed 导航栏 -->
     <transition name="slide-down">
@@ -175,6 +170,7 @@
 import GameControls from "./GameControls.vue";
 import GameResultModal from "./GameResultModal.vue";
 import GameSettings from "./GameSettings.vue";
+import GameHelp from "./GameHelp.vue";
 import eventBus from "../utils/eventBus.js";
 
 export default {
@@ -183,6 +179,7 @@ export default {
     GameControls,
     GameResultModal,
     GameSettings,
+    GameHelp,
   },
   data() {
     return {
@@ -197,7 +194,6 @@ export default {
       autoHideTimer: null, // 自动隐藏定时器
       showSettings: false, // 是否显示设置弹窗
       showHelp: false, // 是否显示帮助弹窗
-      helpContent: [], // 帮助内容
       gameControlsButtons: {}, // 存储所有GameControls组件的按钮配置
       longPressTimer: null, // 长按定时器
       isLongPress: false, // 是否正在长按
@@ -613,81 +609,6 @@ export default {
     
     // 打开帮助弹窗
     openHelp() {
-      // 按钮说明映射
-      const buttonDescriptions = {
-        undo: "CANCEL THE LAST MOVE",
-        goon: "RESTART THE GAME",
-        restart: "RESTART THE GAME",
-        hint: "GET A HINT",
-        step: "EXECUTE THE NEXT MOVE",
-        auto: "AUTO EXECUTE/STOP AUTO EXECUTE",
-        hitBtn: "DRAW A NEW CARD",
-        passBtn: "STOP DRAWING CARDS"
-      };
-      
-      // 收集所有GameControls实例的按钮配置
-      const uniqueButtons = new Map();
-      
-      // 从事件总线收集的按钮配置（优先使用）
-      Object.values(this.gameControlsButtons).forEach(buttons => {
-        if (buttons && Array.isArray(buttons)) {
-          buttons.forEach(button => {
-            if (button.action) {
-              uniqueButtons.set(button.action, button);
-            }
-          });
-        }
-      });
-      
-      // 同时也检查命名的refs作为备用
-      if (this.$refs.gameControls && this.$refs.gameControls.displayButtons) {
-        this.$refs.gameControls.displayButtons.forEach(button => {
-          if (button.action && !uniqueButtons.has(button.action)) {
-            uniqueButtons.set(button.action, button);
-          }
-        });
-      }
-      
-      if (this.$refs.bottomGameControls && this.$refs.bottomGameControls.displayButtons) {
-        this.$refs.bottomGameControls.displayButtons.forEach(button => {
-          if (button.action && !uniqueButtons.has(button.action)) {
-            uniqueButtons.set(button.action, button);
-          }
-        });
-      }
-      
-      // 初始化帮助内容
-      this.helpContent = [];
-      
-      // 添加游戏规则说明（作为一个特殊的帮助项）
-      if (this.gameRule) {
-        this.helpContent.push({
-          label: "📋",
-          description: `RULE: ${this.gameRule}`
-        });
-      }
-      
-      // 添加按钮操作说明
-      if (uniqueButtons.size > 0) {
-        console.log("通过事件总线获取到的按钮配置:", Array.from(uniqueButtons.values()));
-        // 从Map转换为数组并添加到帮助内容中
-        const buttonItems = Array.from(uniqueButtons.values()).map(button => ({
-          label: button.label || button.action.toUpperCase(),
-          description: buttonDescriptions[button.action] || '未知功能'
-        }));
-        this.helpContent.push(...buttonItems);
-      } else {
-        console.log("未获取到游戏按钮配置，使用默认按钮说明");
-        // 如果无法直接获取，使用默认的按钮说明
-        const defaultButtonItems = [
-          { label: "◀︎", description: buttonDescriptions.undo },
-          { label: "RESTART", description: buttonDescriptions.restart },
-          { label: "AUTO/STOP", description: buttonDescriptions.auto },
-          { label: "►", description: buttonDescriptions.step }
-        ];
-        this.helpContent.push(...defaultButtonItems);
-      }
-      
       this.showHelp = true;
     },
     
@@ -856,86 +777,7 @@ export default {
   transform: scale(0.95);
 }
 
-/* 帮助弹窗样式 */
-.help-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
 
-.help-content {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  max-width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
-}
-
-.help-content span {
-  font-size: medium;
-}
-
-.help-content h3 {
-  margin-top: 0;
-  color: #2c3e50;
-  text-align: center;
-}
-
-.button-help-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin: 1rem 0;
-}
-
-.button-help-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-  background: #f8f9fa;
-  border-radius: 0.375rem;
-  border: 0.0625rem solid #e9ecef;
-}
-
-.button-label {
-  padding: 0.25rem 0.5rem;
-  background: #dfcdc3;
-  border-radius: 0.25rem;
-  min-width: 3rem;
-  text-align: center;
-  color: #2c3e50;
-}
-
-.button-description {
-  flex: 1;
-  color: #495057;
-}
-
-.close-btn {
-  display: block;
-  margin: 1rem auto 0;
-  padding: 0.5rem 1rem;
-  background: #42b983;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.close-btn:hover {
-  background: #35a372;
-}
 
 /* 可滚动的游戏内容区域 */
 .game-content-wrapper {
