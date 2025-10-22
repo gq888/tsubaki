@@ -580,14 +580,6 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
     // 初始化游戏状态
     let currentState = {};
     
-    // 先执行 init 方法初始化游戏
-    console.log('\n🎮 初始化游戏...');
-    await executeMethodWithRenderToString(componentPath, 'init', currentState, [], timeout, seed, outputFile);
-    
-    // 读取初始化后的状态
-    const stateContent = readFileSync(outputFile, 'utf-8');
-    currentState = JSON.parse(stateContent);
-    
     // 创建 readline 接口
     const rl = readline.createInterface({
       input: process.stdin,

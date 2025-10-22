@@ -301,7 +301,6 @@ const Spider = {
               continue;
             }
             this.skipCheck = false;
-            console.log(next);
             this.sign = -99;
             await this.clickCard(next[0]);
             await wait(this.gameManager.autoStepDelay);
@@ -333,7 +332,6 @@ const Spider = {
                     continue;
                   }
                   let next = [k, pos, index, this.cards[pos].length - index, l];
-                  console.log(next);
                   if (!checkDeadForeach(this.gameManager.history, next)) {
                     continue;
                   }

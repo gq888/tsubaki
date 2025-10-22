@@ -50,7 +50,6 @@ const Fish = {
       this.cards2.push(...cards.splice(-14));
       this.cards3.push(...cards.splice(-13));
       this.cards4.push(...cards.splice(-13));
-      console.log(cards, this.cards2, this.cards3);
     },
     time(handle, time) {
       return new Promise((resolve) => {

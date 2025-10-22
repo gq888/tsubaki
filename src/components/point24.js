@@ -1,4 +1,4 @@
-import { shuffleCards, timeout } from "../utils/help.js";
+import { shuffleCards, wait } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 import { getCardPlaceholderText } from "../utils/cardUtils.js";
 import { defineAsyncComponent } from "vue";
@@ -158,9 +158,9 @@ const Point24 = {
         this.sign = 0;
         const index1 = this.arr.findIndex((a) => this.first(a) == this.first(temp[0]));
         this.clickCard(temp[0], index1);
-        await timeout(() => {}, this.gameManager.autoStepDelay);
+        await wait(this.gameManager.autoStepDelay);
         this.clickSign(temp[1]);
-        await timeout(() => {}, this.gameManager.autoStepDelay);
+        await wait(this.gameManager.autoStepDelay);
         const index2 = this.arr.findIndex((a) => this.first(a) == this.first(temp[2]));
         this.clickCard(temp[2], index2);
       });

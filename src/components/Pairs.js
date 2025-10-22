@@ -130,13 +130,13 @@ const Pairs = {
           const idx = row * cols + col;
           const cardId = this.cards1[idx];
           
-          if (this.arr[idx]) {
-            line += '[✓] ';
-          } else if (this.cards2[idx] || idx === this.sign || idx === this.sign2) {
+          if (this.cards2[idx] || idx === this.sign || idx === this.sign2) {
             // 已翻开或当前选中
             const cardText = getCardPlaceholderText(cardId);
             const prefix = idx === this.sign ? '>' : idx === this.sign2 ? '*' : '';
             line += `${(prefix + cardText).padEnd(3)} `;
+          } else if (this.arr[idx]) {
+            line += '[✓] ';
           } else {
             // 未翻开
             line += '[?] ';
@@ -148,10 +148,7 @@ const Pairs = {
       console.log('\n图例:');
       console.log('  [?] = 未翻开  [✓] = 已看过  > = 第一张  * = 第二张');
       
-      if (this.sign >= 0) {
-        const signCard = getCardPlaceholderText(this.cards1[this.sign]);
-        console.log(`\n当前选中: ${signCard} (需要配对)`);
-      }
+      console.log(this.sign >= 0 ? `\n当前选中: ${getCardPlaceholderText(this.cards1[this.sign])} (需要配对)` : '\n');
       
       return '渲染完成';
     },
