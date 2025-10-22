@@ -625,13 +625,13 @@ export function generateGameTemplate(options = {}) {
     <GameResultModal
       v-if="winflag"
       title="U WIN!"
-      :buttons="[{ text: 'GO ON', callback: goon, disabled: false }]"
+      :buttons="[{ text: 'GO ON', action: 'goon', callback: goon, disabled: false }]"
     />
     
     <GameResultModal
       v-if="loseflag"
       title="U LOSE"
-      :buttons="[{ text: 'GO ON', callback: goon, disabled: false }]"
+      :buttons="[{ text: 'GO ON', action: 'goon', callback: goon, disabled: false }]"
     />
   </div>
 </template>`;

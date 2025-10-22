@@ -316,6 +316,7 @@ export default {
       return [
         {
           text: "GO ON",
+          action: "goon",
           callback: () => this.$emit("goon"),
           disabled: false,
         },
@@ -325,11 +326,13 @@ export default {
       return [
         {
           text: "RESTART",
+          action: "goon",
           callback: () => this.$emit("goon"),
           disabled: false,
         },
         {
           text: "UNDO",
+          action: "undo",
           callback: () => this.$emit("undo"),
           disabled: this.step <= 0,
         },
@@ -339,11 +342,13 @@ export default {
       return [
         {
           text: "RESTART",
+          action: "goon",
           callback: () => this.$emit("goon"),
           disabled: false,
         },
         {
           text: "UNDO",
+          action: "undo",
           callback: () => this.$emit("undo"),
           disabled: this.step <= 0,
         },

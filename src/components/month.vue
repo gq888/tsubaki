@@ -6,6 +6,7 @@
     :lose-buttons="[
       {
         text: 'GO ON',
+        action: 'goon',
         callback: goon,
         disabled: false,
       },

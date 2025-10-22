@@ -5,11 +5,13 @@
     :lose-buttons="[
       {
         text: 'RESTART',
+        action: 'goon',
         callback: goon,
         disabled: false,
       },
       {
         text: 'UNDO',
+        action: 'undo',
         callback: undo,
         disabled: undoDisabled,
       },

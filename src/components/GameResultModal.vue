@@ -10,17 +10,14 @@
       <!-- 用于显示卡片的插槽 -->
       <slot name="cards"></slot>
 
-      <div class="modal-buttons">
-        <input
-          v-for="(button, index) in buttons"
-          :key="index"
-          type="button"
-          :value="button.text"
-          @click="button.callback"
-          :disabled="button.disabled"
-          class="modal-button"
-        />
-      </div>
+      <!-- 使用 GameControls 组件替代手动按钮渲染 -->
+      <GameControls
+        :buttons="gameControlsButtons"
+        @undo="handleAction('undo')"
+        @goon="handleAction('goon')"
+        @step="handleAction('step')"
+        @auto="handleAction('auto')"
+      />
        
        <!-- 底部空白区域，高度等于footerHeight -->
        <!-- <div class="modal-footer-spacer" :style="spacerStyle"></div> -->
@@ -29,8 +26,13 @@
 </template>
 
 <script>
+import GameControls from "./GameControls.vue";
+
 export default {
   name: "GameResultModal",
+  components: {
+    GameControls
+  },
   props: {
     title: {
       type: String,
@@ -68,6 +70,28 @@ export default {
       return {
         height: `${this.footerHeight / 16}rem`
       };
+    },
+    gameControlsButtons() {
+      // 将原有的按钮配置转换为 GameControls 所需的格式
+      return this.buttons.map(button => {
+        return {
+          label: button.text,
+          action: button.action,
+          disabled: button.disabled
+        };
+      });
+    }
+  },
+  methods: {
+    handleAction(action) {
+      // 根据动作类型找到对应的按钮并执行其回调
+      const button = this.buttons.find(btn => btn.action === action);
+      
+      if (button && button.callback) {
+        button.callback();
+      } else {
+        console.warn(`GameResultModal: No button found with action "${action}" or button lacks callback`);
+      }
     }
   }
 };
@@ -76,13 +100,5 @@ export default {
 <style scoped>
 @import url("./sum.css");
 
-.modal-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.modal-button {
-  cursor: pointer;
-}
+/* GameControls 组件会自动处理按钮样式，这里不需要额外的样式 */
 </style>

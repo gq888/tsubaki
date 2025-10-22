@@ -1,13 +1,13 @@
 <template>
   <GameLayout
     v-bind="gameLayoutProps"
-    :win-buttons="[{ text: 'GO ON', callback: goon }]"
+    :win-buttons="[{ text: 'GO ON', action: 'goon', callback: goon }]"
     :win-modal-style="{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }"
     :win-custom-class="'lose'"
-    :lose-buttons="[{ text: 'AGAIN', callback: goon }]"
+    :lose-buttons="[{ text: 'AGAIN', action: 'goon', callback: goon }]"
     :lose-modal-style="{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }"
     :lose-custom-class="'lose'"
-    :draw-buttons="[{ text: 'GO ON', callback: goon }]"
+    :draw-buttons="[{ text: 'GO ON', action: 'goon', callback: goon }]"
     :draw-modal-style="{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }"
     :draw-custom-class="'draw lose'"
     @goon="goon"
