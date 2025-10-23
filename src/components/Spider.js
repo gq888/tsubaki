@@ -718,7 +718,7 @@ const Spider = {
         label: '撤销 (◀︎)',
         method: 'undo',
         args: [],
-        disabled: !this.canUndo
+        disabled: this.undoDisabled
       });
       
       // 重新开始按钮
