@@ -3,7 +3,6 @@ import gameSettingsManager from "./gameSettingsManager.js";
 import { defineAsyncComponent } from "vue";
 import { setSeed } from "./help.js";
 import { CARD_TYPES, CARD_POINTS, getCardPlaceholderText } from "./cardUtils.js";
-import eventBus from "./eventBus.js";
 
 /**
  * 游戏规则说明映射
@@ -109,21 +108,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
     customCleanup = null,
   } = options;
 
-  // 按钮描述映射
-  const buttonDescriptions = {
-    undo: '撤销上一步操作',
-    goon: '重新开始游戏',
-    step: '单步执行',
-    auto: '自动运行/停止自动运行',
-    submit: '提交答案',
-    hint: '显示提示',
-    reset: '重置当前操作',
-    confirm: '确认操作',
-    cancel: '取消操作',
-    pause: '暂停游戏',
-    resume: '继续游戏',
-  };
-
   return {
     // 继承基础组件的所有属性
     ...baseComponent,
@@ -148,7 +132,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         gameManager: new GameStateManager({
           autoStepDelay,
         }),
-        gameControlsButtons: {}, // 存储从eventBus获取的按钮配置
+        customButtons: [], // 存储自定义按钮配置
       };
     },
 
@@ -192,14 +176,8 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         }
       });
 
-      // 监听事件总线中的GameControls相关事件
-      this._controlsCreatedHandler = this.handleControlsCreated.bind(this);
-      this._controlsButtonsUpdatedHandler = this.handleControlsButtonsUpdated.bind(this);
-      this._controlsUnmountedHandler = this.handleControlsUnmounted.bind(this);
-      
-      eventBus.on('game-controls:created', this._controlsCreatedHandler);
-      eventBus.on('game-controls:buttons-updated', this._controlsButtonsUpdatedHandler);
-      eventBus.on('game-controls:unmounted', this._controlsUnmountedHandler);
+      // 初始化自定义按钮数组
+      this.customButtons = [];
 
       // 调用自定义初始化函数
       if (customInit) {
@@ -232,16 +210,8 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         gameSettingsManager.removeListener(this._settingsChangeHandler);
       }
 
-      // 清理事件总线监听器
-      if (this._controlsCreatedHandler) {
-        eventBus.off('game-controls:created', this._controlsCreatedHandler);
-      }
-      if (this._controlsButtonsUpdatedHandler) {
-        eventBus.off('game-controls:buttons-updated', this._controlsButtonsUpdatedHandler);
-      }
-      if (this._controlsUnmountedHandler) {
-        eventBus.off('game-controls:unmounted', this._controlsUnmountedHandler);
-      }
+      // 清理自定义按钮
+      this.customButtons = [];
 
       // 调用自定义清理函数
       if (customCleanup) {
@@ -328,26 +298,13 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           drawflag: this.drawflag,
           step: this.step,
           gameRule: gameRules[currentGame],
-          gameControlsButtons: this.gameControlsButtons,
+          customButtons: this.collectedGameButtons,
         };
       },
       
-      // 从事件总线收集的按钮配置，用于getAvailableActions
+      // 自定义按钮配置，用于getAvailableActions
       collectedGameButtons() {
-        const uniqueButtons = new Map();
-        
-        // 从事件总线收集的按钮配置
-        Object.values(this.gameControlsButtons).forEach(buttons => {
-          if (buttons && Array.isArray(buttons)) {
-            buttons.forEach(button => {
-              if (button.action) {
-                uniqueButtons.set(button.action, button);
-              }
-            });
-          }
-        });
-        
-        return Array.from(uniqueButtons.values());
+        return [...this.displayButtons, ...this.customButtons.filter(button => button.action)];
       },
 
       ...baseComponent.computed,
@@ -446,23 +403,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       /**
        * 处理GameControls组件挂载事件
        */
-      handleControlsCreated(data) {
-        this.gameControlsButtons[data.instanceId] = data.buttons;
-      },
-      
-      /**
-       * 处理GameControls组件按钮更新事件
-       */
-      handleControlsButtonsUpdated(data) {
-        this.gameControlsButtons[data.instanceId] = data.buttons;
-      },
-      
-      /**
-       * 处理GameControls组件卸载事件
-       */
-      handleControlsUnmounted(data) {
-        delete this.gameControlsButtons[data.instanceId];
-      },
+
       
       /**
        * 统一的获取可用操作方法
@@ -478,89 +419,40 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         };
         
         // 首先尝试从事件总线获取按钮配置
-        if (this.collectedGameButtons.length > 0) {
-          this.collectedGameButtons.forEach((button, index) => {
-            const methodName = actionToMethodMap[button.action] || button.action;
-            if (this[methodName] && typeof this[methodName] === 'function') {
-              actions.push({
-                id: index + 1, // 使用从1开始的序号
-                label: button.label || `${button.action.toUpperCase()}`,
-                method: methodName,
-                args: [], // 默认空数组
-                disabled: button.disabled || false,
-                description: button.description || buttonDescriptions[button.action] || '未知功能'
-              });
-            } else {
-              console.log(`未找到方法 ${methodName} 对应的操作按钮 ${button.action}`);
-            }
-          });
-        }
-        
-        // 如果从事件总线没有获取到足够的按钮配置，使用默认配置
-        if (actions.length === 0) {
-          // 默认按钮配置
-          const defaultButtons = [
-            { action: 'undo', label: '撤销 (◀︎)', disabled: this.undoDisabled, description: buttonDescriptions.undo },
-            { action: 'goon', label: '重新开始 (RESTART)', disabled: this.restartDisabled || false, description: buttonDescriptions.goon },
-            { action: 'step', label: '单步执行 (►)', disabled: this.stepDisabled || false, description: buttonDescriptions.step },
-            { action: 'auto', label: (this.gameManager?.isAutoRunning || false) ? '停止自动 (STOP)' : '自动运行 (AUTO)', disabled: this.autoDisabled || false, description: buttonDescriptions.auto }
-          ];
-          
-          defaultButtons.forEach((button, index) => {
-            // 只添加游戏支持的按钮
-            if ((hasUndo || button.action !== 'undo') && (hasRestart || button.action !== 'goon')) {
-              const methodName = actionToMethodMap[button.action] || button.action;
-              actions.push({
-                id: index + 1,
-                label: button.label,
-                method: methodName,
-                args: [],
-                disabled: button.disabled,
-                description: button.description
-              });
-            }
-          });
-        }
+        this.collectedGameButtons.forEach((button, index) => {
+          const methodName = actionToMethodMap[button.action] || button.action;
+          if (this[methodName] && typeof this[methodName] === 'function') {
+            actions.push({
+              id: index + 1, // 使用从1开始的序号
+              label: button.label || `${button.action.toUpperCase()}`,
+              method: methodName,
+              args: [], // 默认空数组
+              disabled: button.disabled || false,
+            });
+          } else {
+            console.log(`未找到对应方法 ${methodName} 的操作按钮 ${button.action}`);
+          }
+        });
         
         // 过滤掉禁用的按钮
         return actions.filter(a => !a.disabled);
       },
       
       /**
-       * 向事件总线发送自定义按钮配置
+       * 添加自定义按钮配置
        * 用于添加游戏特定的按钮配置
        */
-      sendCustomButtonsToEventBus(buttons) {
+      addCustomButtons(buttons) {
         if (!Array.isArray(buttons)) return;
         
-        // 生成唯一的instanceId
-        const instanceId = `custom_buttons_${this.title}_${Date.now()}`;
+        // 清除旧的自定义按钮
+        this.customButtons = [];
         
-        // 向事件总线发送按钮配置
-        eventBus.emit('game-controls:buttons-updated', {
-          instanceId,
-          buttons: buttons.map(button => ({
-            ...button,
-            id: undefined, // 确保移除id，使用序号
-            args: button.args || [] // 确保有默认空数组
-          }))
-        });
-        
-        // 在组件卸载时清理
-        const cleanupHandler = () => {
-          eventBus.emit('game-controls:unmounted', { instanceId });
-        };
-        
-        // 确保在组件卸载时清理
-        const originalBeforeUnmount = this.beforeUnmount;
-        this.beforeUnmount = function() {
-          cleanupHandler();
-          if (originalBeforeUnmount && typeof originalBeforeUnmount === 'function') {
-            originalBeforeUnmount.call(this);
-          }
-        };
-        
-        return instanceId;
+        // 添加新的自定义按钮
+        this.customButtons = buttons.map(button => ({
+          ...button,
+          args: button.args || [] // 确保有默认空数组
+        }));
       },
 
       ...baseComponent.methods,

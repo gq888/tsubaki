@@ -45,7 +45,7 @@
     <GameHelp 
       :visible="showHelp" 
       :gameRule="gameRule"
-      :gameControlsButtons="gameControlsButtons"
+      :customButtons="customButtons"
       @close="closeHelp"
     />
 
@@ -238,7 +238,7 @@ export default {
       type: Object,
       default: () => ({}),
     },
-    gameControlsButtons: {
+    customButtons: {
       type: Object,
       default: () => ({}),
     },

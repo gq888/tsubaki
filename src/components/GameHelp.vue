@@ -27,7 +27,7 @@ export default {
       type: String,
       default: "",
     },
-    gameControlsButtons: {
+    customButtons: {
       type: Object,
       default: () => ({}),
     },
@@ -60,20 +60,6 @@ export default {
         passBtn: "STOP DRAWING CARDS"
       };
       
-      // 收集所有GameControls实例的按钮配置
-      const uniqueButtons = new Map();
-      
-      // 从事件总线收集的按钮配置（优先使用）
-      Object.values(this.gameControlsButtons).forEach(buttons => {
-        if (buttons && Array.isArray(buttons)) {
-          buttons.forEach(button => {
-            if (button.action) {
-              uniqueButtons.set(button.action, button);
-            }
-          });
-        }
-      });
-      
       // 初始化帮助内容
       this.helpContent = [];
       
@@ -85,26 +71,12 @@ export default {
         });
       }
       
-      // 添加按钮操作说明
-      if (uniqueButtons.size > 0) {
-        console.log("通过事件总线获取到的按钮配置:", Array.from(uniqueButtons.values()));
-        // 从Map转换为数组并添加到帮助内容中
-        const buttonItems = Array.from(uniqueButtons.values()).map(button => ({
-          label: button.label || button.action.toUpperCase(),
-          description: button.description || buttonDescriptions[button.action] || '未知功能'
-        }));
-        this.helpContent.push(...buttonItems);
-      } else {
-        console.log("未获取到游戏按钮配置，使用默认按钮说明");
-        // 如果无法直接获取，使用默认的按钮说明
-        const defaultButtonItems = [
-          { label: "◀︎", description: buttonDescriptions.undo },
-          { label: "RESTART", description: buttonDescriptions.restart },
-          { label: "AUTO/STOP", description: buttonDescriptions.auto },
-          { label: "►", description: buttonDescriptions.step }
-        ];
-        this.helpContent.push(...defaultButtonItems);
-      }
+      // 从Map转换为数组并添加到帮助内容中
+      const buttonItems = this.customButtons.map(button => ({
+        label: button.label || button.action.toUpperCase(),
+        description: button.description || buttonDescriptions[button.action] || '未知功能'
+      }));
+      this.helpContent.push(...buttonItems);
     },
     
     closeHelp() {

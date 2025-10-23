@@ -706,9 +706,6 @@ const Spider = {
       return '渲染完成';
     },
     
-    /**
-     * 发送自定义按钮到eventBus
-     */
     sendCustomButtons() {
       const customButtons = [];
       
@@ -716,14 +713,14 @@ const Spider = {
       if (this.cards[0].length > 0) {
         customButtons.push({
           action: 'deal',
-          label: '从牌堆发牌',
+          label: 'DEAL',
           method: 'clickCard',
           args: [0],
-          description: '从牌堆中发一张牌到每个列'
+          description: 'DEAL FROM THE DECK'
         });
       }
       
-      this.sendCustomButtonsToEventBus(customButtons);
+      this.addCustomButtons(customButtons);
     },
   },
     

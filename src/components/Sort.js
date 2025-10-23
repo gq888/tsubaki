@@ -811,27 +811,18 @@ const Sort = {
       
       return '渲染完成';
     },
-    
-    /**
-     * 获取当前可用的操作列表
-     * 用于终端交互式游戏
-     * 使用工厂函数中统一实现的方法
-     */
-    
-    /**
-     * 发送自定义按钮到eventBus
-     */
+
     sendCustomButtons() {
       const nextMode = this.matchMode === 1 ? 2 : this.matchMode === 2 ? 4 : 1;
       const customButtons = [{
         action: 'difficulty',
-        label: '切换难度 (简单→中等→困难)',
+        label: 'MODE',
         method: 'setMatchMode',
         args: [nextMode],
-        description: '切换游戏难度模式'
+        description: 'SWITCH DIFFICULTY MODE (EASY → NORMAL → HARD)'
       }];
       
-      this.sendCustomButtonsToEventBus(customButtons);
+      this.addCustomButtons(customButtons);
     },
   },
   
@@ -839,7 +830,6 @@ const Sort = {
    * 组件挂载时注册自定义按钮
    */
   created() {
-    // 发送自定义按钮到eventBus
     this.sendCustomButtons();
   },
   
