@@ -57,11 +57,50 @@ const Pairs = {
     },
     /**
      * 处理卡片点击事件
-     * @param {number} positionIndex - 被点击的卡片位置索引
+     * @param {number} [rowOrPositionIndex] - 行号(当第二个参数存在时)或位置索引
+     * @param {number} [col] - 列号(可选)
      */
-    async clickCard(positionIndex) {
-      // 通过位置索引获取卡片ID
-      const cardId = this.cardPositions[positionIndex];
+    async clickCard(rowOrPositionIndex, col) {
+      let positionIndex;
+      let cardId;
+      
+      // 处理不同参数情况
+      if (rowOrPositionIndex === undefined) {
+        // 不传参数时，选择一张未查看过的牌
+        let found = false;
+        
+        // 遍历所有位置查找未查看过的牌
+        for (positionIndex = 0; positionIndex < this.totalCards; positionIndex++) {
+          cardId = this.cardPositions[positionIndex];
+          if (!this.seenCards[cardId] && !this.matchedCards[cardId]) {
+            found = true;
+            break;
+          }
+        }
+        
+        // 如果所有牌都被看过，重置seen数组
+        if (!found) {
+          // 清空seen数组
+          this.seenCards.splice(0);
+          // 再次查找第一张未配对的牌
+          for (positionIndex = 0; positionIndex < this.totalCards; positionIndex++) {
+            cardId = this.cardPositions[positionIndex];
+            if (!this.matchedCards[cardId]) {
+              break;
+            }
+          }
+        }
+      } else if (col !== undefined) {
+        // 传入两个参数时，视为行号和列号
+        // 假设6行8列的布局
+        const gridColumns = 8;
+        positionIndex = rowOrPositionIndex * gridColumns + col;
+        cardId = this.cardPositions[positionIndex];
+      } else {
+        // 传入一个参数时，视为位置索引
+        positionIndex = rowOrPositionIndex;
+        cardId = this.cardPositions[positionIndex];
+      }
       
       // 启动游戏计时器（首次点击时）
       if (!this._timer) {
@@ -176,13 +215,9 @@ const Pairs = {
         }
       }
       
-      // 如果没有明确的匹配策略，选择一张未查看过的牌
-      for (let positionIndex = 0; positionIndex < this.totalCards; positionIndex++) {
-        const cardId = this.cardPositions[positionIndex];
-        if (!this.seenCards[cardId] && !this.matchedCards[cardId]) {
-          return await this.clickCard(positionIndex);
-        }
-      }
+      // 如果没有明确的匹配策略，调用不带参数的clickCard函数
+      // 它会自动选择未查看过的牌，或在所有牌都看过时重置seen数组
+      return await this.clickCard();
     },
     
     /**
