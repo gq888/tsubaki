@@ -150,9 +150,9 @@ export default {
     },
   },
   
-  mounted() {
+  created() {
     // 组件挂载时通知事件总线
-    eventBus.emit('game-controls:mounted', {
+    eventBus.emit('game-controls:created', {
       instanceId: this.instanceId,
       buttons: this.displayButtons
     });

@@ -70,40 +70,8 @@ const Month = {
     /**
      * 获取当前可用的操作列表
      * 用于终端交互式游戏
+     * 使用工厂函数中统一实现的方法
      */
-    getAvailableActions() {
-      const actions = [];
-      
-      // 重新开始按钮
-      actions.push({
-        id: 1,
-        label: '重新开始 (RESTART)',
-        method: 'goon',
-        args: []
-      });
-      
-      // 单步执行按钮
-      const hasCards = this.cards1.length > 0;
-      actions.push({
-        id: 2,
-        label: '单步执行 (►) - 翻一张牌',
-        method: 'stepFn',
-        args: [],
-        disabled: !hasCards
-      });
-      
-      // 自动运行按钮
-      const isAutoRunning = this.gameManager?.isAutoRunning || false;
-      actions.push({
-        id: 3,
-        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
-        method: 'pass',
-        args: []
-      });
-      
-      // 过滤掉禁用的按钮
-      return actions.filter(a => !a.disabled);
-    },
   },
 };
 

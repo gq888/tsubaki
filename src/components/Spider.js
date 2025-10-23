@@ -21,6 +21,7 @@ const Spider = {
   },
   directives: { move },
   created: function () {
+    this.sendCustomButtons();
     this.setupGameStateListeners();
   },
   mounted() {
@@ -706,58 +707,35 @@ const Spider = {
     },
     
     /**
-     * 获取当前可用的操作列表
-     * 用于终端交互式游戏
+     * 发送自定义按钮到eventBus
      */
-    getAvailableActions() {
-      const actions = [];
+    sendCustomButtons() {
+      const customButtons = [];
       
-      // 撤销按钮
-      actions.push({
-        id: 1,
-        label: '撤销 (◀︎)',
-        method: 'undo',
-        args: [],
-        disabled: this.undoDisabled
-      });
-      
-      // 重新开始按钮
-      actions.push({
-        id: 2,
-        label: '重新开始 (RESTART)',
-        method: 'goon',
-        args: []
-      });
-      
-      // 单步执行按钮
-      actions.push({
-        id: 3,
-        label: '单步执行 (►)',
-        method: 'stepFn',
-        args: []
-      });
-      
-      // 自动运行按钮
-      const isAutoRunning = this.gameManager?.isAutoRunning || false;
-      actions.push({
-        id: 4,
-        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
-        method: 'pass',
-        args: []
-      });
-      
-      // 发牌按钮（如果牌堆有牌）
+      // 添加Spider游戏特有的发牌按钮（如果牌堆有牌）
       if (this.cards[0].length > 0) {
-        actions.push({
-          id: 5,
+        customButtons.push({
+          action: 'deal',
           label: '从牌堆发牌',
           method: 'clickCard',
-          args: [0]
+          args: [0],
+          description: '从牌堆中发一张牌到每个列'
         });
       }
       
-      // 过滤掉禁用的按钮
-      return actions.filter(a => !a.disabled);
+      this.sendCustomButtonsToEventBus(customButtons);
+    },
+  },
+    
+    /**
+     * 监听cards变化，更新自定义按钮
+     */
+  watch: {
+    cards: {
+      handler() {
+        this.sendCustomButtons();
+      },
+      deep: true
     },
   },
   computed: {

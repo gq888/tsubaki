@@ -31,10 +31,6 @@ export default {
       type: Object,
       default: () => ({}),
     },
-    gameControlsRefs: {
-      type: Object,
-      default: () => ({}),
-    },
   },
   data() {
     return {
@@ -78,23 +74,6 @@ export default {
         }
       });
       
-      // 同时也检查命名的refs作为备用
-      if (this.gameControlsRefs.gameControls && this.gameControlsRefs.gameControls.displayButtons) {
-        this.gameControlsRefs.gameControls.displayButtons.forEach(button => {
-          if (button.action && !uniqueButtons.has(button.action)) {
-            uniqueButtons.set(button.action, button);
-          }
-        });
-      }
-      
-      if (this.gameControlsRefs.bottomGameControls && this.gameControlsRefs.bottomGameControls.displayButtons) {
-        this.gameControlsRefs.bottomGameControls.displayButtons.forEach(button => {
-          if (button.action && !uniqueButtons.has(button.action)) {
-            uniqueButtons.set(button.action, button);
-          }
-        });
-      }
-      
       // 初始化帮助内容
       this.helpContent = [];
       
@@ -112,7 +91,7 @@ export default {
         // 从Map转换为数组并添加到帮助内容中
         const buttonItems = Array.from(uniqueButtons.values()).map(button => ({
           label: button.label || button.action.toUpperCase(),
-          description: buttonDescriptions[button.action] || '未知功能'
+          description: button.description || buttonDescriptions[button.action] || '未知功能'
         }));
         this.helpContent.push(...buttonItems);
       } else {

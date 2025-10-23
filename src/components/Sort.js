@@ -815,61 +815,43 @@ const Sort = {
     /**
      * 获取当前可用的操作列表
      * 用于终端交互式游戏
+     * 使用工厂函数中统一实现的方法
      */
-    getAvailableActions() {
-      const actions = [];
-      
-      // 撤销按钮
-      actions.push({
-        id: 1,
-        label: '撤销 (◀︎)',
-        method: 'undo',
-        args: [],
-        disabled: this.undoDisabled
-      });
-      
-      // 重新开始按钮
-      actions.push({
-        id: 2,
-        label: '重新开始 (RESTART)',
-        method: 'goon',
-        args: []
-      });
-      
-      // 单步执行按钮
-      const hasValidMove = this.next && this.next[0] >= 0;
-      actions.push({
-        id: 3,
-        label: '单步执行 (►)',
-        method: 'stepFn',
-        args: [],
-        disabled: !hasValidMove
-      });
-      
-      // 自动运行按钮
-      const isAutoRunning = this.gameManager?.isAutoRunning || false;
-      actions.push({
-        id: 4,
-        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
-        method: 'pass',
-        args: []
-      });
-      
-      // 切换难度按钮
-      actions.push({
-        id: 5,
+    
+    /**
+     * 发送自定义按钮到eventBus
+     */
+    sendCustomButtons() {
+      const nextMode = this.matchMode === 1 ? 2 : this.matchMode === 2 ? 4 : 1;
+      const customButtons = [{
+        action: 'difficulty',
         label: '切换难度 (简单→中等→困难)',
         method: 'setMatchMode',
-        args: [this.matchMode === 1 ? 2 : this.matchMode === 2 ? 4 : 1]
-      });
+        args: [nextMode],
+        description: '切换游戏难度模式'
+      }];
       
-      // 过滤掉禁用的按钮
-      return actions.filter(a => !a.disabled);
+      this.sendCustomButtonsToEventBus(customButtons);
     },
   },
   
-  // 监听 cards1 数组变化
+  /**
+   * 组件挂载时注册自定义按钮
+   */
+  created() {
+    // 发送自定义按钮到eventBus
+    this.sendCustomButtons();
+  },
+  
+  /**
+   * 当matchMode变化时，更新自定义按钮
+   */
   watch: {
+    matchMode() {
+      this.sendCustomButtons();
+    },
+    
+    // 保留原有的cards1监听
     cards1: {
       handler() {
         this.$nextTick(() => {
@@ -879,6 +861,8 @@ const Sort = {
       deep: true
     }
   },
+  
+
 };
 
 // 使用工厂函数创建增强的Sort组件并导出

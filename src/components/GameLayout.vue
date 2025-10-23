@@ -46,7 +46,6 @@
       :visible="showHelp" 
       :gameRule="gameRule"
       :gameControlsButtons="gameControlsButtons"
-      :gameControlsRefs="{ gameControls: $refs.gameControls, bottomGameControls: $refs.bottomGameControls }"
       @close="closeHelp"
     />
 
@@ -171,7 +170,6 @@ import GameControls from "./GameControls.vue";
 import GameResultModal from "./GameResultModal.vue";
 import GameSettings from "./GameSettings.vue";
 import GameHelp from "./GameHelp.vue";
-import eventBus from "../utils/eventBus.js";
 
 export default {
   name: "GameLayout",
@@ -194,7 +192,6 @@ export default {
       autoHideTimer: null, // 自动隐藏定时器
       showSettings: false, // 是否显示设置弹窗
       showHelp: false, // 是否显示帮助弹窗
-      gameControlsButtons: {}, // 存储所有GameControls组件的按钮配置
       longPressTimer: null, // 长按定时器
       isLongPress: false, // 是否正在长按
       isHovered: false, // 是否正在悬停
@@ -238,6 +235,10 @@ export default {
       default: true,
     },
     gameControlsConfig: {
+      type: Object,
+      default: () => ({}),
+    },
+    gameControlsButtons: {
       type: Object,
       default: () => ({}),
     },
@@ -361,35 +362,20 @@ export default {
     this.setupScrollListener();
     this.startAutoHideTimer();
     
-    // 监听事件总线中的GameControls相关事件
-    eventBus.on('game-controls:mounted', this.handleControlsMounted);
-    eventBus.on('game-controls:buttons-updated', this.handleControlsButtonsUpdated);
-    eventBus.on('game-controls:unmounted', this.handleControlsUnmounted);
-    
-    // 触发一次请求，让已存在的GameControls组件更新配置
-    setTimeout(() => {
-      eventBus.emit('game-layout:request-update');
-      
-      // 检查是否首次访问该游戏，如果是则打开帮助弹窗
-      const currentGame = this.currentGameName;
-      if (currentGame) {
-        const visitedKey = `game-visited-${currentGame}`;
-        if (!localStorage.getItem(visitedKey)) {
-          console.log('首次访问游戏，显示帮助弹窗');
-          setTimeout(() => {
-            this.openHelp();
-            this.$refs.gameSettings.recordGameVisit();
-          }, 500); // 延迟打开，确保组件完全初始化
-        }
+    // 检查是否首次访问该游戏，如果是则打开帮助弹窗
+    const currentGame = this.currentGameName;
+    if (currentGame) {
+      const visitedKey = `game-visited-${currentGame}`;
+      if (!localStorage.getItem(visitedKey)) {
+        console.log('首次访问游戏，显示帮助弹窗');
+        setTimeout(() => {
+          this.openHelp();
+          this.$refs.gameSettings.recordGameVisit();
+        }, 500); // 延迟打开，确保组件完全初始化
       }
-    }, 100);
+    }
   },
   beforeUnmount() {
-    // 清理事件监听
-    eventBus.off('game-controls:mounted', this.handleControlsMounted);
-    eventBus.off('game-controls:buttons-updated', this.handleControlsButtonsUpdated);
-    eventBus.off('game-controls:unmounted', this.handleControlsUnmounted);
-    
     // 清理其他资源
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
@@ -592,20 +578,7 @@ export default {
       this.showSettings = false;
     },
     
-    // 处理GameControls组件挂载事件
-    handleControlsMounted(data) {
-      this.gameControlsButtons[data.instanceId] = data.buttons;
-    },
-    
-    // 处理GameControls组件按钮更新事件
-    handleControlsButtonsUpdated(data) {
-      this.gameControlsButtons[data.instanceId] = data.buttons;
-    },
-    
-    // 处理GameControls组件卸载事件
-    handleControlsUnmounted(data) {
-      delete this.gameControlsButtons[data.instanceId];
-    },
+
     
     // 打开帮助弹窗
     openHelp() {

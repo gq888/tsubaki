@@ -132,41 +132,6 @@ const Fish = {
       
       return '渲染完成';
     },
-    
-    /**
-     * 获取当前可用的操作列表
-     * 用于终端交互式游戏
-     */
-    getAvailableActions() {
-      const actions = [];
-      
-      // 重新开始按钮
-      actions.push({
-        id: 1,
-        label: '重新开始 (RESTART)',
-        method: 'goon',
-        args: []
-      });
-      
-      // 单步执行按钮
-      actions.push({
-        id: 2,
-        label: '单步执行 (►)',
-        method: 'stepFn',
-        args: []
-      });
-      
-      // 自动运行按钮
-      const isAutoRunning = this.gameManager?.isAutoRunning || false;
-      actions.push({
-        id: 3,
-        label: isAutoRunning ? '停止自动 (STOP)' : '自动运行 (AUTO)',
-        method: 'pass',
-        args: []
-      });
-      
-      return actions;
-    },
   },
   computed: {
     // 监听点数
