@@ -814,15 +814,13 @@ const Sort = {
 
     sendCustomButtons() {
       const nextMode = this.matchMode === 1 ? 2 : this.matchMode === 2 ? 4 : 1;
-      const customButtons = [{
+      this.customButtons.push({
         action: 'difficulty',
         label: 'MODE',
         method: 'setMatchMode',
         args: [nextMode],
         description: 'SWITCH DIFFICULTY MODE (EASY → NORMAL → HARD)'
-      }];
-      
-      this.addCustomButtons(customButtons);
+      });
     },
   },
   

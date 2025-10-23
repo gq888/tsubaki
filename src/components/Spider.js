@@ -707,20 +707,14 @@ const Spider = {
     },
     
     sendCustomButtons() {
-      const customButtons = [];
-      
       // 添加Spider游戏特有的发牌按钮（如果牌堆有牌）
-      if (this.cards[0].length > 0) {
-        customButtons.push({
-          action: 'deal',
-          label: 'DEAL',
-          method: 'clickCard',
-          args: [0],
-          description: 'DEAL FROM THE DECK'
-        });
-      }
-      
-      this.addCustomButtons(customButtons);
+      this.customButtons.push({
+        action: 'deal',
+        label: 'DEAL',
+        method: 'clickCard',
+        args: [0],
+        description: 'DEAL FROM THE DECK'
+      });
     },
   },
     

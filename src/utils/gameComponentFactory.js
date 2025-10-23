@@ -176,9 +176,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         }
       });
 
-      // 初始化自定义按钮数组
-      this.customButtons = [];
-
       // 调用自定义初始化函数
       if (customInit) {
         customInit.call(this);
@@ -209,9 +206,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       if (this._settingsChangeHandler) {
         gameSettingsManager.removeListener(this._settingsChangeHandler);
       }
-
-      // 清理自定义按钮
-      this.customButtons = [];
 
       // 调用自定义清理函数
       if (customCleanup) {
@@ -418,15 +412,15 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           'auto': 'pass'
         };
         
-        // 首先尝试从事件总线获取按钮配置
+        // 使用收集的自定义按钮
         this.collectedGameButtons.forEach((button, index) => {
-          const methodName = actionToMethodMap[button.action] || button.action;
+          const methodName = button.method || actionToMethodMap[button.action] || button.action;
           if (this[methodName] && typeof this[methodName] === 'function') {
             actions.push({
               id: index + 1, // 使用从1开始的序号
               label: button.label || `${button.action.toUpperCase()}`,
               method: methodName,
-              args: [], // 默认空数组
+              args: button.args || [], // 默认空数组
               disabled: button.disabled || false,
             });
           } else {
@@ -436,23 +430,6 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         
         // 过滤掉禁用的按钮
         return actions.filter(a => !a.disabled);
-      },
-      
-      /**
-       * 添加自定义按钮配置
-       * 用于添加游戏特定的按钮配置
-       */
-      addCustomButtons(buttons) {
-        if (!Array.isArray(buttons)) return;
-        
-        // 清除旧的自定义按钮
-        this.customButtons = [];
-        
-        // 添加新的自定义按钮
-        this.customButtons = buttons.map(button => ({
-          ...button,
-          args: button.args || [] // 确保有默认空数组
-        }));
       },
 
       ...baseComponent.methods,
