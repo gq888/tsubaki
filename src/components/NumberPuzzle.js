@@ -175,6 +175,9 @@ const NumberPuzzle = {
       if (bestMove) {
         this.clickCard(bestMove.row, bestMove.col);
       }
+      // 随机选择一个有效移动，确保状态变化
+      const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+      this.clickCard(randomMove.row, randomMove.col);
     },
     
     /**
@@ -187,7 +190,14 @@ const NumberPuzzle = {
     },
     
     /**
-     * 计算位置到目标位置的距离（负值表示改善）
+     * 计算曼哈顿距离
+     */
+    calculateManhattanDistance(pos, targetPos) {
+      return Math.abs(pos.row - targetPos.row) + Math.abs(pos.col - targetPos.col);
+    },
+    
+    /**
+     * 计算位置到目标位置的距离（负值表示改善）- 旧方法，保留兼容性
      */
     calculateDistance(pos, targetPos) {
       const currentDistance = Math.abs(pos.row - targetPos.row) + Math.abs(pos.col - targetPos.col);
@@ -280,4 +290,4 @@ const NumberPuzzle = {
 };
 
 // 使用工厂函数创建增强的数字拼图组件并导出
-export default GameComponentPresets.simpleGame(NumberPuzzle, 300);
+export default GameComponentPresets.puzzleGame(NumberPuzzle, 300);
