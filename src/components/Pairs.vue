@@ -18,12 +18,12 @@
             style="padding-left: 0; margin: 0"
           >
             <CardImage
-              v-for="(item, i) in cards1"
+              v-for="(item, i) in cardPositions"
               :key="i"
               class="card m-0 radius"
               style="max-width: 25%"
-              :card-id="sign == item || sign2 == item || cards2[item] ? item : 'bg'"
-              @click="(sign != item && sign2 != item && !cards2[item]) && canOperate && clickCard(item, i)"
+              :card-id="selectedCard == item || secondSelectedCard == item || matchedCards[item] ? item : 'bg'"
+              @click="(selectedCard != item && secondSelectedCard != item && !matchedCards[item]) && canOperate && clickCard(item, i)"
             />
           </ul>
         </div>

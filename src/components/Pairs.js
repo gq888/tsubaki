@@ -7,102 +7,169 @@ const Pairs = {
   data() {
     return {
       title: "Pairs",
-      cards1: [],
-      cards2: [],
-      arr: [],
-      sign: -1,
-      sign2: -2,
+      // 存储牌的位置映射
+      cardPositions: [],
+      // 标记牌是否已配对
+      matchedCards: [],
+      // 标记牌是否已被查看过
+      seenCards: [],
+      // 当前选中的第一张牌索引
+      selectedCard: -1,
+      // 当前选中的第二张牌索引
+      secondSelectedCard: -2,
+      // 游戏时间（秒）
       time: 0,
+      // 计时器引用
       _timer: 0,
-      number: 48,
+      // 牌的总数
+      totalCards: 48,
+      // 未使用的变量
       n: 0,
     };
   },
   methods: {
+    /**
+     * 初始化游戏状态
+     */
     init() {
+      // 重置游戏计时器
       this.time = 0;
       clearInterval(this._timer);
       this._timer = 0;
-      this.sign = -1;
-      this.sign2 = -1;
-      this.cards1.splice(0);
-      this.arr.splice(0);
-      this.cards2.splice(0);
-      let cards = this.cards1;
-      for (let i = 0; i < this.number; i++) {
-        cards.push(i);
-        this.cards2.push(false);
+      
+      // 重置选中状态
+      this.selectedCard = -1;
+      this.secondSelectedCard = -1;
+      
+      // 清空数组
+      this.cardPositions.splice(0);
+      this.seenCards.splice(0);
+      this.matchedCards.splice(0);
+      
+      // 创建牌并打乱顺序
+      const cardPositions = this.cardPositions;
+      for (let i = 0; i < this.totalCards; i++) {
+        cardPositions.push(i);
+        this.matchedCards.push(false);
       }
-      shuffleCards(cards, this.number);
+      
+      shuffleCards(cardPositions, this.totalCards);
     },
+    /**
+     * 处理卡片点击事件
+     * @param {number} card - 被点击的卡片索引
+     */
     async clickCard(card) {
+      // 启动游戏计时器（首次点击时）
       if (!this._timer) {
         this._timer = setInterval(() => {
           this.time++;
         }, 1000);
       }
-      if (this.sign == card || this.cards2[card]) {
+      
+      // 忽略已经选中的牌或已经配对的牌
+      if (this.selectedCard === card || this.matchedCards[card]) {
         return;
       }
-      this.arr[card] = true;
+      
+      // 标记牌为已查看
+      this.seenCards[card] = true;
+      
+      // 记录操作
       this.gameManager.recordOperation();
-      if (this.sign < 0) {
-        this.sign = card;
+      
+      // 如果还没有选中第一张牌，将当前牌设为第一张
+      if (this.selectedCard < 0) {
+        this.selectedCard = card;
         return;
       }
-      if (this.sign >> 2 == card >> 2) {
-        this.cards2.splice(card, 1, true);
-        this.cards2.splice(this.sign, 1, true);
-        this.sign = -1;
+      
+      // 检查两张牌是否匹配（使用位运算判断是否属于同一组）
+      const isMatched = (this.selectedCard >> 2) === (card >> 2);
+      
+      if (isMatched) {
+        // 匹配成功，标记两张牌为已配对
+        this.matchedCards.splice(card, 1, true);
+        this.matchedCards.splice(this.selectedCard, 1, true);
+        this.selectedCard = -1;
       }
+      
+      // 记录第二张选中的牌
       this.gameManager.hitflag = false;
-      this.sign2 = card;
+      this.secondSelectedCard = card;
+      
+      // 等待一段时间让用户看到第二张牌
       await this.wait();
-      this.sign = -1;
-      this.sign2 = -1;
+      
+      // 重置选中状态
+      this.selectedCard = -1;
+      this.secondSelectedCard = -1;
       this.gameManager.hitflag = true;
 
       // 检查游戏是否结束
-      let gameOver = true;
-      for (let i = 0; i < this.number; i++) {
-        if (!this.cards2[i]) {
-          gameOver = false;
-          break;
-        }
-      }
+      const isGameOver = this.checkGameCompletion();
 
-      if (gameOver) {
+      if (isGameOver) {
         this.gameManager.setWin();
         clearInterval(this._timer);
         this._timer = 0;
       }
     },
+    
+    /**
+     * 检查游戏是否完成
+     * @returns {boolean} - 如果所有牌都已配对，返回true
+     */
+    checkGameCompletion() {
+      for (let i = 0; i < this.totalCards; i++) {
+        if (!this.matchedCards[i]) {
+          return false;
+        }
+      }
+      return true;
+    },
+    /**
+     * 自动执行游戏步骤（AI模式）
+     */
     async stepFn() {
-      if (this.sign >= 0) {
+      // 如果已经选中了第一张牌，尝试找出匹配的牌
+      if (this.selectedCard >= 0) {
+        // 查找同一组中的其他牌
+        const groupStartIndex = this.selectedCard - (this.selectedCard % 4);
         for (let i = 0; i < 4; i++) {
-          let sign = this.sign - (this.sign % 4) + i;
-          if (sign != this.sign && this.arr[sign] && !this.cards2[sign]) {
-            return await this.clickCard(sign);
+          const currentCard = groupStartIndex + i;
+          // 跳过当前已选中的牌，选择已查看但未配对的牌
+          if (currentCard !== this.selectedCard && 
+              this.seenCards[currentCard] && 
+              !this.matchedCards[currentCard]) {
+            return await this.clickCard(currentCard);
           }
         }
       } else {
-        let num;
-        for (let i = 0; i < this.number; i++) {
-          if (i % 4 == 0) {
-            num = 0;
+        // 没有选中牌时，尝试找出已查看过的多张相同组的牌
+        let seenInGroupCount;
+        for (let i = 0; i < this.totalCards; i++) {
+          // 每组牌开始时重置计数器
+          if (i % 4 === 0) {
+            seenInGroupCount = 0;
           }
-          if (this.arr[i] && !this.cards2[i]) {
-            num++;
+          
+          if (this.seenCards[i] && !this.matchedCards[i]) {
+            seenInGroupCount++;
           }
-          if (num > 1) {
+          
+          // 如果在同一组中看到多张未配对的牌，选择当前牌
+          if (seenInGroupCount > 1) {
             return await this.clickCard(i);
           }
         }
       }
-      for (let i = 0; i < this.number; i++) {
-        let c = this.cards1[i];
-        if (!this.arr[c] && !this.cards2[c]) {
-          return await this.clickCard(c);
+      
+      // 如果没有明确的匹配策略，选择一张未查看过的牌
+      for (let i = 0; i < this.totalCards; i++) {
+        const cardId = this.cardPositions[i];
+        if (!this.seenCards[cardId] && !this.matchedCards[cardId]) {
+          return await this.clickCard(cardId);
         }
       }
     },
@@ -112,37 +179,47 @@ const Pairs = {
      * 用于终端交互式游戏
      */
     renderTextView() {
+      // 打印游戏标题
       console.log('\n╔════════════════════════════════════════════════╗');
       console.log('║              配对游戏 (Pairs)                 ║');
       console.log('╚════════════════════════════════════════════════╝');
       
-      // 统计信息
-      const matched = this.cards2.filter(m => m).length;
-      console.log(`\n时间: ${this.time}秒 | 已配对: ${matched}/${this.number} 张\n`);
+      // 显示统计信息
+      const matchedCount = this.matchedCards.filter(m => m).length;
+      console.log(`\n时间: ${this.time}秒 | 已配对: ${matchedCount}/${this.totalCards} 张\n`);
       
+      // 显示图例
       console.log('\n图例:');
       console.log('  [?] = 未翻开  [✓] = 已看过  > = 第一张  * = 第二张');
       
-      console.log(this.sign >= 0 ? `\n当前选中: ${getCardPlaceholderText(this.sign)} (需要配对)` : '\n');
+      // 显示当前选中的牌
+      if (this.selectedCard >= 0) {
+        console.log(`\n当前选中: ${getCardPlaceholderText(this.selectedCard)} (需要配对)`);
+      } else {
+        console.log('\n');
+      }
       
       // 按6x8网格显示 - 与Vue模板保持一致
-      const cols = 8;
-      const rows = 6;
+      const gridColumns = 8;
+      const gridRows = 6;
       
-      for (let row = 0; row < rows; row++) {
+      for (let row = 0; row < gridRows; row++) {
         let line = '  ';
-        for (let col = 0; col < cols; col++) {
-          const position = row * cols + col;
-          const cardId = this.cards1[position]; // 获取该位置的牌ID
+        for (let col = 0; col < gridColumns; col++) {
+          const gridPosition = row * gridColumns + col;
+          const cardId = this.cardPositions[gridPosition]; // 获取该位置的牌ID
           
           // 检查这张牌是否被翻开或选中
-          const isFlipped = this.cards2[cardId] || cardId === this.sign || cardId === this.sign2;
-          const isSeen = this.arr[cardId];
+          const isFlipped = this.matchedCards[cardId] || 
+                           cardId === this.selectedCard || 
+                           cardId === this.secondSelectedCard;
+          const isSeen = this.seenCards[cardId];
           
           if (isFlipped) {
             // 已翻开或当前选中
             const cardText = getCardPlaceholderText(cardId);
-            const prefix = cardId === this.sign ? '>' : cardId === this.sign2 ? '*' : '';
+            const prefix = cardId === this.selectedCard ? '>' : 
+                          (cardId === this.secondSelectedCard ? '*' : '');
             line += `${(prefix + cardText).padEnd(3)} `;
           } else if (isSeen) {
             line += '[✓] ';
