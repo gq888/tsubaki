@@ -259,11 +259,54 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       // 使用GameStateManager的默认计算属性
       ...GameStateManager.getDefaultComputedProperties(),
 
+      // 显示按钮计算属性
+      displayButtons() {
+        // 如果提供了自定义按钮数组，则使用它
+        if (this.gameControlsConfig?.buttons && this.gameControlsConfig.buttons.length > 0) {
+          return this.gameControlsConfig.buttons;
+        }
+
+        // 否则生成默认按钮列表
+        const defaultButtons = [];
+
+        // 根据配置添加按钮
+        if (hasUndo) {
+          defaultButtons.push({
+            label: "◀︎",
+            action: "undo",
+            disabled: this.undoDisabled,
+          });
+        }
+
+        if (hasRestart) {
+          defaultButtons.push({
+            label: "RESTART",
+            action: "goon",
+            disabled: this.restartDisabled,
+          });
+        }
+
+        // 默认添加AUTO按钮
+        defaultButtons.push({
+          label: this.isAutoRunning ? "STOP" : "AUTO",
+          action: "auto",
+          disabled: this.autoDisabled,
+        });
+
+        // 默认添加STEP按钮
+        defaultButtons.push({
+          label: "►",
+          action: "step",
+          disabled: this.stepDisabled,
+        });
+
+        return defaultButtons;
+      },
+
       // 游戏控制配置
       gameControlsConfig() {
         return {
-          showUndo: hasUndo,
-          showRestart: hasRestart,
+          buttons: this.displayButtons,
           undoDisabled: this.undoDisabled,
           restartDisabled: this.restartDisabled,
           stepDisabled: this.stepDisabled,

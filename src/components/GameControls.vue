@@ -17,7 +17,7 @@ import eventBus from "../utils/eventBus.js";
 export default {
   name: "GameControls",
   props: {
-    // 使用数组定义按钮配置，优先级高于单独的show属性
+    // 使用数组定义按钮配置，现在是主要的按钮配置方式
     buttons: {
       type: Array,
       default: () => [],
@@ -28,24 +28,7 @@ export default {
       default: () => `gameControls_${Math.random().toString(36).substr(2, 9)}`,
     },
 
-    // 以下属性保持向后兼容性
-    showUndo: {
-      type: Boolean,
-      default: true,
-    },
-    showRestart: {
-      type: Boolean,
-      default: true,
-    },
-    showStep: {
-      type: Boolean,
-      default: true,
-    },
-    showAuto: {
-      type: Boolean,
-      default: true,
-    },
-
+    // 仅保留必要的状态属性
     undoDisabled: {
       type: Boolean,
       default: false,
@@ -84,69 +67,15 @@ export default {
   },
   
   computed: {
-    // 根据buttons数组或单独的show属性生成要显示的按钮列表
+    // 直接使用buttons属性，不再需要复杂的计算逻辑
     displayButtons() {
-      // 如果提供了buttons数组，则使用它
-      if (this.buttons && this.buttons.length > 0) {
-        return this.buttons;
-      }
-
-      // 否则使用单独的show属性生成默认按钮列表（保持向后兼容）
-      const defaultButtons = [];
-
-      if (this.showUndo) {
-        defaultButtons.push({
-          label: "◀︎",
-          action: "undo",
-          disabled: this.undoDisabled,
-        });
-      }
-
-      if (this.showRestart) {
-        defaultButtons.push({
-          label: "RESTART",
-          action: "goon",
-          disabled: this.restartDisabled,
-        });
-      }
-
-      if (this.showAuto) {
-        defaultButtons.push({
-          label: this.isAutoRunning ? "STOP" : "AUTO",
-          action: "auto",
-          disabled: this.autoDisabled,
-        });
-      }
-
-      if (this.showStep) {
-        defaultButtons.push({
-          label: "►",
-          action: "step",
-          disabled: this.stepDisabled,
-        });
-      }
-
-      return defaultButtons;
+      return this.buttons;
     },
   },
   methods: {
     // 统一的按钮点击事件处理
     handleButtonClick(action) {
       this.$emit(action);
-    },
-
-    // 保留原有方法以保持兼容性
-    undo() {
-      this.$emit("undo");
-    },
-    goon() {
-      this.$emit("goon");
-    },
-    stepFn() {
-      this.$emit("step");
-    },
-    pass() {
-      this.$emit("auto");
     },
   },
   

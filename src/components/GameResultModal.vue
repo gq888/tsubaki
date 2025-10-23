@@ -15,7 +15,6 @@
         :buttons="gameControlsButtons"
         @undo="handleAction('undo')"
         @goon="handleAction('goon')"
-        @step="handleAction('step')"
         @auto="handleAction('auto')"
       />
        
