@@ -924,7 +924,24 @@ async function main() {
     }
   });
   
-  await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed, outputFile, maxSteps);
+  const result = await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed, outputFile, maxSteps);
+  
+  // 检查执行结果，如果有错误则显示并退出
+  if (result && !result.success && result.error) {
+    console.error('\n❌ 测试执行失败:', result.error);
+    
+    // 提供更详细的错误信息，特别是对于语法错误
+    if (result.error.includes('SyntaxError') || result.error.includes('Unexpected')) {
+      console.error('📋 语法错误提示: 请检查组件文件', componentPath, '的语法是否正确');
+    } else if (result.error.includes('Cannot find module')) {
+      console.error('📁 文件路径错误: 请确认文件路径是否正确，文件是否存在于:', componentPath);
+    }
+    
+    if (result.stack) {
+      console.error('错误堆栈:', result.stack);
+    }
+    process.exit(1);
+  }
 }
 
 // 直接调用main函数
