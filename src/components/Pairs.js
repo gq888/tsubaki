@@ -57,9 +57,12 @@ const Pairs = {
     },
     /**
      * 处理卡片点击事件
-     * @param {number} card - 被点击的卡片索引
+     * @param {number} positionIndex - 被点击的卡片位置索引
      */
-    async clickCard(card) {
+    async clickCard(positionIndex) {
+      // 通过位置索引获取卡片ID
+      const cardId = this.cardPositions[positionIndex];
+      
       // 启动游戏计时器（首次点击时）
       if (!this._timer) {
         this._timer = setInterval(() => {
@@ -68,35 +71,35 @@ const Pairs = {
       }
       
       // 忽略已经选中的牌或已经配对的牌
-      if (this.selectedCard === card || this.matchedCards[card]) {
+      if (this.selectedCard === cardId || this.matchedCards[cardId]) {
         return;
       }
       
       // 标记牌为已查看
-      this.seenCards[card] = true;
+      this.seenCards[cardId] = true;
       
       // 记录操作
       this.gameManager.recordOperation();
       
       // 如果还没有选中第一张牌，将当前牌设为第一张
       if (this.selectedCard < 0) {
-        this.selectedCard = card;
+        this.selectedCard = cardId;
         return;
       }
       
       // 检查两张牌是否匹配（使用位运算判断是否属于同一组）
-      const isMatched = (this.selectedCard >> 2) === (card >> 2);
+      const isMatched = (this.selectedCard >> 2) === (cardId >> 2);
       
       if (isMatched) {
         // 匹配成功，标记两张牌为已配对
-        this.matchedCards.splice(card, 1, true);
+        this.matchedCards.splice(cardId, 1, true);
         this.matchedCards.splice(this.selectedCard, 1, true);
         this.selectedCard = -1;
       }
       
       // 记录第二张选中的牌
       this.gameManager.hitflag = false;
-      this.secondSelectedCard = card;
+      this.secondSelectedCard = cardId;
       
       // 等待一段时间让用户看到第二张牌
       await this.wait();
@@ -137,12 +140,16 @@ const Pairs = {
         // 查找同一组中的其他牌
         const groupStartIndex = this.selectedCard - (this.selectedCard % 4);
         for (let i = 0; i < 4; i++) {
-          const currentCard = groupStartIndex + i;
+          const targetCardId = groupStartIndex + i;
           // 跳过当前已选中的牌，选择已查看但未配对的牌
-          if (currentCard !== this.selectedCard && 
-              this.seenCards[currentCard] && 
-              !this.matchedCards[currentCard]) {
-            return await this.clickCard(currentCard);
+          if (targetCardId !== this.selectedCard && 
+              this.seenCards[targetCardId] && 
+              !this.matchedCards[targetCardId]) {
+            // 找到对应牌ID的位置索引
+            const positionIndex = this.cardPositions.indexOf(targetCardId);
+            if (positionIndex !== -1) {
+              return await this.clickCard(positionIndex);
+            }
           }
         }
       } else {
@@ -160,16 +167,20 @@ const Pairs = {
           
           // 如果在同一组中看到多张未配对的牌，选择当前牌
           if (seenInGroupCount > 1) {
-            return await this.clickCard(i);
+            // 找到对应牌ID的位置索引
+            const positionIndex = this.cardPositions.indexOf(i);
+            if (positionIndex !== -1) {
+              return await this.clickCard(positionIndex);
+            }
           }
         }
       }
       
       // 如果没有明确的匹配策略，选择一张未查看过的牌
-      for (let i = 0; i < this.totalCards; i++) {
-        const cardId = this.cardPositions[i];
+      for (let positionIndex = 0; positionIndex < this.totalCards; positionIndex++) {
+        const cardId = this.cardPositions[positionIndex];
         if (!this.seenCards[cardId] && !this.matchedCards[cardId]) {
-          return await this.clickCard(cardId);
+          return await this.clickCard(positionIndex);
         }
       }
     },

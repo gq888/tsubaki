@@ -23,7 +23,7 @@
               class="card m-0 radius"
               style="max-width: 25%"
               :card-id="selectedCard == item || secondSelectedCard == item || matchedCards[item] ? item : 'bg'"
-              @click="(selectedCard != item && secondSelectedCard != item && !matchedCards[item]) && canOperate && clickCard(item, i)"
+              @click="(selectedCard != item && secondSelectedCard != item && !matchedCards[item]) && canOperate && clickCard(i)"
             />
           </ul>
         </div>
