@@ -675,9 +675,11 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
       });
       console.log('  [0] 退出游戏');
       
-      // 获取用户输入
-      const input = await question('\n请选择操作 (输入数字): ');
-      const choice = parseInt(input);
+      // 获取用户输入（支持操作数字和参数）
+      const input = await question('\n请选择操作 (输入数字) [可选参数]: ');
+      const inputParts = input.trim().split(/\s+/);
+      const choice = parseInt(inputParts[0]);
+      const dynamicArgs = inputParts.slice(1); // 提取额外参数
       
       if (choice === 0) {
         console.log('\n👋 退出游戏');
@@ -690,6 +692,33 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
         console.log('\n❌ 无效的选择，请重试');
         continue;
       }
+      
+      // 组合默认参数和动态参数
+      let methodArgs = selectedAction.args || [];
+      if (dynamicArgs.length > 0) {
+        // 尝试将字符串参数解析为适当的数据类型
+        const parsedArgs = dynamicArgs.map(arg => {
+          // 尝试解析为数字
+          if (!isNaN(arg) && !isNaN(parseFloat(arg))) {
+            return parseFloat(arg);
+          }
+          // 尝试解析为布尔值
+          if (arg.toLowerCase() === 'true') return true;
+          if (arg.toLowerCase() === 'false') return false;
+          // 尝试解析为JSON
+          if (arg.startsWith('{') && arg.endsWith('}') || 
+              arg.startsWith('[') && arg.endsWith(']')) {
+            try {
+              return JSON.parse(arg);
+            } catch (e) {
+              // 解析失败，返回原始字符串
+            }
+          }
+          // 默认返回字符串
+          return arg;
+        });
+        methodArgs = [...methodArgs, ...parsedArgs];
+      }
         
       // 如果是异步方法且需要等待完成，在方法执行前就开始监听文件变化
       let fileWatchPromise = waitForFileChange(outputFile, timeout);
@@ -701,7 +730,7 @@ async function interactiveGameLoop(componentPath, seed = null, timeout = 60000, 
           componentPath,
           selectedAction.method,
           currentState,
-          selectedAction.args || [],
+          methodArgs,
           timeout,
           seed,
           outputFile

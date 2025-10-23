@@ -27,6 +27,9 @@ const Pairs = {
       n: 0,
     };
   },
+  created() {
+    this.sendCustomButtons();
+  },
   methods: {
     /**
      * 初始化游戏状态
@@ -280,11 +283,16 @@ const Pairs = {
       return '渲染完成';
     },
     
-    /**
-     * 获取当前可用的操作列表
-     * 用于终端交互式游戏
-     * 使用工厂函数中统一实现的方法
-     */
+    sendCustomButtons() {
+      // 添加Spider游戏特有的发牌按钮（如果牌堆有牌）
+      this.customButtons.push({
+        action: 'clickCard',
+        label: 'CLICK',
+        method: 'clickCard',
+        args: [],
+        description: 'CLICK ONE CARD'
+      });
+    },
   },
 };
 
