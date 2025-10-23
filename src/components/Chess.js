@@ -1,6 +1,11 @@
 import { shuffleCards, seededRandom } from "../utils/help.js";
 import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 
+/**
+ * GridBattle对象定义了棋盘对战游戏的基础组件，将传递给GameComponentPresets.strategyGame工厂函数
+ * 工厂函数会为该组件添加游戏管理、按钮控制、自动操作等功能
+ */
+
 let _modes = [
   [1, 0],
   [1, 1],
@@ -31,6 +36,13 @@ const GridBattle = {
         1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1,
         1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1,
       ],
+      
+      // 以下属性由工厂函数GameComponentPresets.strategyGame添加：
+      // gameManager: 游戏管理器实例，提供游戏状态控制和自动操作功能
+      // customButtons: 自定义按钮数组，用于存储游戏控制按钮配置
+      // step: 当前游戏步骤计数
+      // difficulty: 游戏难度级别（默认为"normal"）
+      // seed: 随机种子，用于确保游戏结果可重现
     };
   },
   computed: {
@@ -431,8 +443,64 @@ const GridBattle = {
      * 用于终端交互式游戏
      * 使用工厂函数中统一实现的方法
      */
+    
+    // 注意：以下方法由工厂函数添加并可在当前组件中访问：
+    // - wait(delay): 延迟函数
+    // - pass(): 自动模式方法（组件中未重写）
+    // - goon(): 重新开始方法（组件中未重写）
+    // - getAvailableActions(): 获取可用操作列表
+    // - setSeed(seed): 设置随机数种子
+    // - setDifficulty(level): 设置游戏难度（由strategyGame预设添加）
+    // - loadDelaySettings(): 加载延迟设置
+    // - handleSettingsChanged(settings): 处理设置变化事件
+    // - getCardPlaceholderText(): 获取卡片占位符文本
+    // - 注意：组件中重写了undo()方法
   },
+  
+  // 以下方法由工厂函数GameComponentPresets.strategyGame添加：
+  // wait(): Promise<void> - 等待指定时间，用于游戏步骤延迟
+  // undo(): void - 撤销上一步操作（组件重写了此方法，一次撤销两个操作）
+  // pass(): void - 跳过当前步骤
+  // goon(): void - 继续游戏
+  // goBack(): void - 返回上一状态
+  // step(fn: Function): Promise<void> - 执行游戏步骤
+  // setDifficulty(level: string): void - 设置游戏难度
+  // executeMethodWithRenderToString(method: string, ...args: any[]): Promise<void> - 执行方法并渲染
+  // getActions(): Array<Object> - 获取当前可用的操作列表
+  // setSeed(seed: number): void - 设置随机种子
+  // getAvailableActions(): Array<Object> - 获取可用操作（终端交互用）
+  // setWin(): void - 设置游戏胜利状态
+  // setLose(): void - 设置游戏失败状态
+  // setDraw(): void - 设置游戏平局状态
 };
 
 // 使用工厂函数创建增强的GridBattle组件并导出
 export default GameComponentPresets.strategyGame(GridBattle, 1200);
+
+/**
+ * 工厂函数GameComponentPresets.strategyGame为GridBattle组件添加的功能：
+ * 
+ * 基础增强功能（来自createEnhancedGameComponent）：
+ * - gameManager属性：提供游戏状态管理、自动模式控制和步骤执行
+ * - customButtons属性：存储自定义按钮配置
+ * - displayButtons计算属性：决定显示哪些游戏控制按钮
+ * - gameControlsConfig计算属性：游戏控制配置
+ * - wait()、undo()、pass()、goon()等方法：游戏控制方法
+ * - created和beforeUnmount生命周期钩子：管理游戏状态和事件监听
+ * - setWin()、setLose()、setDraw()方法：设置游戏结果状态
+ * - setSeed()方法：设置随机种子
+ * - getAvailableActions()方法：获取可用操作（终端交互用）
+ * 
+ * strategyGame特有功能：
+ * - step属性：游戏步骤计数器（组件中已使用）
+ * - difficulty属性：游戏难度配置（默认为"normal"）
+ * - seed属性：随机种子，确保游戏可重现
+ * - getActions()方法：获取当前可用的操作列表
+ * - setDifficulty()方法：设置游戏难度
+ * - 提供策略游戏相关的自动操作和状态管理
+ * - 支持自动步骤延迟配置（此处设置为1200ms）
+ * 
+ * 注意事项：
+ * - 组件重写了undo()方法，每调用一次会撤销两个操作
+ * - 组件使用了gameManager来记录操作和管理历史记录
+ */

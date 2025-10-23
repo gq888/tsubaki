@@ -2,6 +2,10 @@ import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 import { shuffleCards } from "../utils/help.js";
 import { getCardPlaceholderText } from "../utils/cardUtils.js";
 
+/**
+ * Sum对象定义了黑杰克(BlackJack)游戏的基础组件，将传递给GameComponentPresets.strategyGame工厂函数
+ * 工厂函数会为该组件添加游戏管理、按钮控制、自动操作等功能
+ */
 const Sum = {
   name: "Sum",
   data() {
@@ -11,6 +15,13 @@ const Sum = {
       arr1: [],
       arr2: [],
       number: 54,
+      
+      // 以下属性由工厂函数GameComponentPresets.strategyGame添加：
+      // gameManager: 游戏管理器实例，提供游戏状态控制和自动操作功能
+      // customButtons: 自定义按钮数组，用于存储游戏控制按钮配置
+      // step: 当前游戏步骤计数
+      // difficulty: 游戏难度级别
+      // seed: 随机种子，用于确保游戏结果可重现
     };
   },
   component: [],
@@ -199,6 +210,16 @@ const Sum = {
     //   this.gameManager.recordOperation();
     // },
   },
+  
+  // 以下方法由工厂函数GameComponentPresets.strategyGame添加：
+  // wait(): Promise<void> - 等待指定时间，用于游戏步骤延迟
+  // undo(): void - 撤销上一步操作
+  // pass(): void - 跳过当前步骤（已被组件使用）
+  // goon(): void - 继续游戏（已被组件使用）
+  // goBack(): void - 返回上一状态
+  // step(fn: Function): Promise<void> - 执行游戏步骤
+  // executeMethodWithRenderToString(method: string, ...args: any[]): Promise<void> - 执行方法并渲染
+  // getActions(): Array<Object> - 获取当前可用的操作列表
   computed: {
     // 监听点数
     score1: function () {
@@ -212,3 +233,23 @@ const Sum = {
 
 // 使用工厂函数创建增强的Sum组件并导出
 export default GameComponentPresets.strategyGame(Sum, 1000);
+
+/**
+ * 工厂函数GameComponentPresets.strategyGame为Sum组件添加的功能：
+ * 
+ * 基础增强功能（来自createEnhancedGameComponent）：
+ * - gameManager属性：提供游戏状态管理、自动模式控制和步骤执行
+ * - customButtons属性：存储自定义按钮配置
+ * - displayButtons计算属性：决定显示哪些游戏控制按钮
+ * - gameControlsConfig计算属性：游戏控制配置
+ * - wait()、undo()、pass()、goon()等方法：游戏控制方法
+ * - created和beforeUnmount生命周期钩子：管理游戏状态和事件监听
+ * 
+ * strategyGame特有功能：
+ * - step属性：游戏步骤计数器
+ * - difficulty属性：游戏难度配置
+ * - seed属性：随机种子，确保游戏可重现
+ * - getActions()方法：获取当前可用的操作列表（组件提供了getAvailableActions()替代实现）
+ * - 提供策略游戏相关的自动操作和状态管理
+ * - 支持自动步骤延迟配置（此处设置为1000ms）
+ */
