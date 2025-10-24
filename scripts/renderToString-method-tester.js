@@ -652,37 +652,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           testSuccess: (this._testCapture.after && (this._testCapture.after.winflag || this._testCapture.after.loseflag || this._testCapture.after.drawflag))
         };
         
-        // 使用自定义replacer处理循环引用和特殊对象
-        const seen = new WeakMap();
-        const pathStack = [];
-        let hasCircular = false;
-        
-        const replacer = function(key, value) {
-          // 跳过以_开头的属性
-          if (typeof key === 'string' && key.startsWith('_')) {
-            return undefined;
-          }
-          
-          // 处理对象循环引用
-          if (typeof value === 'object' && value !== null) {
-            if (seen.has(value)) {
-              const circularPath = seen.get(value);
-              const currentPath = pathStack.join('.') + (key ? '.' + key : '');
-              if (!hasCircular) {
-                hasCircular = true;
-              }
-              console.warn(`   字段: ${currentPath} -> 引用回: ${circularPath}`);
-              return '[Circular]';
-            }
-            
-            const currentPath = pathStack.join('.') + (key ? '.' + key : '');
-            seen.set(value, currentPath);
-            pathStack.push(key);
-          }
-          
-          return value;
-        };
-        
         // 保存执行后的状态到文件
         if (this._testCapture.after) {
           console.log('已保存执行后的状态到文件:', outputFile);

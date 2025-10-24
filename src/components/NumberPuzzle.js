@@ -359,8 +359,24 @@ const NumberPuzzle = {
       if (currentIndex === -1) return false;
       
       // 检查当前数字及之前所有数字是否都已完成
-      const prevTargetSquence = TARGET_SEQUENCE.filter((target, index) => index <= currentIndex && !TARGET_SEQUENCE.findLast((t, i) => t[0] === target[0] && i > index && i <= currentIndex));
-      for (let i = 0; i <= prevTargetSquence.length; i++) {
+      // 兼容Node.js v16，使用filter代替findLast
+      const prevTargetSquence = TARGET_SEQUENCE.filter((target, index) => {
+        if (index > currentIndex) return false;
+        
+        // 查找是否有后续相同数字的目标位置
+        let hasLaterTarget = false;
+        for (let i = currentIndex; i >= index + 1; i--) {
+          const t = TARGET_SEQUENCE[i];
+          if (t[0] === target[0]) {
+            hasLaterTarget = true;
+            break;
+          }
+        }
+        
+        return !hasLaterTarget;
+      });
+      
+      for (let i = 0; i < prevTargetSquence.length; i++) {
         const [targetNumber, targetRow, targetCol] = prevTargetSquence[i];
         
         // 检查目标数字是否在正确的目标位置
