@@ -218,6 +218,7 @@ const NumberPuzzle = {
           const currentPos = this.findNumberPosition(targetNumber);
           if (currentPos) {
             // 检查是否有后续相同数字的目标位置
+            let hasLaterTargetAndAllIntermediateCompleted = false;
             const laterTargets = targetSequence.slice(i + 1).filter(target => target[0] === targetNumber);
             for (const laterTarget of laterTargets) {
               const [laterNumber, laterRow, laterCol] = laterTarget;
@@ -234,9 +235,13 @@ const NumberPuzzle = {
                   }
                 }
                 if (allIntermediateCompleted) {
-                  return [targetNumber, targetRow, targetCol];
+                  hasLaterTargetAndAllIntermediateCompleted = true;
+                  break;
                 }
               }
+            }
+            if (hasLaterTargetAndAllIntermediateCompleted) {
+              continue;
             }
           }
           return [targetNumber, targetRow, targetCol];
