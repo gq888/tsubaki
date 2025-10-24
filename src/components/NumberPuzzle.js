@@ -261,7 +261,7 @@ const NumberPuzzle = {
 
     /**
      * 计算能将目标数字移动到目标位置的下一步移动
-     * 使用路径规划算法避免干扰已完成的数字
+     * 使用路径规划算法避免干扰已完成的数字，同时避开正在计算的目标数字
      */
     calculateNextMove(targetNumber, targetRow, targetCol) {
       const numberPos = this.findNumberPosition(targetNumber);
@@ -272,8 +272,8 @@ const NumberPuzzle = {
         return null;
       }
 
-      // 计算数字到目标的最短路径
-      const numberPath = this.findShortestPath(numberPos, { row: targetRow, col: targetCol });
+      // 计算数字到目标的最短路径，避开目标数字本身
+      const numberPath = this.findShortestPath(numberPos, { row: targetRow, col: targetCol }, targetNumber);
       if (!numberPath || numberPath.length === 0) return null;
 
       // 获取路径的下一步
@@ -287,8 +287,8 @@ const NumberPuzzle = {
         return numberPos;
       }
 
-      // 计算空位到所需位置的路径
-      const emptyPath = this.findShortestPath(this.emptyPos, requiredEmptyPos);
+      // 计算空位到所需位置的路径，同样避开目标数字
+      const emptyPath = this.findShortestPath(this.emptyPos, requiredEmptyPos, targetNumber);
       if (!emptyPath || emptyPath.length === 0) return null;
 
       // 返回空位移动的下一步
@@ -297,9 +297,9 @@ const NumberPuzzle = {
 
     /**
      * 使用BFS算法找到最短路径
-     * 避免经过已完成的数字位置
+     * 避免经过已完成的数字位置，同时避开指定的目标数字
      */
-    findShortestPath(start, end) {
+    findShortestPath(start, end, excludeNumber = null) {
       if (start.row === end.row && start.col === end.col) {
         return [];
       }
@@ -339,6 +339,11 @@ const NumberPuzzle = {
           const numberAtPos = this.grid[neighbor.row][neighbor.col];
           if (numberAtPos !== 0 && this.isNumberCompleted(numberAtPos, neighbor.row, neighbor.col)) {
             continue; // 避免经过已完成的数字
+          }
+
+          // 检查是否是需要避开的目标数字（防止无限循环）
+          if (excludeNumber !== null && numberAtPos === excludeNumber) {
+            continue; // 避免经过正在移动的目标数字
           }
 
           visited.add(neighborKey);
