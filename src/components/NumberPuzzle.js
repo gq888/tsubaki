@@ -164,35 +164,228 @@ const NumberPuzzle = {
     },
     
     /**
-     * 单步执行
-     * 自动找到一个有效的移动并执行
-     */
-    /**
-     * 基于改进贪心策略的智能算法
-     * 使用简单的贪心策略选择最佳移动
+     * 单步执行 - 基于路径规划的智能算法
+     * 按照固定顺序将目标数字移动到指定目标位置
      */
     stepFn() {
-      // 获取所有有效移动
-      const validMoves = this.getValidMoves();
-      if (validMoves.length === 0) return;
-      
-      // 策略1：如果可以直接完成游戏，直接完成
-      const winningMove = this.findWinningMove(validMoves);
-      if (winningMove) {
-        this.clickCard(winningMove.row, winningMove.col);
+      // 目标处理顺序：[数字, 目标位置] 对
+      const targetSequence = [
+        [1, 0], [2, 1], [4, 15], [3, 3], [4, 11], [4, 7], [3, 2], [4, 3],
+        [5, 4], [6, 5], [8, 15], [7, 7], [8, 11], [7, 6], [8, 7], [9, 15],
+        [13, 8], [9, 14], [9, 13], [9, 9], [13, 12], [9, 8], [10, 15],
+        [14, 9], [10, 14], [10, 10], [14, 13], [10, 9], [11, 10], [12, 11], [15, 14]
+      ];
+
+      // 找到当前需要处理的目标
+      const currentTarget = this.findCurrentTarget(targetSequence);
+      if (!currentTarget) {
+        // 所有目标都已完成，随机移动
+        const validMoves = this.getValidMoves();
+        if (validMoves.length > 0) {
+          const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+          this.clickCard(randomMove.row, randomMove.col);
+        }
         return;
       }
-      
-      // 策略2：选择能直接将数字放到正确位置的移动
-      const directMove = this.findDirectCorrectMove(validMoves);
-      if (directMove) {
-        this.clickCard(directMove.row, directMove.col);
-        return;
+
+      const [targetNumber, targetPos] = currentTarget;
+      const targetRow = Math.floor(targetPos / 4);
+      const targetCol = targetPos % 4;
+
+      // 计算下一步移动
+      const nextMove = this.calculateNextMove(targetNumber, targetRow, targetCol);
+      if (nextMove) {
+        this.clickCard(nextMove.row, nextMove.col);
+      } else {
+        // 如果没有找到路径，随机移动
+        const validMoves = this.getValidMoves();
+        if (validMoves.length > 0) {
+          const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+          this.clickCard(randomMove.row, randomMove.col);
+        }
       }
-      
-      // 保底策略：随机选择一个移动
-      const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-      this.clickCard(randomMove.row, randomMove.col);
+    },
+
+    /**
+     * 找到当前需要处理的目标
+     * 按照目标序列顺序检查，返回第一个未完成的目标
+     */
+    findCurrentTarget(targetSequence) {
+      for (let i = 0; i < targetSequence.length; i++) {
+        const [targetNumber, targetPos] = targetSequence[i];
+        const targetRow = Math.floor(targetPos / 4);
+        const targetCol = targetPos % 4;
+        
+        // 检查目标数字是否已在目标位置
+        if (this.grid[targetRow][targetCol] !== targetNumber) {
+          // 检查目标数字当前位置
+          const currentPos = this.findNumberPosition(targetNumber);
+          if (currentPos) {
+            // 检查是否有后续相同数字的目标位置
+            const laterTargets = targetSequence.slice(i + 1).filter(target => target[0] === targetNumber);
+            for (const laterTarget of laterTargets) {
+              const laterPos = laterTarget[1];
+              const laterRow = Math.floor(laterPos / 4);
+              const laterCol = laterPos % 4;
+              
+              // 如果数字在后续目标位置，检查中间是否有未完成的目标
+              if (currentPos.row === laterRow && currentPos.col === laterCol) {
+                // 检查从当前位置到后续目标位置之间的目标是否都已完成
+                let allIntermediateCompleted = true;
+                for (let j = i + 1; j < targetSequence.findIndex(t => t[1] === laterPos); j++) {
+                  const [interNumber, interPos] = targetSequence[j];
+                  const interRow = Math.floor(interPos / 4);
+                  const interCol = interPos % 4;
+                  if (this.grid[interRow][interCol] !== interNumber) {
+                    allIntermediateCompleted = false;
+                    break;
+                  }
+                }
+                if (allIntermediateCompleted) {
+                  return [targetNumber, targetPos];
+                }
+              }
+            }
+          }
+          return [targetNumber, targetPos];
+        }
+      }
+      return null;
+    },
+
+    /**
+     * 找到数字的当前位置
+     */
+    findNumberPosition(number) {
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          if (this.grid[i][j] === number) {
+            return { row: i, col: j };
+          }
+        }
+      }
+      return null;
+    },
+
+    /**
+     * 计算能将目标数字移动到目标位置的下一步移动
+     * 使用路径规划算法避免干扰已完成的数字
+     */
+    calculateNextMove(targetNumber, targetRow, targetCol) {
+      const numberPos = this.findNumberPosition(targetNumber);
+      if (!numberPos) return null;
+
+      // 如果数字已在目标位置，返回null
+      if (numberPos.row === targetRow && numberPos.col === targetCol) {
+        return null;
+      }
+
+      // 计算数字到目标的最短路径
+      const numberPath = this.findShortestPath(numberPos, { row: targetRow, col: targetCol });
+      if (!numberPath || numberPath.length === 0) return null;
+
+      // 获取路径的下一步
+      const nextNumberPos = numberPath[0];
+
+      // 计算空位需要移动到的位置（数字路径的下一步）
+      const requiredEmptyPos = nextNumberPos;
+
+      // 如果空位已经在所需位置，直接移动数字
+      if (this.emptyPos.row === requiredEmptyPos.row && this.emptyPos.col === requiredEmptyPos.col) {
+        return numberPos;
+      }
+
+      // 计算空位到所需位置的路径
+      const emptyPath = this.findShortestPath(this.emptyPos, requiredEmptyPos);
+      if (!emptyPath || emptyPath.length === 0) return null;
+
+      // 返回空位移动的下一步
+      return emptyPath[0];
+    },
+
+    /**
+     * 使用BFS算法找到最短路径
+     * 避免经过已完成的数字位置
+     */
+    findShortestPath(start, end) {
+      if (start.row === end.row && start.col === end.col) {
+        return [];
+      }
+
+      const queue = [{ pos: start, path: [] }];
+      const visited = new Set();
+      visited.add(`${start.row},${start.col}`);
+
+      while (queue.length > 0) {
+        const { pos, path } = queue.shift();
+
+        // 获取相邻位置
+        const neighbors = [
+          { row: pos.row - 1, col: pos.col }, // 上
+          { row: pos.row + 1, col: pos.col }, // 下
+          { row: pos.row, col: pos.col - 1 }, // 左
+          { row: pos.row, col: pos.col + 1 }  // 右
+        ];
+
+        for (const neighbor of neighbors) {
+          // 检查边界
+          if (neighbor.row < 0 || neighbor.row >= 4 || neighbor.col < 0 || neighbor.col >= 4) {
+            continue;
+          }
+
+          const neighborKey = `${neighbor.row},${neighbor.col}`;
+          if (visited.has(neighborKey)) {
+            continue;
+          }
+
+          // 检查是否是目标位置
+          if (neighbor.row === end.row && neighbor.col === end.col) {
+            return [...path, neighbor];
+          }
+
+          // 检查该位置是否包含已完成的数字
+          const numberAtPos = this.grid[neighbor.row][neighbor.col];
+          if (numberAtPos !== 0 && this.isNumberCompleted(numberAtPos, neighbor.row, neighbor.col)) {
+            continue; // 避免经过已完成的数字
+          }
+
+          visited.add(neighborKey);
+          queue.push({ pos: neighbor, path: [...path, neighbor] });
+        }
+      }
+
+      return null; // 没有找到路径
+    },
+
+    /**
+     * 检查数字是否已完成（在正确的目标位置）
+     */
+    isNumberCompleted(number, row, col) {
+      const targetPos = this.getTargetPositionForNumber(number);
+      if (!targetPos) return false;
+      return row === targetPos.row && col === targetPos.col;
+    },
+
+    /**
+     * 获取数字的目标位置
+     */
+    getTargetPositionForNumber(number) {
+      const targetSequence = [
+        [1, 0], [2, 1], [4, 15], [3, 3], [4, 11], [4, 7], [3, 2], [4, 3],
+        [5, 4], [6, 5], [8, 15], [7, 7], [8, 11], [7, 6], [8, 7], [9, 15],
+        [13, 8], [9, 14], [9, 13], [9, 9], [13, 12], [9, 8], [10, 15],
+        [14, 9], [10, 14], [10, 10], [14, 13], [10, 9], [11, 10], [12, 11], [15, 14]
+      ];
+
+      for (const [targetNumber, targetPos] of targetSequence) {
+        if (targetNumber === number) {
+          return {
+            row: Math.floor(targetPos / 4),
+            col: targetPos % 4
+          };
+        }
+      }
+      return null;
     },
     
     /**
@@ -257,6 +450,7 @@ const NumberPuzzle = {
       }
       return true;
     },
+    
     /**
      * 检查游戏是否完成
      */
