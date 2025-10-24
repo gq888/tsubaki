@@ -109,7 +109,7 @@ const NumberPuzzle = {
       
       if (recordHistory) {
         this.moves++;
-        this.recordMove({
+        this.gameManager.recordOperation({
           type: "move",
           from: { row, col },
           to: oldEmptyPos,
@@ -151,59 +151,96 @@ const NumberPuzzle = {
      * 单步执行
      * 自动找到一个有效的移动并执行
      */
+    /**
+     * 基于改进贪心策略的智能算法
+     * 使用简单的贪心策略选择最佳移动
+     */
     stepFn() {
-      if (!this.gameManager.hitflag) return;
-      
+      // 获取所有有效移动
       const validMoves = this.getValidMoves();
       if (validMoves.length === 0) return;
       
-      // 简单的启发式：优先选择让数字更接近目标位置的移动
-      let bestMove = null;
-      let bestScore = -1;
-      
-      for (const move of validMoves) {
-        const number = this.grid[move.row][move.col];
-        const targetPos = this.getTargetPosition(number);
-        const score = this.calculateDistance(move, targetPos);
-        
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = move;
-        }
+      // 策略1：如果可以直接完成游戏，直接完成
+      const winningMove = this.findWinningMove(validMoves);
+      if (winningMove) {
+        this.clickCard(winningMove.row, winningMove.col);
+        return;
       }
       
-      if (bestMove) {
-        this.clickCard(bestMove.row, bestMove.col);
+      // 策略2：选择能直接将数字放到正确位置的移动
+      const directMove = this.findDirectCorrectMove(validMoves);
+      if (directMove) {
+        this.clickCard(directMove.row, directMove.col);
+        return;
       }
-      // 随机选择一个有效移动，确保状态变化
+      
+      // 保底策略：随机选择一个移动
       const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
       this.clickCard(randomMove.row, randomMove.col);
     },
     
     /**
-     * 获取数字的目标位置
+     * 找到可以直接完成游戏的移动
      */
-    getTargetPosition(number) {
-      if (number === 0) return { row: 3, col: 3 };
-      const index = number - 1;
-      return { row: Math.floor(index / 4), col: index % 4 };
+    findWinningMove(validMoves) {
+      for (const move of validMoves) {
+        if (this.willCompleteGame(move)) {
+          return move;
+        }
+      }
+      return null;
     },
     
     /**
-     * 计算曼哈顿距离
+     * 找到能直接将数字放到正确位置的移动
      */
-    calculateManhattanDistance(pos, targetPos) {
-      return Math.abs(pos.row - targetPos.row) + Math.abs(pos.col - targetPos.col);
+    findDirectCorrectMove(validMoves) {
+      for (const move of validMoves) {
+        const number = this.grid[move.row][move.col];
+        const targetRow = Math.floor((number - 1) / 4);
+        const targetCol = (number - 1) % 4;
+        
+        // 如果这个移动能将数字放到正确位置
+        if (move.row === targetRow && move.col === targetCol) {
+          return move;
+        }
+      }
+      return null;
     },
     
     /**
-     * 计算位置到目标位置的距离（负值表示改善）- 旧方法，保留兼容性
+     * 检查移动是否能完成游戏
      */
-    calculateDistance(pos, targetPos) {
-      const currentDistance = Math.abs(pos.row - targetPos.row) + Math.abs(pos.col - targetPos.col);
-      return -currentDistance; // 负值表示距离越近越好
+    willCompleteGame(move) {
+      const tempGrid = this.grid.map(row => [...row]);
+      const tempEmptyPos = { ...this.emptyPos };
+      
+      const number = tempGrid[move.row][move.col];
+      tempGrid[move.row][move.col] = 0;
+      tempGrid[tempEmptyPos.row][tempEmptyPos.col] = number;
+      
+      return this.isGridComplete(tempGrid);
     },
     
+    /**
+     * 检查网格是否完成
+     */
+    isGridComplete(grid) {
+      let expectedNumber = 1;
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          if (i === 3 && j === 3) {
+            return grid[i][j] === 0;
+          } else {
+            if (grid[i][j] !== expectedNumber) {
+              return false;
+            }
+            expectedNumber++;
+          }
+        }
+      }
+      return true;
+    },
     /**
      * 检查游戏是否完成
      */
@@ -290,4 +327,4 @@ const NumberPuzzle = {
 };
 
 // 使用工厂函数创建增强的数字拼图组件并导出
-export default GameComponentPresets.puzzleGame(NumberPuzzle, 300);
+export default GameComponentPresets.simpleGame(NumberPuzzle, 300);
