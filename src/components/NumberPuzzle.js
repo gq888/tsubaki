@@ -4,6 +4,14 @@ import { GameComponentPresets } from "../utils/gameComponentFactory.js";
  * NumberPuzzle对象定义了数字拼图游戏的基础组件
  * 游戏规则：4×4网格，15个数字方块和1个空位，通过移动数字方块将数字按顺序排列
  */
+// 目标处理顺序：[数字, 目标行, 目标列] 对
+const TARGET_SEQUENCE = [
+  [1, 0, 0], [2, 0, 1], [4, 3, 3], [3, 0, 3], [4, 2, 3], [4, 1, 3], [3, 0, 2], [4, 1, 3],
+  [5, 1, 0], [6, 1, 1], [8, 3, 3], [7, 1, 3], [8, 2, 3], [7, 1, 2], [8, 1, 3], [9, 3, 3],
+  [13, 2, 0], [9, 3, 2], [9, 3, 1], [9, 2, 1], [13, 3, 0], [9, 2, 0], [10, 3, 3],
+  [14, 2, 1], [10, 3, 2], [10, 2, 2], [14, 3, 1], [10, 2, 1], [11, 2, 2], [12, 2, 3], [15, 3, 2]
+];
+
 const NumberPuzzle = {
   name: "NumberPuzzle",
   data() {
@@ -168,16 +176,8 @@ const NumberPuzzle = {
      * 按照固定顺序将目标数字移动到指定目标位置
      */
     stepFn() {
-      // 目标处理顺序：[数字, 目标位置] 对
-      const targetSequence = [
-        [1, 0], [2, 1], [4, 15], [3, 3], [4, 11], [4, 7], [3, 2], [4, 3],
-        [5, 4], [6, 5], [8, 15], [7, 7], [8, 11], [7, 6], [8, 7], [9, 15],
-        [13, 8], [9, 14], [9, 13], [9, 9], [13, 12], [9, 8], [10, 15],
-        [14, 9], [10, 14], [10, 10], [14, 13], [10, 9], [11, 10], [12, 11], [15, 14]
-      ];
-
       // 找到当前需要处理的目标
-      const currentTarget = this.findCurrentTarget(targetSequence);
+      const currentTarget = this.findCurrentTarget(TARGET_SEQUENCE);
       if (!currentTarget) {
         // 所有目标都已完成，随机移动
         const validMoves = this.getValidMoves();
@@ -188,9 +188,7 @@ const NumberPuzzle = {
         return;
       }
 
-      const [targetNumber, targetPos] = currentTarget;
-      const targetRow = Math.floor(targetPos / 4);
-      const targetCol = targetPos % 4;
+      const [targetNumber, targetRow, targetCol] = currentTarget;
 
       // 计算下一步移动
       const nextMove = this.calculateNextMove(targetNumber, targetRow, targetCol);
@@ -212,9 +210,7 @@ const NumberPuzzle = {
      */
     findCurrentTarget(targetSequence) {
       for (let i = 0; i < targetSequence.length; i++) {
-        const [targetNumber, targetPos] = targetSequence[i];
-        const targetRow = Math.floor(targetPos / 4);
-        const targetCol = targetPos % 4;
+        const [targetNumber, targetRow, targetCol] = targetSequence[i];
         
         // 检查目标数字是否已在目标位置
         if (this.grid[targetRow][targetCol] !== targetNumber) {
@@ -224,30 +220,26 @@ const NumberPuzzle = {
             // 检查是否有后续相同数字的目标位置
             const laterTargets = targetSequence.slice(i + 1).filter(target => target[0] === targetNumber);
             for (const laterTarget of laterTargets) {
-              const laterPos = laterTarget[1];
-              const laterRow = Math.floor(laterPos / 4);
-              const laterCol = laterPos % 4;
+              const [laterNumber, laterRow, laterCol] = laterTarget;
               
               // 如果数字在后续目标位置，检查中间是否有未完成的目标
               if (currentPos.row === laterRow && currentPos.col === laterCol) {
                 // 检查从当前位置到后续目标位置之间的目标是否都已完成
                 let allIntermediateCompleted = true;
-                for (let j = i + 1; j < targetSequence.findIndex(t => t[1] === laterPos); j++) {
-                  const [interNumber, interPos] = targetSequence[j];
-                  const interRow = Math.floor(interPos / 4);
-                  const interCol = interPos % 4;
+                for (let j = i + 1; j < targetSequence.findIndex(t => t[0] === laterNumber && t[1] === laterRow && t[2] === laterCol); j++) {
+                  const [interNumber, interRow, interCol] = targetSequence[j];
                   if (this.grid[interRow][interCol] !== interNumber) {
                     allIntermediateCompleted = false;
                     break;
                   }
                 }
                 if (allIntermediateCompleted) {
-                  return [targetNumber, targetPos];
+                  return [targetNumber, targetRow, targetCol];
                 }
               }
             }
           }
-          return [targetNumber, targetPos];
+          return [targetNumber, targetRow, targetCol];
         }
       }
       return null;
@@ -359,33 +351,25 @@ const NumberPuzzle = {
 
     /**
      * 检查数字是否已完成（在正确的目标位置）
+     * 同时检查当前数字之前所有数字是否都已完成目标
      */
     isNumberCompleted(number, row, col) {
-      const targetPos = this.getTargetPositionForNumber(number);
-      if (!targetPos) return false;
-      return row === targetPos.row && col === targetPos.col;
-    },
-
-    /**
-     * 获取数字的目标位置
-     */
-    getTargetPositionForNumber(number) {
-      const targetSequence = [
-        [1, 0], [2, 1], [4, 15], [3, 3], [4, 11], [4, 7], [3, 2], [4, 3],
-        [5, 4], [6, 5], [8, 15], [7, 7], [8, 11], [7, 6], [8, 7], [9, 15],
-        [13, 8], [9, 14], [9, 13], [9, 9], [13, 12], [9, 8], [10, 15],
-        [14, 9], [10, 14], [10, 10], [14, 13], [10, 9], [11, 10], [12, 11], [15, 14]
-      ];
-
-      for (const [targetNumber, targetPos] of targetSequence) {
-        if (targetNumber === number) {
-          return {
-            row: Math.floor(targetPos / 4),
-            col: targetPos % 4
-          };
+      // 找到当前数字在目标序列中的索引
+      const currentIndex = TARGET_SEQUENCE.findIndex(target => target[0] === number && target[1] === row && target[2] === col);
+      if (currentIndex === -1) return false;
+      
+      // 检查当前数字及之前所有数字是否都已完成
+      const prevTargetSquence = TARGET_SEQUENCE.filter((target, index) => index <= currentIndex && !TARGET_SEQUENCE.findLast((t, i) => t[0] === target[0] && i > index && i <= currentIndex));
+      for (let i = 0; i <= prevTargetSquence.length; i++) {
+        const [targetNumber, targetRow, targetCol] = prevTargetSquence[i];
+        
+        // 检查目标数字是否在正确的目标位置
+        if (this.grid[targetRow][targetCol] !== targetNumber) {
+          return false;
         }
       }
-      return null;
+      
+      return true;
     },
     
     /**
