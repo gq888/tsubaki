@@ -65,17 +65,21 @@ const NumberPuzzle = {
      * 获取所有有效的移动
      * 返回可以与空位交换的数字位置数组
      */
-    getValidMoves() {
+    getValidMoves(direction) {
       const moves = [];
       const { row, col } = this.emptyPos;
       
       // 检查四个方向
-      const directions = [
+      let directions = [
         { row: row - 1, col: col }, // 上
         { row: row + 1, col: col }, // 下
         { row: row, col: col - 1 }, // 左
         { row: row, col: col + 1 }  // 右
       ];
+
+      if (direction !== undefined) {
+        directions = directions.filter((_, index) => index === direction);
+      }
       
       for (const dir of directions) {
         if (dir.row >= 0 && dir.row < 4 && dir.col >= 0 && dir.col < 4) {
@@ -132,8 +136,20 @@ const NumberPuzzle = {
     /**
      * 点击卡片处理
      */
-    clickCard(row, col) {
+    clickCard(rowOrDirection, col) {
       if (!this.gameManager.hitflag) return;
+
+      if (rowOrDirection === undefined) return;
+
+      let row;
+      if (col === undefined) {
+        const move = this.getValidMoves(rowOrDirection);
+        if (move.length === 0) return;
+        row = move[0].row;
+        col = move[0].col;
+      } else {
+        row = rowOrDirection;
+      }
       
       // 如果点击的是空位，忽略
       if (this.grid[row][col] === 0) return;
@@ -280,10 +296,7 @@ const NumberPuzzle = {
      * 撤销上一步
      */
     undo() {
-      const operation = this.gameManager.undo();
-      if (operation) {
-        this.handleUndo(operation);
-      }
+      this.gameManager.undo();
     },
     
     /**
@@ -322,9 +335,23 @@ const NumberPuzzle = {
       }
       
       return '渲染完成';
-    }
+    },
+    
+    sendCustomButtons() {
+      // 添加Spider游戏特有的发牌按钮（如果牌堆有牌）
+      this.customButtons.push({
+        action: 'clickCard',
+        label: 'MOVE',
+        method: 'clickCard',
+        args: [],
+        description: 'MOVE TO ONE DIRECTION'
+      });
+    },
+  },
+  created() {
+    this.sendCustomButtons();
   }
 };
 
 // 使用工厂函数创建增强的数字拼图组件并导出
-export default GameComponentPresets.simpleGame(NumberPuzzle, 300);
+export default GameComponentPresets.puzzleGame(NumberPuzzle, 300);
