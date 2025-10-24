@@ -70,6 +70,195 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 
 /**
+ * 通用JSON断言函数
+ * 支持多种断言类型和灵活的表达式
+ */
+class JSONAssertion {
+  constructor() {
+    this.assertions = [];
+    this.results = [];
+  }
+
+  /**
+   * 解析断言表达式
+   * 支持格式: --assert="path.to.property operator value"
+   * 例如: --assert="winflag === true" 或 --assert="gameManager.score > 100"
+   */
+  parseAssertExpression(expression) {
+    const operators = ['===', '!==', '==', '!=', '>=', '<=', '>', '<', 'in', 'not in'];
+    
+    for (const op of operators) {
+      const parts = expression.split(op);
+      if (parts.length === 2) {
+        return {
+          path: parts[0].trim(),
+          operator: op,
+          expectedValue: parts[1].trim(),
+          original: expression
+        };
+      }
+    }
+    
+    throw new Error(`不支持的断言表达式: ${expression}`);
+  }
+
+  /**
+   * 根据路径获取对象属性值
+   */
+  getValueByPath(obj, path) {
+    if (path === 'this' || path === '') return obj;
+    
+    const keys = path.split('.');
+    let current = obj;
+    
+    for (const key of keys) {
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+      current = current[key];
+    }
+    
+    return current;
+  }
+
+  /**
+   * 解析期望值（支持字符串、数字、布尔值、null、undefined）
+   */
+  parseExpectedValue(valueStr) {
+    const str = valueStr.trim();
+    
+    // 布尔值
+    if (str === 'true') return true;
+    if (str === 'false') return false;
+    
+    // null 和 undefined
+    if (str === 'null') return null;
+    if (str === 'undefined') return undefined;
+    
+    // 数字
+    if (/^-?\d+(\.\d+)?$/.test(str)) {
+      return parseFloat(str);
+    }
+    
+    // 字符串（去除引号）
+    if ((str.startsWith('"') && str.endsWith('"')) || 
+        (str.startsWith("'") && str.endsWith("'"))) {
+      return str.slice(1, -1);
+    }
+    
+    // 数组
+    if (str.startsWith('[') && str.endsWith(']')) {
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return str; // 如果解析失败，作为字符串返回
+      }
+    }
+    
+    // 对象
+    if (str.startsWith('{') && str.endsWith('}')) {
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return str; // 如果解析失败，作为字符串返回
+      }
+    }
+    
+    // 默认作为字符串
+    return str;
+  }
+
+  /**
+   * 执行比较操作
+   */
+  compare(actualValue, operator, expectedValue) {
+    switch (operator) {
+      case '===': return actualValue === expectedValue;
+      case '!==': return actualValue !== expectedValue;
+      case '==': return actualValue == expectedValue;
+      case '!=': return actualValue != expectedValue;
+      case '>=': return actualValue >= expectedValue;
+      case '<=': return actualValue <= expectedValue;
+      case '>': return actualValue > expectedValue;
+      case '<': return actualValue < expectedValue;
+      case 'in': return expectedValue in actualValue;
+      case 'not in': return !(expectedValue in actualValue);
+      default: throw new Error(`不支持的操作符: ${operator}`);
+    }
+  }
+
+  /**
+   * 执行断言
+   */
+  assert(data, expression) {
+    try {
+      const parsed = this.parseAssertExpression(expression);
+      const actualValue = this.getValueByPath(data, parsed.path);
+      const expectedValue = this.parseExpectedValue(parsed.expectedValue);
+      
+      const result = this.compare(actualValue, parsed.operator, expectedValue);
+      
+      const assertionResult = {
+        expression: parsed.original,
+        path: parsed.path,
+        operator: parsed.operator,
+        actualValue: actualValue,
+        expectedValue: expectedValue,
+        passed: result,
+        message: result ? '✓ 断言通过' : `✗ 断言失败: 期望 ${parsed.path} ${parsed.operator} ${parsed.expectedValue}, 实际值为 ${JSON.stringify(actualValue)}`
+      };
+      
+      this.assertions.push(parsed);
+      this.results.push(assertionResult);
+      
+      return assertionResult;
+    } catch (error) {
+      const failedResult = {
+        expression: expression,
+        passed: false,
+        message: `✗ 断言执行失败: ${error.message}`
+      };
+      
+      this.results.push(failedResult);
+      return failedResult;
+    }
+  }
+
+  /**
+   * 批量执行断言
+   */
+  assertAll(data, expressions) {
+    return expressions.map(expr => this.assert(data, expr));
+  }
+
+  /**
+   * 获取断言结果摘要
+   */
+  getSummary() {
+    const passed = this.results.filter(r => r.passed).length;
+    const failed = this.results.filter(r => !r.passed).length;
+    const total = this.results.length;
+    
+    return {
+      total,
+      passed,
+      failed,
+      successRate: total > 0 ? (passed / total * 100).toFixed(2) : 0,
+      allPassed: failed === 0 && total > 0,
+      results: this.results
+    };
+  }
+
+  /**
+   * 重置断言结果
+   */
+  reset() {
+    this.assertions = [];
+    this.results = [];
+  }
+}
+
+/**
  * 保存状态到JSON文件
  * @param {object} state - 要保存的状态对象
  * @param {string} filePath - 文件路径
@@ -308,7 +497,7 @@ async function waitForFileChange(filePath, timeout = 60000) {
  * @param {string} outputFile - 输出状态文件路径
  * @param {boolean} waitForAsync - 是否等待异步方法完成（交互模式专用）
  */
-async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 60000, seed = null, outputFile = DEFAULT_STATE_FILE, maxSteps = null) {
+async function executeMethodWithRenderToString(componentPath, methodName, currentData = {}, args = [], timeout = 60000, seed = null, outputFile = DEFAULT_STATE_FILE, maxSteps = null, assertExpressions = []) {
   try {
     console.log(`正在通过renderToString执行方法: ${methodName}`);
     console.log(`组件路径: ${componentPath}`);
@@ -358,7 +547,8 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         return {
           ...initialData,
           _testCapture: capturedState, // 添加状态捕获对象
-          jsonResult: "" // 添加jsonResult属性用于存储序列化结果
+          jsonResult: "",
+          _assertExpressions: assertExpressions || [], // 传递断言表达式
         };
       },
       async created() {
@@ -494,6 +684,34 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         if (this._testCapture.after) {
           saveStateToFile(this._testCapture.after, outputFile);
         }
+
+
+        // 如果有断言表达式，将断言结果也添加到jsonResult中
+        if (this._assertExpressions && this._assertExpressions.length > 0 && this._testCapture && this._testCapture.after) {
+          try {
+            const assertResults = (new JSONAssertion()).assertAll(this._testCapture.after, this._assertExpressions);
+  
+            let allPassed = true;
+            assertResults.forEach((assertResult, index) => {
+              if (assertResult.passed) {
+                console.log(`✅ 断言 ${index + 1} 通过: ${assertExpressions[index]}`);
+              } else {
+                console.error(`❌ 断言 ${index + 1} 失败: ${assertExpressions[index]}`);
+                console.error(`   ${assertResult.message}`);
+                allPassed = false;
+              }
+            });
+            
+            if (!allPassed) {
+              console.error('❌ 断言检查失败');
+              process.exit(1);
+            } else {
+              console.log('✅ 所有断言检查通过');
+            }
+          } catch (e) {
+            console.error('断言执行错误:', e.message);
+          }
+        }
         
         // 只有在非交互式模式下才退出进程
         // 在交互式模式下，需要让进程继续运行，以便后续操作
@@ -536,7 +754,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
             this.jsonResult = e.message;
           }
         }
-        else this.jsonResult = "";
+        else this.jsonResult = "empty";
       },
       template: "<div>{{jsonResult}}</div>"
     };
@@ -848,6 +1066,7 @@ async function main() {
   let outputFile = DEFAULT_STATE_FILE;
   let maxSteps = null; // 新增：最大步数参数
   const methodArgs = [];
+  const assertExpressions = []; // 新增：断言表达式列表
   
   for (let i = 2; i < args.length; i++) {
     const arg = args[i];
@@ -910,6 +1129,11 @@ async function main() {
         process.exit(1);
       }
       console.log('✓ 将设置最大步数为:', maxSteps);
+    } else if (arg.startsWith('--assert=')) {
+      // 解析断言表达式
+      const assertExpression = arg.substring('--assert='.length);
+      assertExpressions.push(assertExpression);
+      console.log('✓ 添加断言:', assertExpression);
     } else {
       methodArgs.push(arg);
     }
@@ -924,7 +1148,7 @@ async function main() {
     }
   });
   
-  const result = await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed, outputFile, maxSteps);
+  const result = await executeMethodWithRenderToString(componentPath, methodName, currentState, parsedArgs, timeout, seed, outputFile, maxSteps, assertExpressions);
   
   // 检查执行结果，如果有错误则显示并退出
   if (result && !result.success && result.error) {
