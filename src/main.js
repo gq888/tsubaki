@@ -2,9 +2,10 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import store from "./store";
-// import { preload } from "./utils/help.js";
+import { seededRandom } from "./utils/help.js";
 
 // preload();
+Math.random = seededRandom;
 
 const app = createApp(App);
 app.use(router);

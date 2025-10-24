@@ -12,6 +12,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { writeFileSync, readFileSync, watchFile, unwatchFile } from 'fs';
 import readline from 'readline';
+import { seededRandom } from "../src/utils/help.js";
+
+Math.random = seededRandom;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -682,6 +685,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         
         // 保存执行后的状态到文件
         if (this._testCapture.after) {
+          console.log('已保存执行后的状态到文件:', outputFile);
           saveStateToFile(this._testCapture.after, outputFile);
         }
 
@@ -716,7 +720,7 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         // 只有在非交互式模式下才退出进程
         // 在交互式模式下，需要让进程继续运行，以便后续操作
         if (!isInteractiveMode) {
-          console.log(JSON.stringify(testResult, replacer, 2));
+          // console.log(JSON.stringify(testResult, replacer, 2));
           process.exit(0);
         }
         // 对于同步方法，返回过滤了循环引用的JSON序列化结果
