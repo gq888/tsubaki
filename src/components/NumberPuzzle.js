@@ -229,6 +229,7 @@ const NumberPuzzle = {
                 let allIntermediateCompleted = true;
                 for (let j = i + 1; j < targetSequence.findIndex(t => t[0] === laterNumber && t[1] === laterRow && t[2] === laterCol); j++) {
                   const [interNumber, interRow, interCol] = targetSequence[j];
+                  if (interNumber === targetNumber) continue;
                   if (this.grid[interRow][interCol] !== interNumber) {
                     allIntermediateCompleted = false;
                     break;
