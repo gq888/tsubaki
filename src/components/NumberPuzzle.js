@@ -578,10 +578,20 @@ const NumberPuzzle = {
     /**
      * 找到当前需要处理的目标
      * 按照目标序列顺序检查，返回第一个未完成的目标
+     * 跳过所有小于连续完成序列的数字，避免破坏已完成的序列
      */
     findCurrentTarget(targetSequence) {
+      // 获取当前连续完成的数字序列边界
+      let protectedNumber = this.getContinuousCompletedNumbers() - 1;
+      protectedNumber = protectedNumber - (protectedNumber % 4);
+      console.log(protectedNumber)
       for (let i = 0; i < targetSequence.length; i++) {
         const [targetNumber, targetRow, targetCol] = targetSequence[i];
+        
+        // 跳过所有小于保护边界的数字，这些数字应该被视为"已完成"
+        if (targetNumber <= protectedNumber) {
+          continue;
+        }
         
         // 检查目标数字是否已在目标位置
         if (this.grid[targetRow][targetCol] !== targetNumber) {
@@ -743,8 +753,8 @@ const NumberPuzzle = {
      */
     makeSafeRandomMove() {
       // 找出从数字1开始的最长连续已完成数字序列
-      const protectedNumbers = this.getContinuousCompletedNumbers();
-      
+      const protectedNumber = this.getContinuousCompletedNumbers();
+      console.log(protectedNumber)
       // 获取所有有效移动
       const allValidMoves = this.getValidMoves();
       
@@ -752,7 +762,7 @@ const NumberPuzzle = {
       const safeMoves = allValidMoves.filter(move => {
         const numberAtMove = this.grid[move.row][move.col];
         // 如果移动的位置是空位或者是未完成的数字，则是安全的
-        return numberAtMove === 0 || !protectedNumbers.includes(numberAtMove);
+        return numberAtMove >= protectedNumber;
       });
       
       // 优先选择安全的移动
@@ -774,33 +784,19 @@ const NumberPuzzle = {
      * 例如：如果数字1、2已完成，数字3未完成，则返回[1, 2]
      */
     getContinuousCompletedNumbers() {
-      const continuousNumbers = [];
       let currentNumber = 1;
       
       // 按顺序检查每个数字是否已完成
       while (currentNumber <= 15) {
-        const targetPos = this.findTargetPositionForNumber(currentNumber);
-        if (targetPos && this.grid[targetPos.row][targetPos.col] === currentNumber) {
-          continuousNumbers.push(currentNumber);
+        const targetIndex = currentNumber - 1;
+        if (this.grid[Math.floor(targetIndex / 4)][targetIndex % 4] === currentNumber) {
           currentNumber++;
         } else {
           break;
         }
       }
       
-      return continuousNumbers;
-    },
-    
-    /**
-     * 找到数字在目标序列中的目标位置
-     */
-    findTargetPositionForNumber(number) {
-      for (const [targetNumber, targetRow, targetCol] of TARGET_SEQUENCE) {
-        if (targetNumber === number) {
-          return { row: targetRow, col: targetCol };
-        }
-      }
-      return null;
+      return currentNumber;
     },
 
     /**
