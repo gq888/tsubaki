@@ -8,7 +8,7 @@ import { GameComponentPresets } from "../utils/gameComponentFactory.js";
 const TARGET_SEQUENCE = [
   [1, 0, 0], [2, 0, 1], [4, 3, 3], [3, 0, 3], [4, 2, 3], [4, 1, 3], [3, 0, 2], [4, 0, 3],
   [5, 1, 0], [6, 1, 1], [7, 1, 3], [8, 2, 3], [7, 1, 2], [8, 1, 3],
-  [9, 3, 0], [13, 3, 1], [9, 2, 0], [13, 3, 0]// , [14, 3, 3], [10, 3, 2], [10, 3, 1], [14, 3, 2], [10, 2, 1], [14, 3, 1]
+  [9, 3, 0], [13, 3, 1], [9, 2, 0], [13, 3, 0], [10, 3, 1], [14, 3, 2], [10, 2, 1], [14, 3, 1]
 ];
 
 const NumberPuzzle = {
@@ -557,8 +557,12 @@ const NumberPuzzle = {
         const numberAtMove = tempGrid[nextMove.row][nextMove.col];
         tempGrid[nextMove.row][nextMove.col] = 0;
         tempGrid[tempEmptyPos.row][tempEmptyPos.col] = numberAtMove;
-        if (this.gameManager.history.filter(operation => operation.hash === JSON.stringify(tempGrid)).length < 2) {
+        if (!this.gameManager.history.find(operation => operation.hash === JSON.stringify(tempGrid))) {
           this.clickCard(nextMove.row, nextMove.col);
+          return;
+        } else {
+          // 防死锁条件触发：添加智能随机移动逻辑
+          this.makeSafeRandomMove();
           return;
         }
       }
@@ -731,6 +735,72 @@ const NumberPuzzle = {
       }
 
       return null; // 没有找到路径
+    },
+
+    /**
+     * 在不破坏连续已完成数字序列的前提下进行随机移动
+     * 找出从数字1开始的最长连续已完成数字序列，确保随机移动不会破坏这些数字
+     */
+    makeSafeRandomMove() {
+      // 找出从数字1开始的最长连续已完成数字序列
+      const protectedNumbers = this.getContinuousCompletedNumbers();
+      
+      // 获取所有有效移动
+      const allValidMoves = this.getValidMoves();
+      
+      // 过滤出不会破坏已完成数字序列的移动
+      const safeMoves = allValidMoves.filter(move => {
+        const numberAtMove = this.grid[move.row][move.col];
+        // 如果移动的位置是空位或者是未完成的数字，则是安全的
+        return numberAtMove === 0 || !protectedNumbers.includes(numberAtMove);
+      });
+      
+      // 优先选择安全的移动
+      if (safeMoves.length > 0) {
+        const randomSafeMove = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+        this.clickCard(randomSafeMove.row, randomSafeMove.col);
+        return;
+      }
+
+      // 如果没有安全的移动（理论上不应该发生），选择任意移动
+      if (allValidMoves.length > 0) {
+        const randomMove = allValidMoves[Math.floor(Math.random() * allValidMoves.length)];
+        this.clickCard(randomMove.row, randomMove.col);
+      }
+    },
+    
+    /**
+     * 找出从数字1开始的最长连续已完成数字序列
+     * 例如：如果数字1、2已完成，数字3未完成，则返回[1, 2]
+     */
+    getContinuousCompletedNumbers() {
+      const continuousNumbers = [];
+      let currentNumber = 1;
+      
+      // 按顺序检查每个数字是否已完成
+      while (currentNumber <= 15) {
+        const targetPos = this.findTargetPositionForNumber(currentNumber);
+        if (targetPos && this.grid[targetPos.row][targetPos.col] === currentNumber) {
+          continuousNumbers.push(currentNumber);
+          currentNumber++;
+        } else {
+          break;
+        }
+      }
+      
+      return continuousNumbers;
+    },
+    
+    /**
+     * 找到数字在目标序列中的目标位置
+     */
+    findTargetPositionForNumber(number) {
+      for (const [targetNumber, targetRow, targetCol] of TARGET_SEQUENCE) {
+        if (targetNumber === number) {
+          return { row: targetRow, col: targetCol };
+        }
+      }
+      return null;
     },
 
     /**
