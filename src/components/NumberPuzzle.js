@@ -6,8 +6,8 @@ import { GameComponentPresets } from "../utils/gameComponentFactory.js";
  */
 // 目标处理顺序：[数字, 目标行, 目标列] 对
 const TARGET_SEQUENCE = [
-  [1, 0, 0], [2, 0, 1], [4, 3, 3], [3, 0, 3], [4, 2, 3], [4, 1, 3], [3, 0, 2], [4, 1, 3],
-  [5, 1, 0], [6, 1, 1], [8, 3, 3], [7, 1, 3], [8, 2, 3], [7, 1, 2], [8, 1, 3], [9, 3, 3],
+  [1, 0, 0], [2, 0, 1], [4, 3, 3], [3, 0, 3], [4, 2, 3], [4, 1, 3], [3, 0, 2], [4, 0, 3],
+  [5, 1, 0], [6, 1, 1], [8, 3, 0], [7, 1, 3], [8, 3, 1], [8, 3, 2], [8, 3, 3], [8, 2, 3], [7, 1, 2], [8, 1, 3], [9, 3, 3],
   [13, 2, 0], [9, 3, 2], [9, 3, 1], [9, 2, 1], [13, 3, 0], [9, 2, 0], [10, 3, 3],
   [14, 2, 1], [10, 3, 2], [10, 2, 2], [14, 3, 1], [10, 2, 1], [11, 2, 2], [12, 2, 3], [15, 3, 2]
 ];
@@ -218,7 +218,7 @@ const NumberPuzzle = {
           const currentPos = this.findNumberPosition(targetNumber);
           if (currentPos) {
             // 检查是否有后续相同数字的目标位置
-            let hasLaterTargetAndAllIntermediateCompleted = false;
+            let hasLaterTargetAndIntermediateCompleted = false;
             const laterTargets = targetSequence.slice(i + 1).filter(target => target[0] === targetNumber);
             for (const laterTarget of laterTargets) {
               const [laterNumber, laterRow, laterCol] = laterTarget;
@@ -226,22 +226,28 @@ const NumberPuzzle = {
               // 如果数字在后续目标位置，检查中间是否有未完成的目标
               if (currentPos.row === laterRow && currentPos.col === laterCol) {
                 // 检查从当前位置到后续目标位置之间的目标是否都已完成
-                let allIntermediateCompleted = true;
-                for (let j = i + 1; j < targetSequence.findIndex(t => t[0] === laterNumber && t[1] === laterRow && t[2] === laterCol); j++) {
+                let intermediateCompleted = true;
+                for (let j = targetSequence.findIndex(t => t[0] === laterNumber && t[1] === laterRow && t[2] === laterCol); j > i; j--) {
                   const [interNumber, interRow, interCol] = targetSequence[j];
                   if (interNumber === targetNumber) continue;
-                  if (this.grid[interRow][interCol] !== interNumber) {
-                    allIntermediateCompleted = false;
+                  const interIndex = interNumber - 1;
+                  const targetIndex = targetNumber - 1;
+                  const targetIndexInGrid = this.grid[Math.floor(targetIndex / 4)][targetIndex % 4]
+                  const interIndexInGrid = this.grid[Math.floor(interIndex / 4)][interIndex % 4]
+                  const interNumberInGrid = this.grid[interRow][interCol]
+                  if (targetIndexInGrid === targetNumber && interIndexInGrid === interNumber || interNumberInGrid === interNumber){//} || interNumberInGrid === 0 && (targetIndexInGrid === 0)) {
                     break;
                   }
+                  intermediateCompleted = false;
+                  break;
                 }
-                if (allIntermediateCompleted) {
-                  hasLaterTargetAndAllIntermediateCompleted = true;
+                if (intermediateCompleted) {
+                  hasLaterTargetAndIntermediateCompleted = true;
                   break;
                 }
               }
             }
-            if (hasLaterTargetAndAllIntermediateCompleted) {
+            if (hasLaterTargetAndIntermediateCompleted) {
               continue;
             }
           }
