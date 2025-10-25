@@ -560,19 +560,10 @@ const NumberPuzzle = {
         if (!this.gameManager.history.find(operation => operation.hash === JSON.stringify(tempGrid))) {
           this.clickCard(nextMove.row, nextMove.col);
           return;
-        } else {
-          // 防死锁条件触发：添加智能随机移动逻辑
-          this.makeSafeRandomMove();
-          return;
         }
       }
 
-      // 如果没有找到路径，随机移动
-      const validMoves = this.getValidMoves();
-      if (validMoves.length > 0) {
-        const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-        this.clickCard(randomMove.row, randomMove.col);
-      }
+      this.makeSafeRandomMove();
     },
 
     /**
@@ -581,17 +572,8 @@ const NumberPuzzle = {
      * 跳过所有小于连续完成序列的数字，避免破坏已完成的序列
      */
     findCurrentTarget(targetSequence) {
-      // 获取当前连续完成的数字序列边界
-      let protectedNumber = this.getContinuousCompletedNumbers() - 1;
-      protectedNumber = protectedNumber - (protectedNumber % 4);
-      console.log(protectedNumber)
       for (let i = 0; i < targetSequence.length; i++) {
         const [targetNumber, targetRow, targetCol] = targetSequence[i];
-        
-        // 跳过所有小于保护边界的数字，这些数字应该被视为"已完成"
-        if (targetNumber <= protectedNumber) {
-          continue;
-        }
         
         // 检查目标数字是否已在目标位置
         if (this.grid[targetRow][targetCol] !== targetNumber) {
@@ -753,8 +735,8 @@ const NumberPuzzle = {
      */
     makeSafeRandomMove() {
       // 找出从数字1开始的最长连续已完成数字序列
-      const protectedNumber = this.getContinuousCompletedNumbers();
-      console.log(protectedNumber)
+      const continuousCompleted = this.getContinuousCompletedNumbers();
+
       // 获取所有有效移动
       const allValidMoves = this.getValidMoves();
       
@@ -762,7 +744,7 @@ const NumberPuzzle = {
       const safeMoves = allValidMoves.filter(move => {
         const numberAtMove = this.grid[move.row][move.col];
         // 如果移动的位置是空位或者是未完成的数字，则是安全的
-        return numberAtMove >= protectedNumber;
+        return numberAtMove >= continuousCompleted;
       });
       
       // 优先选择安全的移动
