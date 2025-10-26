@@ -37,7 +37,10 @@ const gameRules = {
   blackjack: "A card game using a 54-card deck. The goal is to get as close to 21 as possible without exceeding it. Cards 2-10 are worth their face value, J/Q/K are worth 10, and Aces can be worth 1 or 11. If your score exceeds 21, you bust. Both player and dealer start with 2 cards.",
   
   // 数字迷宫（新游戏）
-  NumberMaze: "A 6x6 grid puzzle game with numbered blocks. Move number blocks to adjacent empty spaces to create a valid path from start (0) to end (99). The path must have strictly increasing numbers. Use strategy to rearrange blocks and find the optimal path. Win when a valid ascending path exists from start to end."
+  NumberMaze: "A 6x6 grid puzzle game with numbered blocks. Move number blocks to adjacent empty spaces to create a valid path from start (0) to end (99). The path must have strictly increasing numbers. Use strategy to rearrange blocks and find the optimal path. Win when a valid ascending path exists from start to end.",
+  
+  // 数字接龙（全新游戏）
+  NumberSequence: "A strategic puzzle game on a 5x5 grid with numbered blocks (1-9). Build ascending sequences by selecting adjacent numbers (minimum 3). Selected sequences are cleared and blocks fall down to fill gaps. Clear all numbers to win. Plan your moves carefully as sequences must be strictly increasing and adjacent."
 };
 
 /**
