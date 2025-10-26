@@ -8,6 +8,7 @@ import Sort from "@/components/Sort.vue";
 import Pairs from "@/components/Pairs.vue";
 import Spider from "@/components/Spider.vue";
 import GridBattle from "@/components/Chess.vue";
+import TowerHanoi from "@/components/TowerHanoi.vue";
 
 const routes = [
   {
@@ -49,6 +50,10 @@ const routes = [
   {
     path: "/GridBattle",
     component: GridBattle,
+  },
+  {
+    path: "/TowerHanoi",
+    component: TowerHanoi,
   },
 ];
 
