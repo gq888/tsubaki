@@ -34,7 +34,10 @@ const gameRules = {
   GridBattle: "A strategy game on a 6x6 grid with two types of pieces: high (1) and low (0) grade. Pieces move according to specific rules defined by their positions. Win by eliminating all opponent's pieces of the opposite grade, or reach a draw when only one of each remains.",
   
   // 21点（BlackJack）
-  blackjack: "A card game using a 54-card deck. The goal is to get as close to 21 as possible without exceeding it. Cards 2-10 are worth their face value, J/Q/K are worth 10, and Aces can be worth 1 or 11. If your score exceeds 21, you bust. Both player and dealer start with 2 cards."
+  blackjack: "A card game using a 54-card deck. The goal is to get as close to 21 as possible without exceeding it. Cards 2-10 are worth their face value, J/Q/K are worth 10, and Aces can be worth 1 or 11. If your score exceeds 21, you bust. Both player and dealer start with 2 cards.",
+  
+  // 数字迷宫（新游戏）
+  NumberMaze: "A 6x6 grid puzzle game with numbered blocks. Move number blocks to adjacent empty spaces to create a valid path from start (0) to end (99). The path must have strictly increasing numbers. Use strategy to rearrange blocks and find the optimal path. Win when a valid ascending path exists from start to end."
 };
 
 /**
