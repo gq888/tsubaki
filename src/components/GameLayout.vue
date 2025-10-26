@@ -209,6 +209,7 @@ export default {
         { path: '/GridBattle', icon: '⚔️' },
         { path: '/numbermaze', icon: '🔢' },
         { path: '/numberpuzzle', icon: '🧩' },
+        { path: '/numbersequence', icon: '🔢' },
       ],
     };
   },

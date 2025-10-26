@@ -29,7 +29,88 @@ export default GameComponentPresets.puzzleGame({
       this.selectedCells = [];
       this.score = 0;
       this.gameManager.recordOperation({type: 'init', data: { grid: this.copyGrid(this.grid) }});
+      
+      // 确保标准状态属性存在
+      this.gameManager.winflag = false;
+      this.gameManager.loseflag = false;
+      this.gameManager.drawflag = false;
+      this.gameManager.step = this.gameManager.history.length;
+      
       this.gameManager.emit('init');
+    },
+
+    goon() {
+      // 重新开始游戏
+      this.init();
+      // 确保step属性正确重置
+      this.gameManager.step = this.gameManager.history.length;
+    },
+
+    handleCellClick(row, col) {
+      if (this.grid[row][col] === null) return;
+      
+      const cellData = { row, col, value: this.grid[row][col] };
+      
+      // 如果点击的是已选中的第一个单元格，清除选择
+      if (this.selectedCells.length > 0 && 
+          this.selectedCells[0].row === row && 
+          this.selectedCells[0].col === col) {
+        this.clearSelection();
+        return;
+      }
+      
+      // 如果当前没有选择，开始新选择
+      if (this.selectedCells.length === 0) {
+        this.selectedCells = [cellData];
+        return;
+      }
+      
+      // 检查是否可以添加到当前序列
+      const lastCell = this.selectedCells[this.selectedCells.length - 1];
+      const distance = Math.abs(row - lastCell.row) + Math.abs(col - lastCell.col);
+      
+      // 必须相邻且值更大
+      if (distance === 1 && this.grid[row][col] > lastCell.value) {
+        // 检查是否已经包含这个单元格
+        const alreadySelected = this.selectedCells.some(cell => 
+          cell.row === row && cell.col === col
+        );
+        
+        if (!alreadySelected) {
+          this.selectedCells.push(cellData);
+        }
+      } else {
+        // 不能添加，开始新选择
+        this.selectedCells = [cellData];
+      }
+    },
+
+    confirmSequence() {
+      if (this.isValidSequence(this.selectedCells)) {
+        this.selectSequence(this.selectedCells);
+        this.clearSelection();
+      }
+    },
+
+    clearSelection() {
+      this.selectedCells = [];
+    },
+
+    isCellSelected(row, col) {
+      return this.selectedCells.some(cell => cell.row === row && cell.col === col);
+    },
+
+    isCellSelectableNext(row, col) {
+      if (this.selectedCells.length === 0) return false;
+      if (this.grid[row][col] === null) return false;
+      
+      const lastCell = this.selectedCells[this.selectedCells.length - 1];
+      const distance = Math.abs(row - lastCell.row) + Math.abs(col - lastCell.col);
+      
+      // 必须相邻、值更大且未被选中
+      return distance === 1 && 
+             this.grid[row][col] > lastCell.value &&
+             !this.isCellSelected(row, col);
     },
 
     generateGrid() {
@@ -158,6 +239,9 @@ export default GameComponentPresets.puzzleGame({
         }
       });
 
+      // 更新步数
+      this.gameManager.step = this.gameManager.history.length;
+
       // 检查游戏状态
       this.checkGameState();
       
@@ -211,6 +295,17 @@ export default GameComponentPresets.puzzleGame({
       } else if (!this.hasValidMoves) {
         this.gameManager.setLose();
       }
+      
+      // 设置游戏结束标志，用于自动模式检测
+      if (this.gameManager.winflag || this.gameManager.loseflag) {
+        this.gameManager.overflag = true;
+      }
+      
+      // 确保标准状态属性存在
+      if (this.gameManager.winflag === undefined) this.gameManager.winflag = false;
+      if (this.gameManager.loseflag === undefined) this.gameManager.loseflag = false;
+      if (this.gameManager.drawflag === undefined) this.gameManager.drawflag = false;
+      if (this.gameManager.step === undefined) this.gameManager.step = this.gameManager.history.length;
     },
 
     handleUndo(operation) {
@@ -219,7 +314,15 @@ export default GameComponentPresets.puzzleGame({
         this.grid = this.copyGrid(operation.data.grid);
         this.score = operation.data.score;
         this.selectedCells = [];
+      } else if (operation.type === 'init') {
+        // 如果是初始化操作，完全重置游戏状态
+        this.grid = this.copyGrid(operation.data.grid);
+        this.score = 0;
+        this.selectedCells = [];
       }
+      
+      // 更新步数
+      this.gameManager.step = this.gameManager.history.length;
     },
 
     renderTextView() {

@@ -11,6 +11,7 @@ import GridBattle from "@/components/Chess.vue";
 import TowerHanoi from "@/components/TowerHanoi.vue";
 import NumberMaze from "@/components/NumberMaze.vue";
 import NumberPuzzle from "@/components/NumberPuzzle.vue";
+import NumberSequence from "@/components/NumberSequence.vue";
 
 const routes = [
   {
@@ -64,6 +65,10 @@ const routes = [
   {
     path: "/numberpuzzle",
     component: NumberPuzzle,
+  },
+  {
+    path: "/numbersequence",
+    component: NumberSequence,
   },
 ];
 
