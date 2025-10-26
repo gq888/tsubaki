@@ -205,6 +205,7 @@ export default {
         { path: '/Sort', icon: '🐗' },
         { path: '/Pairs', icon: '🐰' },
         { path: '/Spider', icon: '🕷️' },
+        { path: '/TowerHanoi', icon: '🗼' },
         { path: '/GridBattle', icon: '⚔️' },
       ],
     };
