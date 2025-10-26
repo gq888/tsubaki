@@ -9,7 +9,7 @@ import Pairs from "@/components/Pairs.vue";
 import Spider from "@/components/Spider.vue";
 import GridBattle from "@/components/Chess.vue";
 import TowerHanoi from "@/components/TowerHanoi.vue";
-import NumberMaze from "@/components/NumberMaze.js";
+import NumberMaze from "@/components/NumberMaze.vue";
 import NumberPuzzle from "@/components/NumberPuzzle.vue";
 
 const routes = [
