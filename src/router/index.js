@@ -9,7 +9,8 @@ import Pairs from "@/components/Pairs.vue";
 import Spider from "@/components/Spider.vue";
 import GridBattle from "@/components/Chess.vue";
 import TowerHanoi from "@/components/TowerHanoi.vue";
-import NumberMaze from "@/components/NumberMaze.vue";
+import NumberMaze from "@/components/NumberMaze.js";
+import NumberPuzzle from "@/components/NumberPuzzle.vue";
 
 const routes = [
   {
@@ -59,6 +60,10 @@ const routes = [
   {
     path: "/numbermaze",
     component: NumberMaze,
+  },
+  {
+    path: "/numberpuzzle",
+    component: NumberPuzzle,
   },
 ];
 
