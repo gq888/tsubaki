@@ -1,0 +1,133 @@
+<svg width="1200" height="900.0000000000001" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+ <defs>
+  <style>.title { font-size: 28px; font-weight: bold; fill: #1a1a1a; }
+      .subtitle { font-size: 20px; font-weight: bold; fill: #2c3e50; }
+      .text { font-size: 14px; fill: #34495e; }
+      .small-text { font-size: 12px; fill: #7f8c8d; }
+      .box { fill: #ecf0f1; stroke: #3498db; stroke-width: 2; rx: 8; }
+      .frontend-box { fill: #3498db; stroke: #2980b9; stroke-width: 2; rx: 8; }
+      .backend-box { fill: #9b59b6; stroke: #8e44ad; stroke-width: 2; rx: 8; }
+      .step-box { fill: #ffffff; stroke: #34495e; stroke-width: 2; rx: 6; }
+      .ai-box { fill: #e67e22; stroke: #d35400; stroke-width: 2; rx: 8; }
+      .white-text { fill: white; font-weight: bold; }
+      .arrow { fill: none; stroke: #34495e; stroke-width: 2; marker-end: url(#arrowhead); }
+      .flow-arrow { fill: none; stroke: #2ecc71; stroke-width: 3; marker-end: url(#arrowhead-green); }
+      .cycle-arrow { fill: none; stroke: #e74c3c; stroke-width: 3; marker-end: url(#arrowhead-red); stroke-dasharray: 5,5; }</style>
+ </defs>
+ <!-- 标题 -->
+ <!-- 前端框架功能流程 -->
+ <!-- 前端功能区 -->
+ <!-- 流程步骤 -->
+ <!-- 流程箭头 -->
+ <!-- 循环箭头 -->
+ <!-- GameStateManager 说明 -->
+ <!-- 大模型应用流程 -->
+ <!-- AI流程区 -->
+ <!-- AI流程箭头 -->
+ <!-- 反馈循环 -->
+ <!-- 核心竞争力说明 -->
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="705" width="1006" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <text id="svg_4" text-anchor="middle" class="title" y="40" x="600">图2：前端功能流程与大模型应用</text>
+  <text id="svg_5" text-anchor="middle" class="small-text" y="75.527923" x="600">前后端协同的自动化工作流程</text>
+  <rect id="svg_6" class="box" height="300" width="1100" y="90" x="50"/>
+  <text id="svg_7" class="subtitle" y="115" x="60">前端框架自动解谜流程</text>
+  <rect id="svg_8" class="frontend-box" height="230" width="1040" y="135" x="80"/>
+  <text id="svg_9" font-size="16" text-anchor="middle" class="white-text" y="165" x="600">以自动解谜为核心的完整功能模块</text>
+  <g id="frontend-steps">
+   <!-- 初始化 -->
+   <rect id="svg_10" class="step-box" height="80" width="160" y="185" x="110"/>
+   <text id="svg_11" font-weight="bold" text-anchor="middle" class="text" y="210" x="190">1. 初始化</text>
+   <text id="svg_12" class="small-text" y="235" x="130">• 加载游戏配置</text>
+   <text id="svg_13" class="small-text" y="252" x="130">• 设置初始状态</text>
+   <!-- 单步提示 -->
+   <rect id="svg_14" class="step-box" height="80" width="160" y="185" x="300"/>
+   <text id="svg_15" font-weight="bold" text-anchor="middle" class="text" y="210" x="380">2. 单步提示</text>
+   <text id="svg_16" class="small-text" y="235" x="320">• 分析当前状态</text>
+   <text id="svg_17" class="small-text" y="252" x="320">• 生成下一步操作</text>
+   <!-- 自动模式 -->
+   <rect id="svg_18" class="step-box" height="80" width="160" y="185" x="490"/>
+   <text id="svg_19" font-weight="bold" text-anchor="middle" class="text" y="210" x="570">3. 自动模式</text>
+   <text id="svg_20" class="small-text" y="235" x="510">• 持续执行提示</text>
+   <text id="svg_21" class="small-text" y="252" x="510">• 直到游戏结束</text>
+   <!-- 撤销 -->
+   <rect id="svg_22" class="step-box" height="80" width="160" y="185" x="680"/>
+   <text id="svg_23" font-weight="bold" text-anchor="middle" class="text" y="210" x="760">4. 撤销操作</text>
+   <text id="svg_24" class="small-text" y="235" x="700">• 回退上次行动</text>
+   <text id="svg_25" class="small-text" y="252" x="700">• 恢复历史状态</text>
+   <!-- 重新开始 -->
+   <rect id="svg_26" class="step-box" height="80" width="160" y="185" x="870"/>
+   <text id="svg_27" font-weight="bold" text-anchor="middle" class="text" y="210" x="950">5. 重新开始</text>
+   <text id="svg_28" class="small-text" y="235" x="890">• 重置游戏状态</text>
+   <text id="svg_29" class="small-text" y="252" x="890">• 清空历史记录</text>
+  </g>
+  <path id="svg_30" class="flow-arrow" d="m270,225l30,0"/>
+  <path id="svg_31" class="flow-arrow" d="m460,225l30,0"/>
+  <path id="svg_32" class="flow-arrow" d="m650,225l30,0"/>
+  <path id="svg_33" class="flow-arrow" d="m840,225l30,0"/>
+  <path stroke="null" id="svg_34" class="cycle-arrow" d="m1030,225q40,0 40,-20.121216l0,-42.757568q0,-20.121216 -40,-20.121216l-880,0q-40,0 -40,20.121216l0,42.757568"/>
+  <text id="svg_35" text-anchor="middle" class="small-text" y="59.211932" x="590">持续迭代循环</text>
+  <rect id="svg_36" rx="6" stroke-width="2" stroke="#e67e22" fill="#f39c12" height="60" width="920" y="285" x="110"/>
+  <text id="svg_37" font-size="14" text-anchor="middle" class="white-text" y="310" x="570">GameStateManager 统一状态管理</text>
+  <text id="svg_38" font-size="12" class="white-text" y="330" x="160">事件驱动架构 | 历史记录管理 | 支持撤销重做 | 状态同步</text>
+  <rect id="svg_39" class="box" height="460" width="1100" y="410" x="50"/>
+  <text id="svg_40" class="subtitle" y="435" x="60">大模型自动设计与优化流程</text>
+  <g id="ai-workflow">
+   <!-- 步骤1: 仿写框架 -->
+   <rect id="svg_41" class="ai-box" height="180" width="220" y="460" x="100"/>
+   <text id="svg_42" font-size="15" text-anchor="middle" class="white-text" y="490" x="210">步骤1: 仿写框架</text>
+   <rect id="svg_43" rx="4" stroke="#d35400" fill="white" height="110" width="180" y="510" x="120"/>
+   <text id="svg_44" font-weight="bold" class="text" y="535" x="130">学习现有游戏</text>
+   <text id="svg_45" class="small-text" y="555" x="130">• 分析游戏结构</text>
+   <text id="svg_46" class="small-text" y="572" x="130">• 理解设计模式</text>
+   <text id="svg_47" class="small-text" y="589" x="130">• 提取核心逻辑</text>
+   <text id="svg_48" font-weight="bold" class="text" y="610" x="130">生成新谜题框架</text>
+   <!-- 步骤2: 设定测试标准 -->
+   <rect id="svg_49" class="ai-box" height="180" width="220" y="460" x="370"/>
+   <text id="svg_50" font-size="15" text-anchor="middle" class="white-text" y="490" x="480">步骤2: 测试标准</text>
+   <rect id="svg_51" rx="4" stroke="#d35400" fill="white" height="110" width="180" y="510" x="390"/>
+   <text id="svg_52" font-weight="bold" class="text" y="535" x="400">npm run test</text>
+   <text id="svg_53" class="small-text" y="555" x="400">• 制定测试规范</text>
+   <text id="svg_54" class="small-text" y="572" x="400">• 建立评估体系</text>
+   <text id="svg_55" class="small-text" y="589" x="400">• 定义成功标准</text>
+   <text id="svg_56" font-weight="bold" class="text" y="610" x="400">严格规范验证</text>
+   <!-- 步骤3: 优化算法 -->
+   <rect id="svg_57" class="ai-box" height="180" width="220" y="460" x="640"/>
+   <text id="svg_58" font-size="15" text-anchor="middle" class="white-text" y="490" x="750">步骤3: 优化算法</text>
+   <rect id="svg_59" rx="4" stroke="#d35400" fill="white" height="110" width="180" y="510" x="660"/>
+   <text id="svg_60" font-weight="bold" class="text" y="535" x="670">自动化优化</text>
+   <text id="svg_61" class="small-text" y="555" x="670">• 基于测试反馈</text>
+   <text id="svg_62" class="small-text" y="572" x="670">• 迭代改进算法</text>
+   <text id="svg_63" class="small-text" y="589" x="670">• 性能调优</text>
+   <text id="svg_64" font-weight="bold" class="text" y="610" x="670">持续改进提升</text>
+   <!-- 步骤4: 生成方案 -->
+   <rect id="svg_65" class="ai-box" height="180" width="220" y="460" x="910"/>
+   <text id="svg_66" font-size="15" text-anchor="middle" class="white-text" y="490" x="1020">步骤4: 输出方案</text>
+   <rect id="svg_67" rx="4" stroke="#d35400" fill="white" height="110" width="180" y="510" x="930"/>
+   <text id="svg_68" font-weight="bold" class="text" y="535" x="940">最终产出</text>
+   <text id="svg_69" class="small-text" y="555" x="940">• 优化后的算法</text>
+   <text id="svg_70" class="small-text" y="572" x="940">• 性能评估报告</text>
+   <text id="svg_71" class="small-text" y="589" x="940">• 完整解决方案</text>
+   <text id="svg_72" font-weight="bold" class="text" y="610" x="940">可部署实施</text>
+  </g>
+  <path id="svg_73" class="flow-arrow" d="m320,550l50,0"/>
+  <path id="svg_74" class="flow-arrow" d="m590,550l50,0"/>
+  <path id="svg_75" class="flow-arrow" d="m860,550l50,0"/>
+  <path stroke="null" id="svg_76" class="cycle-arrow" d="m1020,640q0,60 -70,60l-740,0q-70,0 -70,-60"/>
+  <text id="svg_77" text-anchor="middle" class="small-text" y="720" x="600">持续迭代优化循环</text>
+  <rect id="svg_78" class="backend-box" height="100" width="1030" y="750" x="100"/>
+  <text id="svg_79" font-size="16" text-anchor="middle" class="white-text" y="780" x="615">双重优势：前后端协同</text>
+  <g id="advantages">
+   <rect id="svg_80" rx="4" stroke="#8e44ad" fill="white" height="40" width="460" y="795" x="130"/>
+   <text id="svg_81" font-weight="bold" class="text" y="820" x="150">前端优势：</text>
+   <text id="svg_82" class="small-text" y="820" x="240">清晰操作界面 | 实时可视化 | 人类监控有效性</text>
+   <rect id="svg_83" rx="4" stroke="#8e44ad" fill="white" height="40" width="480" y="795" x="620"/>
+   <text id="svg_84" font-weight="bold" class="text" y="820" x="640">后端优势：</text>
+   <text id="svg_85" class="small-text" y="820" x="730">简单测试环境 | 批量处理 | 大模型自动化优势</text>
+  </g>
+ </g>
+</svg>

@@ -1,0 +1,124 @@
+<svg width="1200" height="900" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+ <defs>
+  <style>.title { font-size: 32px; font-weight: bold; fill: #1a1a1a; }
+      .subtitle { font-size: 22px; font-weight: bold; fill: #2c3e50; }
+      .section-title { font-size: 18px; font-weight: bold; fill: #2c3e50; }
+      .text { font-size: 15px; fill: #34495e; }
+      .small-text { font-size: 13px; fill: #7f8c8d; }
+      .highlight-text { font-size: 16px; font-weight: bold; fill: #e74c3c; }
+      .success-text { font-size: 16px; font-weight: bold; fill: #27ae60; }
+      .box { fill: #ecf0f1; stroke: #3498db; stroke-width: 2; rx: 8; }
+      .problem-box { fill: #ffe6e6; stroke: #e74c3c; stroke-width: 3; rx: 12; }
+      .solution-box { fill: #e8f8f0; stroke: #27ae60; stroke-width: 3; rx: 12; }
+      .value-box { fill: #fff9e6; stroke: #f39c12; stroke-width: 3; rx: 12; }
+      .icon-box { fill: #3498db; stroke: #2980b9; stroke-width: 2; rx: 8; }
+      .white-text { fill: white; font-weight: bold; }
+      .red-text { fill: #e74c3c; font-weight: bold; }
+      .green-text { fill: #27ae60; font-weight: bold; }
+      .arrow { fill: none; stroke: #e74c3c; stroke-width: 4; marker-end: url(#arrowhead); }
+      .transform-arrow { fill: #27ae60; }</style>
+ </defs>
+ <!-- 主标题 -->
+ <!-- 问题区域 -->
+ <!-- 问题1 -->
+ <!-- 问题2 -->
+ <!-- 转换箭头 -->
+ <!-- 解决方案区域 -->
+ <!-- 解决方案1 -->
+ <!-- 解决方案2 -->
+ <!-- 核心价值区域 -->
+ <!-- 价值展示 - 3列布局 -->
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="758" width="1182" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <text id="svg_2" text-anchor="middle" class="title" y="50" x="600">AI训练平台：让机器像人一样学会解谜</text>
+  <text id="svg_3" text-anchor="middle" class="subtitle" y="85" x="600">通过游戏训练提升AI推理能力</text>
+  <rect id="svg_4" class="problem-box" height="380" width="520" y="130" x="60"/>
+  <text id="svg_5" font-size="24" text-anchor="middle" class="highlight-text" y="170" x="320">❌ 现在的困难</text>
+  <g id="problem1">
+   <rect id="svg_6" rx="8" stroke-width="2" stroke="#e74c3c" fill="white" height="140" width="460" y="200" x="90"/>
+   <circle id="svg_7" fill="#e74c3c" r="20" cy="240" cx="120"/>
+   <text id="svg_8" font-size="18" text-anchor="middle" class="white-text" y="248" x="120">1</text>
+   <text id="svg_9" font-weight="bold" class="text" y="230" x="160">AI难以完成完整的思考-行动循环</text>
+   <text id="svg_10" class="small-text" y="255" x="160">就像教小朋友做题，AI看不清题目内容</text>
+   <text id="svg_11" class="small-text" y="278" x="160">做完题后也不知道答案对不对</text>
+   <text id="svg_12" class="small-text" y="301" x="160">无法通过反馈来改进自己的思考方式</text>
+   <text id="svg_13" font-style="italic" class="small-text" y="324" x="160">→ 学习效率低，难以进步</text>
+  </g>
+  <g id="problem2">
+   <rect id="svg_14" rx="8" stroke-width="2" stroke="#e74c3c" fill="white" height="130" width="460" y="360" x="90"/>
+   <circle id="svg_15" fill="#e74c3c" r="20" cy="395" cx="120"/>
+   <text id="svg_16" font-size="18" text-anchor="middle" class="white-text" y="403" x="120">2</text>
+   <text id="svg_17" font-weight="bold" class="text" y="385" x="160">缺少可靠的训练和评估方法</text>
+   <text id="svg_18" class="small-text" y="410" x="160">没有统一标准来衡量AI的推理能力</text>
+   <text id="svg_19" class="small-text" y="433" x="160">训练过程像"黑盒子"，不知道哪里需要改进</text>
+   <text id="svg_20" class="small-text" y="456" x="160">难以持续提升AI的智能水平</text>
+   <text id="svg_21" font-style="italic" class="small-text" y="479" x="160">→ 投入大，成效难以衡量</text>
+  </g>
+  <g id="transform">
+   <path id="svg_22" class="arrow" d="m580,320l40,0"/>
+  </g>
+  <rect id="svg_26" class="solution-box" height="380" width="520" y="130" x="620"/>
+  <text id="svg_27" font-size="24" text-anchor="middle" class="success-text" y="170" x="880">✓ 我们的方案</text>
+  <g id="solution1">
+   <rect id="svg_28" rx="8" stroke-width="2" stroke="#27ae60" fill="white" height="140" width="460" y="200" x="650"/>
+   <circle id="svg_29" fill="#27ae60" r="20" cy="240" cx="680"/>
+   <text id="svg_30" font-size="18" text-anchor="middle" class="white-text" y="248" x="680">✓</text>
+   <text id="svg_31" font-weight="bold" class="text" y="230" x="720">完整的学习闭环系统</text>
+   <text id="svg_32" class="small-text" y="255" x="720">👀 观察：清晰看到当前状态（像看清题目）</text>
+   <text id="svg_33" class="small-text" y="278" x="720">🧠 思考：分析状态，制定解决策略</text>
+   <text id="svg_34" class="small-text" y="301" x="720">✋ 行动：执行操作，实时记录结果</text>
+   <text id="svg_35" class="small-text" y="324" x="720">🔄 反馈：验证结果，形成完整学习循环</text>
+  </g>
+  <g id="solution2">
+   <rect id="svg_36" rx="8" stroke-width="2" stroke="#27ae60" fill="white" height="130" width="460" y="360" x="650"/>
+   <circle id="svg_37" fill="#27ae60" r="20" cy="395" cx="680"/>
+   <text id="svg_38" font-size="18" text-anchor="middle" class="white-text" y="403" x="680">✓</text>
+   <text id="svg_39" font-weight="bold" class="text" y="385" x="720">科学的评估训练体系</text>
+   <text id="svg_40" class="small-text" y="410" x="720">📊 建立标准化的能力测试基准</text>
+   <text id="svg_41" class="small-text" y="433" x="720">🔁 自动化训练流程，持续优化改进</text>
+   <text id="svg_42" class="small-text" y="456" x="720">📈 从速度、准确率、稳定性等多角度评估</text>
+   <text id="svg_43" font-style="italic" class="small-text" y="479" x="720">→ 训练有方向，进步可衡量</text>
+  </g>
+  <rect id="svg_44" class="value-box" height="320" width="1080" y="540" x="60"/>
+  <text id="svg_45" font-size="26" text-anchor="middle" class="section-title" y="580" x="600">🎯 项目核心价值</text>
+  <g id="value-points">
+   <!-- 第一列 -->
+   <g id="col1">
+    <rect id="svg_46" rx="8" stroke-width="2" stroke="#f39c12" fill="white" height="90" width="320" y="610" x="90"/>
+    <text id="svg_47" font-weight="bold" text-anchor="middle" class="text" y="640" x="250">🎮 游戏化训练场景</text>
+    <text id="svg_48" class="small-text" y="665" x="110">通过解谜游戏训练AI推理</text>
+    <text id="svg_49" class="small-text" y="685" x="110">直观易懂，便于监控效果</text>
+    <rect id="svg_50" rx="8" stroke-width="2" stroke="#f39c12" fill="white" height="90" width="320" y="720" x="90"/>
+    <text id="svg_51" font-weight="bold" text-anchor="middle" class="text" y="750" x="250">⚡ 高效自动化流程</text>
+    <text id="svg_52" class="small-text" y="775" x="110">减少人工干预，提高效率</text>
+    <text id="svg_53" class="small-text" y="795" x="110">批量测试，快速迭代优化</text>
+   </g>
+   <!-- 第二列 -->
+   <g id="col2">
+    <rect id="svg_54" rx="8" stroke-width="2" stroke="#f39c12" fill="white" height="90" width="320" y="610" x="440"/>
+    <text id="svg_55" font-weight="bold" text-anchor="middle" class="text" y="640" x="600">📊 标准化评估体系</text>
+    <text id="svg_56" class="small-text" y="665" x="460">建立统一的能力评估标准</text>
+    <text id="svg_57" class="small-text" y="685" x="460">量化训练效果，可对比分析</text>
+    <rect id="svg_58" rx="8" stroke-width="2" stroke="#f39c12" fill="white" height="90" width="320" y="720" x="440"/>
+    <text id="svg_59" font-weight="bold" text-anchor="middle" class="text" y="750" x="600">🔄 持续迭代优化</text>
+    <text id="svg_60" class="small-text" y="775" x="460">数据驱动的改进方向</text>
+    <text id="svg_61" class="small-text" y="795" x="460">不断提升AI推理能力</text>
+   </g>
+   <!-- 第三列 -->
+   <g id="col3">
+    <rect id="svg_62" rx="8" stroke-width="2" stroke="#f39c12" fill="white" height="90" width="320" y="610" x="790"/>
+    <text id="svg_63" font-weight="bold" text-anchor="middle" class="text" y="640" x="950">🎨 前后端双重优势</text>
+    <text id="svg_64" class="small-text" y="665" x="810">前端：清晰界面，便于监控</text>
+    <text id="svg_65" class="small-text" y="685" x="810">后端：高效测试，自动化强</text>
+    <rect id="svg_66" rx="8" stroke-width="2" stroke="#f39c12" fill="white" height="90" width="320" y="720" x="790"/>
+    <text id="svg_67" font-weight="bold" text-anchor="middle" class="text" y="750" x="950">🚀 可扩展架构</text>
+    <text id="svg_68" class="small-text" y="775" x="810">支持多种游戏类型</text>
+    <text id="svg_69" class="small-text" y="795" x="810">适应不同复杂度需求</text>
+   </g>
+  </g>
+ </g>
+</svg>

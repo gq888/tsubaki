@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端游戏自动化测试平台 - 项目介绍</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .svg-container {
+            padding: 20px;
+            text-align: center;
+        }
+        .svg-container svg {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .section {
+            padding: 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section h2 {
+            color: #1e293b;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            margin-right: 12px;
+            border-radius: 2px;
+        }
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .tech-card {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .tech-card:hover {
+            transform: translateY(-5px);
+        }
+        .tech-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+        .tech-card ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .problem-card {
+            background: white;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+        }
+        .problem-card:nth-child(2) {
+            border-color: #3b82f6;
+        }
+        .problem-card h3 {
+            color: #92400e;
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+        .problem-card:nth-child(2) h3 {
+            color: #1e40af;
+        }
+        .problem-card ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #374151;
+            line-height: 1.6;
+        }
+        .workflow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .workflow-step {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .workflow-step:hover {
+            transform: scale(1.05);
+        }
+        .workflow-arrow {
+            font-size: 2em;
+            color: #6b7280;
+            margin: 0 10px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-top: 4px solid;
+        }
+        .metric-card:nth-child(1) { border-top-color: #3b82f6; }
+        .metric-card:nth-child(2) { border-top-color: #16a34a; }
+        .metric-card:nth-child(3) { border-top-color: #f59e0b; }
+        .metric-card:nth-child(4) { border-top-color: #ec4899; }
+        .metric-card h4 {
+            margin: 0 0 10px 0;
+            color: #1e293b;
+            font-size: 1.1em;
+        }
+        .metric-card p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        .advantages {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .advantage-card {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        .advantage-card h3 {
+            color: #1e293b;
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+        .advantage-card ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #374151;
+            line-height: 1.6;
+        }
+        .value-proposition {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            text-align: center;
+            padding: 40px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .value-proposition h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.8em;
+        }
+        .value-proposition p {
+            margin: 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>前端游戏自动化测试平台</h1>
+            <p>AI驱动的游戏推理能力训练与评估系统</p>
+        </div>
+        
+        <div class="section">
+            <h2>核心技术架构</h2>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h3>npm run test工具</h3>
+                    <ul>
+                        <li>核心测试引擎</li>
+                        <li>状态捕获与验证</li>
+                        <li>自动化测试执行</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h3>前端抽象机制</h3>
+                    <ul>
+                        <li>复杂页面文本符号化</li>
+                        <li>动画帧状态捕获</li>
+                        <li>游戏状态可视化</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h3>SSR调试技术</h3>
+                    <ul>
+                        <li>后端文本协议</li>
+                        <li>简单高效环境</li>
+                        <li>最小化环境依赖</li>
+                    </ul>
+                </div>
+                <div class="tech-card">
+                    <h3>GameStateManager</h3>
+                    <ul>
+                        <li>统一状态管理</li>
+                        <li>事件驱动架构</li>
+                        <li>历史记录管理</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>核心问题解决</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <h3>前端沙箱环境AI决策闭环难题</h3>
+                    <ul>
+                        <li>观察：通过文本符号化捕获游戏状态</li>
+                        <li>决策：基于状态分析制定行动策略</li>
+                        <li>行动：执行具体操作并记录结果</li>
+                        <li>新观察：验证状态变化形成闭环</li>
+                    </ul>
+                </div>
+                <div class="problem-card">
+                    <h3>大模型推理能力提升挑战</h3>
+                    <ul>
+                        <li>标准化测试：统一评估基准</li>
+                        <li>迭代优化：持续改进算法性能</li>
+                        <li>多维度评估：速度、胜率、复杂度</li>
+                        <li>自动化训练：减少人工干预</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>前端框架功能流程</h2>
+            <div class="workflow">
+                <div class="workflow-step">初始化</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">单步提示</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">自动模式</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">撤销</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">重新开始</div>
+            </div>
+            <ul style="color: #374151; line-height: 1.8; margin-top: 20px;">
+                <li>自动模式：持续执行单步提示直到游戏结束</li>
+                <li>状态管理：GameStateManager统一管理游戏状态</li>
+                <li>事件驱动：基于发布订阅模式的状态同步</li>
+                <li>历史记录：支持撤销重做功能</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>大模型自动设计流程</h2>
+            <div class="workflow">
+                <div class="workflow-step" style="background: linear-gradient(135deg, #f59e0b, #d97706);">仿写现有框架</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">设定测试标准</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" style="background: linear-gradient(135deg, #10B981, #059669);">自动优化算法</div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" style="background: linear-gradient(135deg, #ec4899, #d946ef);">生成解决方案</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>多维度评估体系</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h4>解密速度</h4>
+                    <p>响应时间 &lt; 100ms<br>步数效率优化</p>
+                </div>
+                <div class="metric-card">
+                    <h4>胜率</h4>
+                    <p>完成成功率<br>稳定性评估</p>
+                </div>
+                <div class="metric-card">
+                    <h4>完成度</h4>
+                    <p>功能覆盖度<br>边界条件处理</p>
+                </div>
+                <div class="metric-card">
+                    <h4>算法复杂度</h4>
+                    <p>时间复杂度分析<br>空间复杂度优化</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>迭代优化循环</h2>
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="display: inline-flex; align-items: center; gap: 20px;">
+                    <div style="background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">设计谜题</div>
+                    <span style="font-size: 2em; color: #6b7280;">→</span>
+                    <div style="background: linear-gradient(135deg, #10B981, #059669); color: white; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">优化算法</div>
+                    <span style="font-size: 2em; color: #6b7280;">→</span>
+                    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">评估</div>
+                    <span style="font-size: 2em; color: #6b7280;">→</span>
+                    <div style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">循环</div>
+                </div>
+            </div>
+            <ul style="color: #374151; line-height: 1.8;">
+                <li>持续迭代：通过自动化测试驱动算法改进</li>
+                <li>数据驱动：基于评估结果指导优化方向</li>
+                <li>自动化：减少人工干预，提高训练效率</li>
+                <li>可扩展：支持多种游戏类型和复杂度</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>核心竞争力</h2>
+            <div class="advantages">
+                <div class="advantage-card">
+                    <h3>前端操作便捷性</h3>
+                    <ul>
+                        <li>清晰的操作界面便于人类监控</li>
+                        <li>实时可视化反馈游戏状态变化</li>
+                        <li>直观的用户体验设计</li>
+                        <li>支持交互式调试和测试</li>
+                    </ul>
+                </div>
+                <div class="advantage-card">
+                    <h3>后端测试高效性</h3>
+                    <ul>
+                        <li>简单高效的测试环境</li>
+                        <li>自动化测试脚本执行</li>
+                        <li>快速批量处理能力</li>
+                        <li>最小化环境依赖</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="value-proposition">
+            <h3>项目价值主张</h3>
+            <p>通过前后端协同的自动化测试平台，为AI模型提供标准化、可量化的游戏推理能力训练环境</p>
+        </div>
+    </div>
+</body>
+</html>

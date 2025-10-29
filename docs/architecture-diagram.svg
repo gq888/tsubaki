@@ -1,0 +1,113 @@
+<svg width="1200" height="900" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">
+ <defs>
+  <style>.title { font-size: 28px; font-weight: bold; fill: #1a1a1a; }
+      .subtitle { font-size: 20px; font-weight: bold; fill: #2c3e50; }
+      .text { font-size: 14px; fill: #34495e; }
+      .small-text { font-size: 12px; fill: #7f8c8d; }
+      .box { fill: #ecf0f1; stroke: #3498db; stroke-width: 2; rx: 8; }
+      .core-box { fill: #3498db; stroke: #2980b9; stroke-width: 3; rx: 10; }
+      .problem-box { fill: #e74c3c; stroke: #c0392b; stroke-width: 2; rx: 8; }
+      .solution-box { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; rx: 8; }
+      .tech-box { fill: #f39c12; stroke: #e67e22; stroke-width: 2; rx: 8; }
+      .white-text { fill: white; font-weight: bold; }
+      .arrow { fill: none; stroke: #34495e; stroke-width: 2; marker-end: url(#arrowhead); }
+      .thick-arrow { fill: none; stroke: #e74c3c; stroke-width: 3; marker-end: url(#arrowhead-red); }</style>
+ </defs>
+ <!-- 标题 -->
+ <!-- 核心技术架构区域 -->
+ <!-- npm run test 工具核心 -->
+ <!-- 四大技术支柱 -->
+ <!-- 前端抽象机制 -->
+ <!-- GameStateManager -->
+ <!-- SSR调试技术 -->
+ <!-- 可视化调试 -->
+ <!-- 连接箭头到核心 -->
+ <!-- 核心问题与解决方案 -->
+ <!-- 问题区域 -->
+ <!-- 问题1 -->
+ <!-- 问题2 -->
+ <!-- 解决方案区域 -->
+ <!-- 解决方案1 -->
+ <!-- 解决方案2 -->
+ <!-- 大箭头连接 -->
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="758" width="1182" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <text id="svg_3" text-anchor="middle" class="title" y="40" x="600">图1：项目核心技术架构与问题解决</text>
+  <text id="svg_4" text-anchor="middle" class="small-text" y="65" x="600">AI驱动的游戏推理能力训练与评估系统</text>
+  <rect id="svg_5" class="box" height="360" width="1100" y="90" x="50"/>
+  <text id="svg_6" class="subtitle" y="115" x="60">核心技术架构</text>
+  <rect id="svg_7" class="core-box" height="80" width="300" y="135" x="450"/>
+  <text id="svg_8" font-size="18" text-anchor="middle" class="white-text" y="165" x="600">npm run test 工具</text>
+  <text id="svg_9" font-size="13" text-anchor="middle" class="white-text" y="188" x="600">统一测试执行框架</text>
+  <text id="svg_10" font-size="12" text-anchor="middle" class="white-text" y="206" x="600">状态捕获 | 自动化验证 | 批量测试</text>
+  <rect id="svg_11" class="tech-box" height="180" width="240" y="250" x="70"/>
+  <text id="svg_12" font-size="15" text-anchor="middle" class="white-text" y="275" x="190">前端抽象机制</text>
+  <text id="svg_13" font-size="12" class="white-text" y="300" x="90">复杂页面文本符号化</text>
+  <text id="svg_14" font-size="11" class="small-text" y="320" x="90">• 将复杂UI转为可处理文本</text>
+  <text id="svg_15" font-size="11" class="small-text" y="340" x="90">• 标准化状态表示</text>
+  <text id="svg_16" font-size="12" class="white-text" y="365" x="90">动画帧状态捕获</text>
+  <text id="svg_17" font-size="11" class="small-text" y="385" x="90">• 重写定时函数</text>
+  <text id="svg_18" font-size="11" class="small-text" y="405" x="90">• 精确捕获关键帧</text>
+  <rect id="svg_19" class="tech-box" height="180" width="240" y="250" x="340"/>
+  <text id="svg_20" font-size="15" text-anchor="middle" class="white-text" y="275" x="460">GameStateManager</text>
+  <text id="svg_21" font-size="12" class="white-text" y="300" x="360">统一状态管理</text>
+  <text id="svg_22" font-size="11" class="small-text" y="320" x="360">• 集中管理游戏状态</text>
+  <text id="svg_23" font-size="11" class="small-text" y="340" x="360">• 事件驱动架构</text>
+  <text id="svg_24" font-size="12" class="white-text" y="365" x="360">历史记录管理</text>
+  <text id="svg_25" font-size="11" class="small-text" y="385" x="360">• 支持撤销重做</text>
+  <text id="svg_26" font-size="11" class="small-text" y="405" x="360">• 状态快照保存</text>
+  <rect id="svg_27" class="tech-box" height="180" width="240" y="250" x="610"/>
+  <text id="svg_28" font-size="15" text-anchor="middle" class="white-text" y="275" x="730">SSR调试技术</text>
+  <text id="svg_29" font-size="12" class="white-text" y="300" x="630">后端文本协议</text>
+  <text id="svg_30" font-size="11" class="small-text" y="320" x="630">• 简单高效通信</text>
+  <text id="svg_31" font-size="11" class="small-text" y="340" x="630">• 文本化交互接口</text>
+  <text id="svg_32" font-size="12" class="white-text" y="365" x="630">简单测试环境</text>
+  <text id="svg_33" font-size="11" class="small-text" y="385" x="630">• 最小化依赖</text>
+  <text id="svg_34" font-size="11" class="small-text" y="405" x="630">• 快速部署执行</text>
+  <rect id="svg_35" class="tech-box" height="180" width="240" y="250" x="880"/>
+  <text id="svg_36" font-size="15" text-anchor="middle" class="white-text" y="275" x="1000">可视化调试</text>
+  <text id="svg_37" font-size="12" class="white-text" y="300" x="900">游戏状态可视化</text>
+  <text id="svg_38" font-size="11" class="small-text" y="320" x="900">• 直观状态展示</text>
+  <text id="svg_39" font-size="11" class="small-text" y="340" x="900">• 实时反馈界面</text>
+  <text id="svg_40" font-size="12" class="white-text" y="365" x="900">交互式调试</text>
+  <text id="svg_41" font-size="11" class="small-text" y="385" x="900">• 手动干预支持</text>
+  <text id="svg_42" font-size="11" class="small-text" y="405" x="900">• 丰富错误追踪</text>
+  <path id="svg_43" class="arrow" d="m190,250l0,-20l360,0l0,-15"/>
+  <path id="svg_44" class="arrow" d="m460,250l0,-20l140,0l0,-15"/>
+  <path id="svg_45" class="arrow" d="m730,250l0,-20l-80,0l0,-15"/>
+  <path id="svg_46" class="arrow" d="m1000,250l0,-20l-300,0l0,-15"/>
+  <rect id="svg_47" class="box" height="400" width="1100" y="470" x="50"/>
+  <text id="svg_48" class="subtitle" y="495" x="60">核心问题解决方案</text>
+  <rect id="svg_49" class="problem-box" height="320" width="480" y="520" x="80"/>
+  <text id="svg_50" font-size="16" text-anchor="middle" class="white-text" y="550" x="320">行业痛点</text>
+  <rect id="svg_51" rx="5" stroke="#c0392b" fill="white" height="120" width="440" y="570" x="100"/>
+  <text id="svg_52" font-weight="bold" text-anchor="middle" class="text" y="595" x="320">问题1: 前端沙箱环境AI决策闭环难题</text>
+  <text id="svg_53" class="small-text" y="620" x="120">❌ 复杂沙箱环境限制AI观察能力</text>
+  <text id="svg_54" class="small-text" y="640" x="120">❌ 状态获取不完整，决策依据不足</text>
+  <text id="svg_55" class="small-text" y="660" x="120">❌ 行动执行后无法有效验证结果</text>
+  <text id="svg_56" class="small-text" y="680" x="120">❌ 无法形成完整的"观察→决策→行动→新观察"闭环</text>
+  <rect id="svg_57" rx="5" stroke="#c0392b" fill="white" height="110" width="440" y="710" x="100"/>
+  <text id="svg_58" font-weight="bold" text-anchor="middle" class="text" y="735" x="320">问题2: 大模型推理能力提升挑战</text>
+  <text id="svg_59" class="small-text" y="760" x="120">❌ 缺乏标准化的能力评估体系</text>
+  <text id="svg_60" class="small-text" y="780" x="120">❌ 训练过程难以量化和优化</text>
+  <text id="svg_61" class="small-text" y="800" x="120">❌ 无法持续迭代改进推理能力</text>
+  <rect id="svg_62" class="solution-box" height="320" width="500" y="520" x="620"/>
+  <text id="svg_63" font-size="16" text-anchor="middle" class="white-text" y="550" x="870">创新解决方案</text>
+  <rect id="svg_64" rx="5" stroke="#27ae60" fill="white" height="120" width="460" y="570" x="640"/>
+  <text id="svg_65" font-weight="bold" text-anchor="middle" class="text" y="595" x="870">解决方案1: 完整决策闭环构建</text>
+  <text id="svg_66" class="small-text" y="620" x="660">✓ 观察: 文本符号化精确捕获游戏状态</text>
+  <text id="svg_67" class="small-text" y="640" x="660">✓ 决策: 基于完整状态分析制定策略</text>
+  <text id="svg_68" class="small-text" y="660" x="660">✓ 行动: 执行操作并实时记录结果</text>
+  <text id="svg_69" class="small-text" y="680" x="660">✓ 新观察: 验证状态变化形成完整闭环</text>
+  <rect id="svg_70" rx="5" stroke="#27ae60" fill="white" height="110" width="460" y="710" x="640"/>
+  <text id="svg_71" font-weight="bold" text-anchor="middle" class="text" y="735" x="870">解决方案2: 多维度评估与迭代优化</text>
+  <text id="svg_72" class="small-text" y="760" x="660">✓ 建立标准化测试基准和评估体系</text>
+  <text id="svg_73" class="small-text" y="798" x="660">✓ 自动化训练流程，持续迭代优化</text>
+  <text id="svg_74" class="small-text" y="779" x="660">✓ 速度、胜率、复杂度等多角度评估</text>
+  <path id="svg_75" class="thick-arrow" d="m560,680l60,0"/>
+ </g>
+</svg>

@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="Arial, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 28px; font-weight: bold; fill: #1a1a1a; }
+      .subtitle { font-size: 20px; font-weight: bold; fill: #2c3e50; }
+      .text { font-size: 14px; fill: #34495e; }
+      .small-text { font-size: 12px; fill: #7f8c8d; }
+      .box { fill: #ecf0f1; stroke: #3498db; stroke-width: 2; rx: 8; }
+      .eval-box { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; rx: 8; }
+      .metric-box { fill: #ffffff; stroke: #27ae60; stroke-width: 2; rx: 6; }
+      .cycle-box { fill: #e74c3c; stroke: #c0392b; stroke-width: 3; rx: 10; }
+      .value-box { fill: #9b59b6; stroke: #8e44ad; stroke-width: 2; rx: 8; }
+      .white-text { fill: white; font-weight: bold; }
+      .arrow { fill: none; stroke: #34495e; stroke-width: 2; marker-end: url(#arrowhead); }
+      .cycle-arrow { fill: none; stroke: #e74c3c; stroke-width: 4; marker-end: url(#arrowhead-red); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#34495e" />
+    </marker>
+    <marker id="arrowhead-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#e74c3c" />
+    </marker>
+  </defs>
+
+  <text x="600" y="40" class="title" text-anchor="middle">图3：多维度评估体系与迭代优化</text>
+  <text x="600" y="65" class="small-text" text-anchor="middle">衡量大模型推理能力的完整评估与训练体系</text>
+
+  <rect x="50" y="90" width="1100" height="360" class="box"/>
+  <text x="60" y="115" class="subtitle">多维度评估指标体系</text>
+
+  <rect x="80" y="135" width="1040" height="290" class="eval-box"/>
+  <text x="600" y="165" class="white-text" text-anchor="middle" font-size="16">全方位衡量模型推理能力</text>
+
+  <rect x="110" y="185" width="230" height="240" class="metric-box"/>
+  <text x="225" y="210" class="text" text-anchor="middle" font-weight="bold" font-size="15">解密速度</text>
+  <text x="130" y="240" class="text" font-weight="bold">性能指标：</text>
+  <text x="130" y="262" class="small-text">• 单步响应时间 &lt; 100ms</text>
+  <text x="130" y="282" class="small-text">• 总体完成时间</text>
+  <text x="130" y="302" class="small-text">• 资源消耗效率</text>
+  <text x="130" y="330" class="text" font-weight="bold">优化目标：</text>
+  <text x="130" y="352" class="small-text">• 减少决策延迟</text>
+  <text x="130" y="372" class="small-text">• 提高步数效率</text>
+  <text x="130" y="392" class="small-text">• 优化算法复杂度</text>
+
+  <rect x="370" y="185" width="230" height="240" class="metric-box"/>
+  <text x="485" y="210" class="text" text-anchor="middle" font-weight="bold" font-size="15">胜率统计</text>
+  <text x="390" y="240" class="text" font-weight="bold">成功率指标：</text>
+  <text x="390" y="262" class="small-text">• 游戏完成成功率</text>
+  <text x="390" y="282" class="small-text">• 不同难度适应性</text>
+  <text x="390" y="302" class="small-text">• 边界案例处理</text>
+  <text x="390" y="330" class="text" font-weight="bold">稳定性评估：</text>
+  <text x="390" y="352" class="small-text">• 多次测试一致性</text>
+  <text x="390" y="372" class="small-text">• 异常情况恢复</text>
+  <text x="390" y="392" class="small-text">• 长期运行稳定</text>
+
+  <rect x="630" y="185" width="230" height="240" class="metric-box"/>
+  <text x="745" y="210" class="text" text-anchor="middle" font-weight="bold" font-size="15">最终完成度</text>
+  <text x="650" y="240" class="text" font-weight="bold">覆盖度评估：</text>
+  <text x="650" y="262" class="small-text">• 功能完整性覆盖</text>
+  <text x="650" y="282" class="small-text">• 规则理解准确度</text>
+  <text x="650" y="302" class="small-text">• 复杂场景处理</text>
+  <text x="650" y="330" class="text" font-weight="bold">质量指标：</text>
+  <text x="650" y="352" class="small-text">• 最优解发现率</text>
+  <text x="650" y="372" class="small-text">• 策略有效性</text>
+  <text x="650" y="392" class="small-text">• 用户体验质量</text>
+
+  <rect x="890" y="185" width="230" height="240" class="metric-box"/>
+  <text x="1005" y="210" class="text" text-anchor="middle" font-weight="bold" font-size="15">算法复杂度</text>
+  <text x="910" y="240" class="text" font-weight="bold">效率分析：</text>
+  <text x="910" y="262" class="small-text">• 时间复杂度 O(n)</text>
+  <text x="910" y="282" class="small-text">• 空间复杂度分析</text>
+  <text x="910" y="302" class="small-text">• 计算资源占用</text>
+  <text x="910" y="330" class="text" font-weight="bold">优化方向：</text>
+  <text x="910" y="352" class="small-text">• 算法精简优化</text>
+  <text x="910" y="372" class="small-text">• 内存使用优化</text>
+  <text x="910" y="392" class="small-text">• 可扩展性提升</text>
+
+  <rect x="50" y="470" width="1100" height="400" class="box"/>
+  <text x="60" y="495" class="subtitle">迭代优化循环机制</text>
+
+  <g id="iteration-cycle">
+    <rect x="180" y="530" width="200" height="120" class="cycle-box"/>
+    <text x="280" y="560" class="white-text" text-anchor="middle" font-size="16">1. 设计谜题</text>
+    <text x="200" y="590" class="white-text" font-size="12">• 仿写现有框架</text>
+    <text x="200" y="610" class="white-text" font-size="12">• 创新谜题设计</text>
+    <text x="200" y="630" class="white-text" font-size="12">• 设定难度梯度</text>
+
+    <rect x="500" y="530" width="200" height="120" class="cycle-box"/>
+    <text x="600" y="560" class="white-text" text-anchor="middle" font-size="16">2. 优化算法</text>
+    <text x="520" y="590" class="white-text" font-size="12">• 基于测试反馈</text>
+    <text x="520" y="610" class="white-text" font-size="12">• 迭代改进策略</text>
+    <text x="520" y="630" class="white-text" font-size="12">• 性能调优</text>
+
+    <rect x="820" y="530" width="200" height="120" class="cycle-box"/>
+    <text x="920" y="560" class="white-text" text-anchor="middle" font-size="16">3. 评估结果</text>
+    <text x="840" y="590" class="white-text" font-size="12">• 多维度评估</text>
+    <text x="840" y="610" class="white-text" font-size="12">• 生成性能报告</text>
+    <text x="840" y="630" class="white-text" font-size="12">• 识别改进点</text>
+  </g>
+
+  <path d="M 380 590 L 500 590" class="cycle-arrow"/>
+  <path d="M 700 590 L 820 590" class="cycle-arrow"/>
+  <path d="M 920 650 Q 920 720 600 720 Q 280 720 280 650" class="cycle-arrow"/>
+  
+  <text x="600" y="745" class="text" text-anchor="middle" font-weight="bold" font-size="14">持续迭代 · 数据驱动 · 自动化优化</text>
+
+  <rect x="100" y="770" width="1000" height="80" class="value-box"/>
+  <text x="600" y="800" class="white-text" text-anchor="middle" font-size="16">项目价值主张</text>
+  <text x="120" y="825" class="white-text" font-size="13">✓ 标准化评估基准</text>
+  <text x="320" y="825" class="white-text" font-size="13">✓ 自动化训练流程</text>
+  <text x="520" y="825" class="white-text" font-size="13">✓ 可视化调试界面</text>
+  <text x="720" y="825" class="white-text" font-size="13">✓ 可扩展架构设计</text>
+  <text x="920" y="825" class="white-text" font-size="13">✓ 持续优化提升</text>
+
+</svg>
