@@ -31,11 +31,11 @@
                 class="grid-cell"
                 :class="{
                   'cell-empty': cell === null,
-                  'cell-selectable': cell !== null && !gameManager.winflag && !gameManager.loseflag,
+                  'cell-selectable': cell !== null && canOperate,
                   'cell-selected': isCellSelected(rowIndex, colIndex),
                   'cell-selectable-next': isCellSelectableNext(rowIndex, colIndex)
                 }"
-                @click="cell !== null && !gameManager.winflag && !gameManager.loseflag && handleCellClick(rowIndex, colIndex)"
+                @click="cell !== null && canOperate && handleCellClick(rowIndex, colIndex)"
               >
                 <span v-if="cell !== null" class="cell-number">{{ cell }}</span>
               </div>

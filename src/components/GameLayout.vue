@@ -71,7 +71,7 @@
         <slot name="top-controls">
           <GameControls
             v-if="showTopControls"
-            v-bind="gameControlsConfig"
+            :buttons="displayButtons"
             @undo="$emit('undo')"
             @goon="$emit('goon')"
             @step="$emit('step')"
@@ -96,7 +96,7 @@
       <slot name="bottom-controls">
         <GameControls
             v-if="showBottomControls"
-            v-bind="gameControlsConfig"
+            :buttons="displayButtons"
             @undo="$emit('undo')"
             @goon="$emit('goon')"
             @step="$emit('step')"
@@ -238,9 +238,9 @@ export default {
       type: Boolean,
       default: true,
     },
-    gameControlsConfig: {
-      type: Object,
-      default: () => ({}),
+    displayButtons: {
+      type: Array,
+      default: () => [],
     },
     customButtons: {
       type: Object,
@@ -316,7 +316,7 @@ export default {
     defaultWinButtons() {
       return [
         {
-          text: "GO ON",
+          label: "GO ON",
           action: "goon",
           callback: () => this.$emit("goon"),
           disabled: false,
@@ -326,13 +326,13 @@ export default {
     defaultLoseButtons() {
       return [
         {
-          text: "RESTART",
+          label: "RESTART",
           action: "goon",
           callback: () => this.$emit("goon"),
           disabled: false,
         },
         {
-          text: "UNDO",
+          label: "UNDO",
           action: "undo",
           callback: () => this.$emit("undo"),
           disabled: this.step <= 0,
@@ -342,13 +342,13 @@ export default {
     defaultDrawButtons() {
       return [
         {
-          text: "RESTART",
+          label: "RESTART",
           action: "goon",
           callback: () => this.$emit("goon"),
           disabled: false,
         },
         {
-          text: "UNDO",
+          label: "UNDO",
           action: "undo",
           callback: () => this.$emit("undo"),
           disabled: this.step <= 0,

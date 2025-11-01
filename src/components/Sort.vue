@@ -4,13 +4,13 @@
     :lose-subtitle="n + '/' + (number + 1) * 4"
     :lose-buttons="[
       {
-        text: 'RESTART',
+        label: 'RESTART',
         action: 'goon',
         callback: goon,
         disabled: false,
       },
       {
-        text: 'UNDO',
+        label: 'UNDO',
         action: 'undo',
         callback: undo,
         disabled: undoDisabled,

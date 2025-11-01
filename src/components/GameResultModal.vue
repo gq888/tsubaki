@@ -12,7 +12,7 @@
 
       <!-- 使用 GameControls 组件替代手动按钮渲染 -->
       <GameControls
-        :buttons="gameControlsButtons"
+        :buttons="buttons"
         @undo="handleAction('undo')"
         @goon="handleAction('goon')"
         @auto="handleAction('auto')"
@@ -70,16 +70,6 @@ export default {
         height: `${this.footerHeight / 16}rem`
       };
     },
-    gameControlsButtons() {
-      // 将原有的按钮配置转换为 GameControls 所需的格式
-      return this.buttons.map(button => {
-        return {
-          label: button.text,
-          action: button.action,
-          disabled: button.disabled
-        };
-      });
-    }
   },
   methods: {
     handleAction(action) {

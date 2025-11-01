@@ -22,28 +22,6 @@ export default {
       type: Array,
       default: () => [],
     },
-
-    // 仅保留必要的状态属性
-    undoDisabled: {
-      type: Boolean,
-      default: false,
-    },
-    restartDisabled: {
-      type: Boolean,
-      default: false,
-    },
-    stepDisabled: {
-      type: Boolean,
-      default: false,
-    },
-    autoDisabled: {
-      type: Boolean,
-      default: false,
-    },
-    isAutoRunning: {
-      type: Boolean,
-      default: false,
-    },
   },
   
 

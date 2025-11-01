@@ -231,12 +231,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
 
       // 显示按钮计算属性
       displayButtons() {
-        // 如果提供了自定义按钮数组，则使用它
-        if (this.gameControlsConfig?.buttons && this.gameControlsConfig.buttons.length > 0) {
-          return this.gameControlsConfig.buttons;
-        }
-
-        // 否则生成默认按钮列表
+        // 生成默认按钮列表
         const defaultButtons = [];
 
         // 根据配置添加按钮
@@ -245,6 +240,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
             label: "◀︎",
             action: "undo",
             disabled: this.undoDisabled,
+            id: 'undo-btn' // 添加唯一ID以确保Vue正确追踪
           });
         }
 
@@ -253,6 +249,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
             label: "RESTART",
             action: "goon",
             disabled: this.restartDisabled,
+            id: 'restart-btn' // 添加唯一ID以确保Vue正确追踪
           });
         }
 
@@ -261,6 +258,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           label: this.isAutoRunning ? "STOP" : "AUTO",
           action: "auto",
           disabled: this.autoDisabled,
+          id: 'auto-btn' // 添加唯一ID以确保Vue正确追踪
         });
 
         // 默认添加STEP按钮
@@ -268,21 +266,10 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
           label: "►",
           action: "step",
           disabled: this.stepDisabled,
+          id: 'step-btn' // 添加唯一ID以确保Vue正确追踪
         });
 
         return defaultButtons;
-      },
-
-      // 游戏控制配置
-      gameControlsConfig() {
-        return {
-          buttons: this.displayButtons,
-          undoDisabled: this.undoDisabled,
-          restartDisabled: this.restartDisabled,
-          stepDisabled: this.stepDisabled,
-          autoDisabled: this.autoDisabled,
-          isAutoRunning: this.gameManager?.isAutoRunning || false,
-        };
       },
 
       // GameLayout通用属性配置
@@ -292,7 +279,7 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
         
         return {
           title: this.title,
-          gameControlsConfig: this.gameControlsConfig,
+          displayButtons: this.displayButtons,
           winflag: this.winflag,
           loseflag: this.loseflag,
           drawflag: this.drawflag,

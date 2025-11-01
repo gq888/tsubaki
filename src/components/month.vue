@@ -5,7 +5,7 @@
     :lose-subtitle="'YOUR LUCKY CLASSES:'"
     :lose-buttons="[
       {
-        text: 'GO ON',
+        label: 'GO ON',
         action: 'goon',
         callback: goon,
         disabled: false,
