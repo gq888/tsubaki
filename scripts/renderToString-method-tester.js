@@ -29,7 +29,12 @@ function getAbsoluteComponentPath(relativePath) {
   if (path.isAbsolute(relativePath)) {
     absolutePath = relativePath;
   } else {
-    absolutePath = path.resolve(__dirname, '..', "src/components/" + relativePath);
+    // 如果路径已经以src/components开头，直接解析
+    if (relativePath.startsWith('src/components/')) {
+      absolutePath = path.resolve(__dirname, '..', relativePath);
+    } else {
+      absolutePath = path.resolve(__dirname, '..', 'src/components', relativePath);
+    }
   }
   
   return absolutePath;

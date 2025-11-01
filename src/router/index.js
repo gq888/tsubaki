@@ -12,6 +12,7 @@ import TowerHanoi from "@/components/TowerHanoi.vue";
 import NumberMaze from "@/components/NumberMaze.vue";
 import NumberPuzzle from "@/components/NumberPuzzle.vue";
 import NumberSequence from "@/components/NumberSequence.vue";
+import Junqi from "@/components/Junqi.vue";
 
 const routes = [
   {
@@ -69,6 +70,10 @@ const routes = [
   {
     path: "/numbersequence",
     component: NumberSequence,
+  },
+  {
+    path: "/junqi",
+    component: Junqi,
   },
 ];
 
