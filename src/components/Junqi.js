@@ -120,6 +120,69 @@ const Junqi = {
           }
         });
       });
+      
+      // 随机摆放乙方棋子（玩家2）
+      this.randomPlacePlayerPieces(2);
+    },
+
+    // 随机摆放指定玩家的棋子
+    randomPlacePlayerPieces(player) {
+      const playerName = player === 1 ? '甲方' : '乙方';
+      const playerPieces = this.pieces[playerName];
+      
+      // 获取该玩家的可放置区域
+      const availablePositions = [];
+      for (let row = 0; row < this.rows; row++) {
+        for (let col = 0; col < this.cols; col++) {
+          // 检查是否在玩家区域内且位置为空
+          const isPlayerArea = player === 1 ? row >= 6 : row <= 5;
+          if (isPlayerArea && this.board[row][col] === 0) {
+            availablePositions.push({ row, col });
+          }
+        }
+      }
+      
+      // 打乱位置顺序
+      this.shuffleArray(availablePositions);
+      
+      let positionIndex = 0;
+      
+      // 按棋子类型顺序放置（先放军旗，然后按等级从高到低）
+      const placeOrder = [11, 8, 7, 6, 5, 4, 3, 2, 1, 0, 9, 10]; // 军旗、司令、军长、师长...
+      
+      for (const pieceType of placeOrder) {
+        const pieceConfig = playerPieces.find(p => p.type === pieceType);
+        if (!pieceConfig || pieceConfig.count <= 0) continue;
+        
+        // 放置该类型的所有棋子
+        for (let i = 0; i < pieceConfig.count && positionIndex < availablePositions.length; i++) {
+          const pos = availablePositions[positionIndex++];
+          this.board[pos.row][pos.col] = {
+            player: player,
+            type: pieceType,
+            revealed: false
+          };
+          
+          console.log(`随机放置了 ${playerName} 的 ${this.pieceNames[pieceType]} 在 (${pos.row}, ${pos.col})`);
+        }
+        
+        // 更新棋子数量（已放置的棋子数量设为0）
+        pieceConfig.count = Math.max(0, pieceConfig.count - (positionIndex > 0 ? 
+          availablePositions.slice(0, positionIndex).filter(pos => 
+            this.board[pos.row][pos.col].type === pieceType
+          ).length : 0));
+      }
+      
+      console.log(`已为 ${playerName} 随机摆放棋子，使用了 ${positionIndex} 个位置`);
+    },
+
+    // 打乱数组顺序（Fisher-Yates算法）
+    shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
     },
 
     // 点击棋盘格子
