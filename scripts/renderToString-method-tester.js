@@ -394,8 +394,13 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
         continue;
       }
       
-      // 基本类型、null、undefined 直接赋值
-      if (sourceValue === null || sourceValue === undefined || typeof sourceValue !== 'object') {
+      // 函数类型、null、undefined 直接跳过
+      if (sourceValue === null || sourceValue === undefined || typeof targetValue === 'function') {
+        continue;
+      }
+      
+      // 基本类型，直接赋值
+      if (typeof sourceValue !== 'object') {
         if (target[key] !== sourceValue) {
           target[key] = sourceValue;
         }
@@ -414,29 +419,9 @@ function deepOverwrite(target, source, path = 'root', visited = new Set()) {
         continue;
       }
       
-      // 对象类型 - 特殊处理gameManager
+      // 对象类型
       if (typeof sourceValue === 'object') {
-        if (key === 'gameManager' && targetValue && typeof targetValue === 'object' && !Array.isArray(targetValue)) {
-          // 对于gameManager，只更新其数据属性，保持其方法和原型
-          console.log(`  深度覆盖: 特殊处理gameManager，保持现有对象引用`);
-          for (const gmKey in sourceValue) {
-            // 只更新数据属性，不覆盖方法
-            if (sourceValue.hasOwnProperty(gmKey) && 
-                gmKey !== 'recordOperation' && 
-                gmKey !== 'on' && 
-                gmKey !== 'off' && 
-                gmKey !== 'emit' &&
-                gmKey !== 'getStepCount' &&
-                gmKey !== 'startAuto' &&
-                gmKey !== 'stopAuto' &&
-                gmKey !== 'wait' &&
-                gmKey !== 'init' &&
-                typeof targetValue[gmKey] !== 'function') {
-              targetValue[gmKey] = sourceValue[gmKey];
-              console.log(`    更新gameManager.${gmKey}: ${JSON.stringify(sourceValue[gmKey])}`);
-            }
-          }
-        } else if (targetValue && typeof targetValue === 'object' && !Array.isArray(targetValue)) {
+        if (targetValue && typeof targetValue === 'object' && !Array.isArray(targetValue)) {
           // 目标也是对象，递归处理
           deepOverwrite(targetValue, sourceValue, currentPath, visited);
         } else {
@@ -544,8 +529,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
     
     // 创建状态捕获对象
     let capturedState = {
-      before: null,
-      after: null,
       result: null,
       error: null,
       errorStack: null
@@ -575,104 +558,26 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
         };
       },
       async created() {
-        // 保存原始console方法
-        const originalConsole = {
-          log: console.log,
-          error: console.error,
-          warn: console.warn
-        };
-        
-        // 创建控制台输出捕获器
-        const capturedOutput = [];
-        const captureConsole = (method, prefix) => {
-          return (...args) => {
-            capturedOutput.push(`[${prefix}] ${args.join(' ')}`);
-            originalConsole[method].apply(console, args);
-          };
-        };
-        
-        // 替换console方法以捕获输出
-        console.log = captureConsole('log', 'LOG');
-        console.error = captureConsole('error', 'ERROR');
-        console.warn = captureConsole('warn', 'WARN');
-        
-        try {
-          // 执行原始的created函数（初始化所有对象）
-          if (originalCreated) {
-            if (originalCreated.constructor.name === 'AsyncFunction') {
-              await originalCreated.call(this);
-            } else {
-              originalCreated.call(this);
-            }
-          }
-          // 如果有保存的状态，使用深度覆盖恢复所有数据
-          if (currentData && Object.keys(currentData).length > 0) {
-            console.log('  开始恢复状态，currentData包含:', Object.keys(currentData));
-            if (currentData.gameManager) {
-              console.log('  currentData.gameManager包含:', Object.keys(currentData.gameManager));
-              console.log('  当前this.gameManager存在:', !!this.gameManager);
-              if (this.gameManager) {
-                console.log('  当前this.gameManager包含:', Object.keys(this.gameManager));
-                console.log('  recordOperation方法存在:', typeof this.gameManager.recordOperation);
-              }
-            }
-            
-            // 使用深度覆盖函数恢复状态
-            deepOverwrite(this, currentData, 'this');
-            
-            if (this.gameManager) {
-              console.log('  恢复后gameManager包含:', Object.keys(this.gameManager));
-              console.log('  恢复后recordOperation方法存在:', typeof this.gameManager.recordOperation);
-              console.log('  gameManager步数:', this.gameManager.getStepCount ? this.gameManager.getStepCount() : 'N/A');
-            }
+        // 执行原始的created函数（初始化所有对象）
+        if (originalCreated) {
+          if (originalCreated.constructor.name === 'AsyncFunction') {
+            await originalCreated.call(this);
           } else {
-            console.log('  无状态需要恢复，currentData为空');
-            if (this.gameManager) {
-              console.log('  当前gameManager包含:', Object.keys(this.gameManager));
-              console.log('  recordOperation方法存在:', typeof this.gameManager.recordOperation);
-            }
+            originalCreated.call(this);
           }
-        } finally {
-          // 恢复原始console方法
-          console.log = originalConsole.log;
-          console.error = originalConsole.error;
-          console.warn = originalConsole.warn;
+        }
+        // 如果有保存的状态，使用深度覆盖恢复所有数据
+        if (currentData && Object.keys(currentData).length > 0) {
           
-          // 输出捕获的控制台信息
-          if (capturedOutput.length > 0) {
-            console.log('=== 组件控制台输出 ===');
-            capturedOutput.forEach(line => console.log(line));
-            console.log('====================');
+          // 使用深度覆盖函数恢复状态
+          deepOverwrite(this, currentData, 'this');
+          
+          if (this.gameManager) {
+            console.log('  gameManager步数:', this.gameManager.getStepCount ? this.gameManager.getStepCount() : 'N/A');
           }
         }
         
-        // 捕获执行前状态 - 使用JSON深拷贝避免循环引用
-        const beforeState = JSON.parse(JSON.stringify(this.$data, (key, value) => {
-          if (key.startsWith('_')) return undefined;
-          return value;
-        }));
-        this._testCapture.before = beforeState;
-        
         console.log(`=== 执行方法 ${methodName} ===`);
-        
-        // 保存原始console方法并设置捕获
-        const methodOriginalConsole = {
-          log: console.log,
-          error: console.error,
-          warn: console.warn
-        };
-        
-        const methodCapturedOutput = [];
-        const captureMethodConsole = (method, prefix) => {
-          return (...args) => {
-            methodCapturedOutput.push(`[${prefix}] ${args.join(' ')}`);
-            methodOriginalConsole[method].apply(console, args);
-          };
-        };
-        
-        console.log = captureMethodConsole('log', 'METHOD');
-        console.error = captureMethodConsole('error', 'METHOD');
-        console.warn = captureMethodConsole('warn', 'METHOD');
         
         // 执行目标方法
         try {
@@ -717,18 +622,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           
           this._testCapture.error = error.message;
           this._testCapture.errorStack = error.stack;
-        } finally {
-          // 恢复原始console方法
-          console.log = methodOriginalConsole.log;
-          console.error = methodOriginalConsole.error;
-          console.warn = methodOriginalConsole.warn;
-          
-          // 输出捕获的控制台信息
-          if (methodCapturedOutput.length > 0) {
-            console.log('=== 方法控制台输出 ===');
-            methodCapturedOutput.forEach(line => console.log(line));
-            console.log('======================');
-          }
         }
         
         // 捕获执行后状态 - 使用JSON深拷贝避免循环引用
@@ -736,36 +629,18 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           if (key.startsWith('_')) return undefined;
           return value;
         }));
-        this._testCapture.after = afterState;
-        
-        // 直接打印测试结果，而不是通过模板
-        const testResult = {
-          methodName: methodName,
-          args: args,
-          result: this._testCapture.result,
-          error: this._testCapture.error,
-          errorStack: this._testCapture.errorStack,
-          before: this._testCapture.before,
-          after: this._testCapture.after,
-          gameFlags: {
-            winflag: this._testCapture.after ? this._testCapture.after.winflag : false,
-            loseflag: this._testCapture.after ? this._testCapture.after.loseflag : false,
-            drawflag: this._testCapture.after ? this._testCapture.after.drawflag : false
-          },
-          testSuccess: (this._testCapture.after && (this._testCapture.after.winflag || this._testCapture.after.loseflag || this._testCapture.after.drawflag))
-        };
         
         // 保存执行后的状态到文件
-        if (this._testCapture.after) {
+        if (afterState) {
           console.log('已保存执行后的状态到文件:', outputFile);
-          saveStateToFile(this._testCapture.after, outputFile);
+          saveStateToFile(afterState, outputFile);
         }
 
 
         // 如果有断言表达式，将断言结果也添加到jsonResult中
-        if (this._assertExpressions && this._assertExpressions.length > 0 && this._testCapture && this._testCapture.after) {
+        if (this._assertExpressions && this._assertExpressions.length > 0) {
           try {
-            const assertResults = (new JSONAssertion()).assertAll(this._testCapture.after, this._assertExpressions);
+            const assertResults = (new JSONAssertion()).assertAll(this, this._assertExpressions);
   
             let allPassed = true;
             assertResults.forEach((assertResult, index) => {

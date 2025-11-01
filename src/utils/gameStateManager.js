@@ -103,7 +103,9 @@ export default class GameStateManager {
     try {
       while (
         this.isAutoRunning &&
-        !this.overflag &&
+        !this.winflag &&
+        !this.loseflag &&
+        !this.drawflag &&
         stepCount < this.maxSteps
       ) {
         await stepCallback();
@@ -178,7 +180,7 @@ export default class GameStateManager {
    * @param {Function} stepCallback - 单步操作的回调函数
    */
   async step(stepCallback) {
-    if (!this.hitflag || this.overflag) {
+    if (!this.hitflag || this.winflag || this.loseflag || this.drawflag) {
       return;
     }
 
@@ -316,7 +318,7 @@ export default class GameStateManager {
 
       overflag() {
         const manager = this.gameManager;
-        return manager ? manager.overflag : false;
+        return manager ? manager.winflag || manager.loseflag || manager.drawflag : false;
       },
 
       winflag() {
@@ -357,7 +359,7 @@ export default class GameStateManager {
           !manager ||
           !manager.hitflag ||
           manager.isAutoRunning ||
-          manager.overflag
+          this.overflag
         );
       },
 
@@ -366,7 +368,7 @@ export default class GameStateManager {
         return (
           !manager ||
           !manager.hitflag ||
-          manager.overflag
+          this.overflag
         );
       },
 

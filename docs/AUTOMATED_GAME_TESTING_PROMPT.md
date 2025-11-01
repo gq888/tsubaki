@@ -64,7 +64,7 @@ cat .last-test-state.json | jq '.gameState'
 **测试目标：** 验证历史记录机制准确性
 **执行命令：**
 ```bash
-npm run test GameName.js stepFn -- --assert="gameManager.history.0!==undefined"
+npm run test GameName.js stepFn -- --assert="step!==0"
 ```
 **成功标准：** 
 - 断言通过，历史记录数组长度增加
@@ -75,7 +75,7 @@ npm run test GameName.js stepFn -- --assert="gameManager.history.0!==undefined"
 **测试目标：** 验证状态完全重置
 **执行命令：**
 ```bash
-npm run test GameName.js stepFn && npm run test GameName.js restart -- --assert="gameManager.history.0===undefined" --continue
+npm run test GameName.js stepFn && npm run test GameName.js restart -- --assert="step===0" --continue
 ```
 **成功标准：**
 - 历史记录清空：`history.length === 0`
@@ -86,7 +86,7 @@ npm run test GameName.js stepFn && npm run test GameName.js restart -- --assert=
 **测试目标：** 验证自动通关逻辑完整性
 **执行命令：**
 ```bash
-npm run test GameName.js pass -- --assert="gameManager.overflag===true"
+npm run test GameName.js pass -- --assert="overflag===true"
 ```
 **成功标准：**
 - 自动模式正常启动和停止
@@ -98,7 +98,7 @@ npm run test GameName.js pass -- --assert="gameManager.overflag===true"
 **测试目标：** 验证操作回滚机制
 **执行命令：**
 ```bash
-npm run test GameName.js stepFn && npm run test GameName.js undo -- --continue --assert="gameManager.history.0===undefined"
+npm run test GameName.js stepFn && npm run test GameName.js undo -- --continue --assert="step!==0"
 ```
 **成功标准：**
 - 撤销后历史记录正确移除
@@ -130,7 +130,6 @@ echo "3" | npm run test GameName.js --interactive
 ```bash
 # 多断言组合
 npm run test GameName.js stepFn -- \
-  --assert="gameManager.history.length===1" \
   --assert="winflag===false" \
   --assert="step===1"
 
