@@ -98,7 +98,7 @@ npm run test GameName.js pass -- --assert="overflag===true"
 **测试目标：** 验证操作回滚机制
 **执行命令：**
 ```bash
-npm run test GameName.js stepFn && npm run test GameName.js undo -- --continue --assert="step!==0"
+npm run test GameName.js stepFn && npm run test GameName.js undo -- --continue --assert="step===0"
 ```
 **成功标准：**
 - 撤销后历史记录正确移除

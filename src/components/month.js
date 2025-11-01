@@ -45,6 +45,7 @@ const Month = {
     },
     // 摸牌
     async hit() {
+      this.gameManager.recordOperation();
       let currentCard = this.arr[this.month].pop();
       var value = currentCard >> 2;
       this.arr[value].unshift(currentCard);

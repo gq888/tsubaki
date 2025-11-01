@@ -30,11 +30,6 @@ export default GameComponentPresets.puzzleGame({
       this.score = 0;
     },
 
-    goon() {
-      // 重新开始游戏
-      this.init();
-    },
-
     handleCellClick(row, col) {
       if (this.grid[row][col] === null) return;
       
@@ -207,6 +202,10 @@ export default GameComponentPresets.puzzleGame({
         return false;
       }
 
+      // 记录操作前的状态（在消除和重力应用之前）
+      const beforeGrid = this.copyGrid(this.grid);
+      const beforeScore = this.score;
+      
       // 清除选中的序列
       for (const cell of sequence) {
         this.grid[cell.row][cell.col] = null;
@@ -218,13 +217,15 @@ export default GameComponentPresets.puzzleGame({
       // 更新分数
       this.score += sequence.length * 10;
       
-      // 记录操作
+      // 记录操作（包含操作前的完整状态）
       this.gameManager.recordOperation({
         type: 'selectSequence',
         data: {
           sequence: sequence.map(cell => ({row: cell.row, col: cell.col, value: cell.value})),
-          score: this.score,
-          grid: this.copyGrid(this.grid)
+          beforeScore: beforeScore,
+          afterScore: this.score,
+          beforeGrid: beforeGrid,
+          afterGrid: this.copyGrid(this.grid)
         }
       });
 
@@ -285,9 +286,9 @@ export default GameComponentPresets.puzzleGame({
 
     handleUndo(operation) {
       if (operation.type === 'selectSequence') {
-        // 恢复网格状态
-        this.grid = this.copyGrid(operation.data.grid);
-        this.score = operation.data.score;
+        // 恢复操作前的网格状态（包含数字的原始位置）
+        this.grid = this.copyGrid(operation.data.beforeGrid);
+        this.score = operation.data.beforeScore;
         this.selectedCells = [];
       }
     },
