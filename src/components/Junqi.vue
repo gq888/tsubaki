@@ -1,14 +1,7 @@
 <template>
   <GameLayout
     :title="title"
-    :winflag="winflag"
-    :loseflag="loseflag"
-    :drawflag="drawflag"
-    :step="step"
-    :undoDisabled="undoDisabled"
-    :restartDisabled="restartDisabled"
-    :stepDisabled="stepDisabled"
-    :autoDisabled="autoDisabled"
+    v-bind="gameLayoutProps"
     @undo="undo"
     @goon="goon"
     @step="stepFn"

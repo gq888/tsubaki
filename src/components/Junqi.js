@@ -55,7 +55,7 @@ const Junqi = {
       // 特殊位置定义
       specialPositions: {
         // 行营位置（棋子进入后不能被攻击）
-        camps: [[2,1], [2,3], [4,1], [4,3], [7,1], [7,3], [9,1], [9,3]],
+        camps: [[2,1], [2,3], [3, 2], [4,1], [4,3], [7,1], [7,3], [8, 2], [9,1], [9,3]],
         // 大本营位置（军旗必须放在这里）
         bases: [[11,1], [11,3], [0,1], [0,3]],
         // 铁路线位置（工兵可沿铁路线任意移动）
@@ -124,6 +124,7 @@ const Junqi = {
 
     // 点击棋盘格子
     clickCell(row, col) {
+      console.log(`点击了格子: ${row}, ${col}`);
       if (this.gamePhase === 'setup') {
         this.handleSetupClick(row, col);
       } else if (this.gamePhase === 'playing') {
@@ -139,6 +140,15 @@ const Junqi = {
       if (cellPlayer === this.currentPlayer) {
         this.selectedPiece = { row, col };
         return;
+      }
+      
+      // 如果点击空位置且有可用棋子，选择棋子类型并放置
+      if (cellPlayer === 0 && this.availablePieces.length > 0) {
+        // 选择第一个可用棋子类型（简化处理）
+        const selectedPieceType = this.availablePieces[0].type;
+        if (this.canPlacePiece(row, col)) {
+          this.placePiece(row, col, selectedPieceType);
+        }
       }
       
       // 如果已经选中了棋子，尝试放置
@@ -189,14 +199,29 @@ const Junqi = {
     },
 
     // 放置棋子
-    placePiece(row, col) {
-      // 这里简化处理，实际应该让玩家选择要放置的棋子类型
-      const pieceType = 0; // 默认放置工兵
+    placePiece(row, col, pieceType = null) {
+      // 如果没有指定棋子类型，使用默认工兵
+      if (pieceType === null) {
+        pieceType = 0; // 默认放置工兵
+      }
+      
+      // 检查是否还有该类型的棋子可用
+      const playerPieces = this.pieces[this.currentPlayerName];
+      const pieceConfig = playerPieces.find(p => p.type === pieceType);
+      if (!pieceConfig || pieceConfig.count <= 0) {
+        console.log(`玩家 ${this.currentPlayerName} 没有可用的 ${this.pieceNames[pieceType]} 棋子`);
+        return;
+      }
+      
+      // 放置棋子
       this.board[row][col] = {
         player: this.currentPlayer,
         type: pieceType,
         revealed: false // 棋子未翻开
       };
+      
+      // 减少可用棋子数量
+      pieceConfig.count--;
       
       this.recordOperation({
         type: 'place',
@@ -205,6 +230,8 @@ const Junqi = {
         player: this.currentPlayer,
         pieceType: pieceType
       });
+      
+      console.log(`在 (${row}, ${col}) 放置了 ${this.currentPlayerName} 的 ${this.pieceNames[pieceType]}`);
     },
 
     // 检查是否可以移动棋子
@@ -449,9 +476,9 @@ const Junqi = {
   },
   
   // 初始化时创建游戏
-  created() {
-    this.init();
-  }
+//   created() {
+//     this.init();
+//   }
 };
 
 // 使用工厂函数创建增强的游戏组件

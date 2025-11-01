@@ -207,9 +207,10 @@ export default {
         { path: '/Spider', icon: '🕷️' },
         { path: '/TowerHanoi', icon: '🗼' },
         { path: '/GridBattle', icon: '⚔️' },
-        { path: '/numbermaze', icon: '🔢' },
+        { path: '/numbermaze', icon: '🗺' },
         { path: '/numberpuzzle', icon: '🧩' },
         { path: '/numbersequence', icon: '🔢' },
+        { path: '/Junqi', icon: '🚩' },
       ],
     };
   },
