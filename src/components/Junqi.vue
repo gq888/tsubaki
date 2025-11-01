@@ -306,25 +306,6 @@ export default {
       if (!piece || piece === 0) return "";
       return this.pieceNames[piece.type].charAt(0);
     },
-
-    // 检查是否可以开始游戏
-    canStartGame() {
-      // 简化检查：确保双方都有棋子
-      let player1Pieces = 0;
-      let player2Pieces = 0;
-      
-      for (let row = 0; row < this.rows; row++) {
-        for (let col = 0; col < this.cols; col++) {
-          const piece = this.board[row][col];
-          if (piece !== 0) {
-            if (piece.player === 1) player1Pieces++;
-            else if (piece.player === 2) player2Pieces++;
-          }
-        }
-      }
-      
-      return player1Pieces > 0 && player2Pieces > 0;
-    }
   }
 };
 </script>

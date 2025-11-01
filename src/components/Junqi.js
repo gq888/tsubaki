@@ -120,9 +120,23 @@ const Junqi = {
           }
         });
       });
+    },
+
+    // 检查是否可以开始游戏
+    canStartGame() {
+      // 简化检查：确保双方都有棋子
+      let player1Pieces = 0;
       
-      // 随机摆放乙方棋子（玩家2）
-      this.randomPlacePlayerPieces(2);
+      for (let row = 0; row < this.rows; row++) {
+        for (let col = 0; col < this.cols; col++) {
+          const piece = this.board[row][col];
+          if (piece !== 0) {
+            if (piece.player === 1) player1Pieces++;
+          }
+        }
+      }
+      
+      return player1Pieces >= 25;
     },
 
     // 随机摆放指定玩家的棋子
@@ -432,6 +446,9 @@ const Junqi = {
     startGame() {
       this.gamePhase = 'playing';
       this.selectedPiece = null;
+      
+      // 随机摆放乙方棋子（玩家2）
+      this.randomPlacePlayerPieces(2);
     },
 
     // 重新开始
@@ -441,11 +458,22 @@ const Junqi = {
 
     // 自动模式
     async stepFn() {
-      // 简化的自动模式逻辑
+      if (this.gamePhase == "setup") {
+        this.randomPlacePlayerPieces(1);
+        this.startGame();
+        return;
+      }
+
+      // 获取可用移动
       const availableMoves = this.getAvailableMoves();
       if (availableMoves.length > 0) {
         const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        
+        // 先选中源棋子，然后移动到目标位置
+        this.selectedPiece = { row: randomMove.fromRow, col: randomMove.fromCol };
         this.clickCell(randomMove.toRow, randomMove.toCol);
+      } else {
+        console.log("没有可用的移动，游戏可能陷入死锁");
       }
     },
 
