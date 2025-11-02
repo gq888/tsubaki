@@ -245,9 +245,10 @@ export default GameComponentPresets.puzzleGame({
     },
 
     dfsFindSequenceFromCell(row, col, currentSequence, visited, allSequences, grid) {
+      // 如果当前序列满足最小长度，保存它（但继续探索更长的序列）
       if (currentSequence.length >= this.minSequenceLength) {
         allSequences.push([...currentSequence]);
-        return;
+        // ❌ 不要在这里返回！继续探索更长的序列
       }
 
       const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
@@ -275,6 +276,8 @@ export default GameComponentPresets.puzzleGame({
           visited[newRow][newCol] = false;
         }
       }
+      
+      // ✅ 只有在所有方向都探索完后才返回
     },
 
     findSequenceFrom(startRow, startCol, visited) {
