@@ -237,11 +237,19 @@ const NumberMaze = {
         return Math.abs(row1 - row2) + Math.abs(col1 - col2);
       };
       
-      // 根据深度计算数字区间
+      // 根据深度计算数字区间（使用严格小于，避免重叠）
       const getNumberRange = (deep) => {
-        const minNum = Math.floor((this.number / 9 * deep) * 100) / 100;
-        const maxNum = Math.floor((this.number / 9 * (deep + 1)) * 100) / 100;
-        return { min: Math.ceil(minNum), max: Math.floor(maxNum) };
+        const minNum = this.number / 9 * deep;
+        const maxNum = this.number / 9 * (deep + 1);
+        // 使用 minNum < num <= maxNum 的区间划分
+        return { min: Math.floor(minNum) + 1, max: Math.floor(maxNum) };
+      };
+      
+      // 根据数字值计算其理想的曼哈顿距离范围（应该距离起点多远）
+      const getIdealDistance = (num) => {
+        // 数字所属的区间深度
+        const deep = Math.floor((num - 1) / (this.number / 9));
+        return deep + 1; // deep=0的数字理想距离为1，deep=1的数字理想距离为2，以此类推
       };
       
       // 找到网格中指定值的数字位置
@@ -287,8 +295,8 @@ const NumberMaze = {
         const range = getNumberRange(deep);
         const candidates = [];
         
-        // 在区间内找到所有候选数字（排除0和99）
-        for (let num = Math.max(1, range.min); num <= range.max && num <= this.number; num++) {
+        // 在区间内找到所有候选数字
+        for (let num = range.min; num <= range.max && num <= this.number; num++) {
           if (!selectedNumbers.includes(num)) {
             const numPos = findNumberPosition(num);
             if (numPos >= 0) {
@@ -297,12 +305,12 @@ const NumberMaze = {
           }
         }
         
-        // 如果没有候选数字，尝试扩展搜索范围（同样排除0和99）
+        // 如果没有候选数字，尝试扩展搜索范围
         if (candidates.length === 0) {
           for (let num = 1; num <= this.number; num++) {
             if (!selectedNumbers.includes(num)) {
               const numPos = findNumberPosition(num);
-              if (numPos >= 0 && this.grid[numPos] !== 0 && this.grid[numPos] !== 99) {
+              if (numPos >= 0) {
                 candidates.push({ value: num, pos: numPos });
               }
             }
@@ -312,12 +320,24 @@ const NumberMaze = {
         // 如果还是没有候选数字，直接返回
         if (candidates.length === 0) return;
         
-        // 为每个候选数字计算到当前路径位置的距离并排序
-        const candidatesWithDistance = candidates.map(c => ({
-          ...c,
-          distance: getManhattanDistance(currentPos, c.pos)
-        }));
-        candidatesWithDistance.sort((a, b) => a.distance - b.distance);
+        // 为每个候选数字计算综合得分并排序
+        const candidatesWithDistance = candidates.map(c => {
+          const distanceToPath = getManhattanDistance(currentPos, c.pos);
+          const currentDistanceFromStart = getManhattanDistance(0, c.pos);
+          const idealDistance = getIdealDistance(c.value);
+          
+          // 综合得分：距离路径的距离 + 偏离理想位置的轻微惩罚
+          const idealPenalty = Math.abs(currentDistanceFromStart - idealDistance) * 0.2;
+          const score = distanceToPath + idealPenalty;
+          
+          return {
+            ...c,
+            distance: distanceToPath,
+            score: score,
+            idealDistance: idealDistance
+          };
+        });
+        candidatesWithDistance.sort((a, b) => a.score - b.score);
         
         // 选择距离最小的数字（取前5个增加多样性，提高找到解的概率）
         const topCandidates = candidatesWithDistance.slice(0, Math.min(5, candidatesWithDistance.length));
@@ -372,10 +392,11 @@ const NumberMaze = {
       const targetNumbers = bestPath.numbers;
       const targetPositions = bestPath.path;
       
-      // 找到所有目标数字及其相邻空位
+      // 找到所有目标数字及其相邻空位，同时考虑理想位置
       const validMoves = [];
       const numbersAtTarget = new Set(); // 记录已到达目标位置的数字
       
+      // 首先，为所有数字计算移动优先级（基于理想位置）
       for (let i = 0; i < targetNumbers.length; i++) {
         const targetNum = targetNumbers[i];
         const targetPos = targetPositions[i];
@@ -389,6 +410,9 @@ const NumberMaze = {
           continue;
         }
         
+        const idealDistance = getIdealDistance(targetNum);
+        const currentDistanceFromStart = getManhattanDistance(0, currentPos);
+        
         // 获取数字当前位置的相邻位置
         const neighbors = this.getNeighbors(currentPos);
         
@@ -397,23 +421,38 @@ const NumberMaze = {
             // 这是一个空位，检查移动是否能减少距离
             const currentDistance = getManhattanDistance(currentPos, targetPos);
             const newDistance = getManhattanDistance(neighbor, targetPos);
+            const newDistanceFromStart = getManhattanDistance(0, neighbor);
             
-            if (newDistance < currentDistance) {
+            // 计算这个移动的综合价值
+            const pathReduction = currentDistance - newDistance;
+            // 额外奖励：如果这个移动让数字更接近其理想距离
+            const idealBonus = Math.abs(currentDistanceFromStart - idealDistance) - 
+                              Math.abs(newDistanceFromStart - idealDistance);
+            
+            // 必须减少到目标位置的距离，idealBonus只作为优先级加成
+            if (pathReduction > 0) {
               validMoves.push({
                 from: currentPos,
                 to: neighbor,
-                reduction: currentDistance - newDistance
+                reduction: pathReduction,
+                idealBonus: idealBonus,
+                priority: pathReduction + idealBonus * 0.3 // 综合优先级，降低idealBonus权重
               });
             }
           }
         }
       }
       
-      // 如果有有效移动，随机选择一个
+      // 按优先级排序移动
+      validMoves.sort((a, b) => b.priority - a.priority);
+      
+      // 如果有有效移动，优先选择优先级高的（带一定随机性）
       if (validMoves.length > 0) {
-        const randomIndex = Math.floor(Math.random() * validMoves.length);
+        // 从前30%的高优先级移动中随机选择，增加多样性同时保持效率
+        const topCount = Math.max(1, Math.ceil(validMoves.length * 0.3));
+        const randomIndex = Math.floor(Math.random() * topCount);
         const move = validMoves[randomIndex];
-        console.log('Selected valid move:', move);
+        console.log('Selected valid move:', { from: move.from, to: move.to, priority: move.priority.toFixed(2) });
         return { from: move.from, to: move.to };
       }
       
