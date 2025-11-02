@@ -113,7 +113,7 @@ export default GameComponentPresets.puzzleGame({
       return grid.map(row => [...row]);
     },
 
-    stepFn() {
+    async stepFn() {
       if (this.isGameComplete) {
         this.gameManager.setWin();
         return;
@@ -125,12 +125,15 @@ export default GameComponentPresets.puzzleGame({
         return;
       }
 
-      // AI选择最长的序列
-      const bestSequence = validSequences.reduce((best, current) => 
-        current.length > best.length ? current : best
-      );
+      // AI前瞻一步：选择"不能被任何序列消除的格子数量最少"的序列
+      const bestSequence = this.findBestSequenceWithLookahead(validSequences);
       
-      this.selectSequence(bestSequence);
+      this.selectedCells = [];
+      for (let seq of bestSequence) {
+        this.selectedCells.push(seq);
+        await this.wait();
+      }
+      this.confirmSequence();
     },
 
     findAllValidSequences() {
@@ -140,10 +143,9 @@ export default GameComponentPresets.puzzleGame({
       for (let i = 0; i < this.gridSize; i++) {
         for (let j = 0; j < this.gridSize; j++) {
           if (this.grid[i][j] !== null) {
-            const sequence = this.findSequenceFrom(i, j, visited);
-            if (sequence.length >= this.minSequenceLength) {
-              sequences.push(sequence);
-            }
+            const res = this.findSequenceFrom(i, j, visited);
+            res.filter(seq => seq.length >= this.minSequenceLength);
+            sequences.push(...res);
           }
         }
       }
@@ -151,16 +153,98 @@ export default GameComponentPresets.puzzleGame({
       return sequences;
     },
 
-    findSequenceFrom(startRow, startCol, visited) {
-      const sequences = [];
-      const currentSequence = [{row: startRow, col: startCol, value: this.grid[startRow][startCol]}];
-      
-      this.dfsFindSequence(startRow, startCol, currentSequence, visited, sequences);
-      
-      return sequences.length > 0 ? sequences[0] : [];
+    findBestSequenceWithLookahead(validSequences) {
+      let bestSequence = validSequences[0];
+      let minUnreachableCount = Infinity;
+
+      for (const sequence of validSequences) {
+        // 前瞻一步：模拟执行这个序列后的状态
+        const futureState = this.simulateSequenceExecution(sequence);
+        
+        // 计算执行后"不能被任何序列消除的格子"数量
+        const unreachableCount = this.countUnreachableCells(futureState);
+        
+        // 优先选择该数量最少的序列，如果数量相同则选择更长的序列
+        if (unreachableCount < minUnreachableCount || 
+            (unreachableCount === minUnreachableCount && sequence.length > bestSequence.length)) {
+          minUnreachableCount = unreachableCount;
+          bestSequence = sequence;
+        }
+      }
+      console.log('bestSequence', bestSequence, minUnreachableCount);
+      return bestSequence;
     },
 
-    dfsFindSequence(row, col, currentSequence, visited, allSequences) {
+    simulateSequenceExecution(sequence) {
+      // 创建当前状态的深拷贝
+      const simulatedGrid = this.copyGrid(this.grid);
+      
+      // 模拟消除序列
+      for (const cell of sequence) {
+        simulatedGrid[cell.row][cell.col] = null;
+      }
+      
+      // 模拟重力效果
+      this.applyGravityToGrid(simulatedGrid);
+      
+      return simulatedGrid;
+    },
+
+    applyGravityToGrid(grid) {
+      for (let col = 0; col < this.gridSize; col++) {
+        let writePos = this.gridSize - 1;
+        for (let row = this.gridSize - 1; row >= 0; row--) {
+          if (grid[row][col] !== null) {
+            if (row !== writePos) {
+              grid[writePos][col] = grid[row][col];
+              grid[row][col] = null;
+            }
+            writePos--;
+          }
+        }
+      }
+    },
+
+    countUnreachableCells(grid) {
+      let unreachableCount = 0;
+      
+      // 遍历每个格子
+      for (let row = 0; row < this.gridSize; row++) {
+        for (let col = 0; col < this.gridSize; col++) {
+          if (grid[row][col] !== null) {
+            // 检查这个格子是否能被任何有效序列消除
+            if (!this.canCellBeReachedInAnySequence(row, col, grid)) {
+              unreachableCount++;
+            }
+          }
+        }
+      }
+      
+      return unreachableCount;
+    },
+
+    canCellBeReachedInAnySequence(targetRow, targetCol, grid) {
+      // 检查是否存在包含目标格子的有效序列
+      const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+      
+      // 从目标格子开始DFS寻找序列
+      const sequence = [];
+      const foundSequences = [];
+      
+      if (grid[targetRow][targetCol] !== null) {
+        sequence.push({
+          row: targetRow, 
+          col: targetCol, 
+          value: grid[targetRow][targetCol]
+        });
+        
+        this.dfsFindSequenceFromCell(targetRow, targetCol, sequence, visited, foundSequences, grid);
+      }
+      
+      return foundSequences.length > 0;
+    },
+
+    dfsFindSequenceFromCell(row, col, currentSequence, visited, allSequences, grid) {
       if (currentSequence.length >= this.minSequenceLength) {
         allSequences.push([...currentSequence]);
         return;
@@ -175,22 +259,31 @@ export default GameComponentPresets.puzzleGame({
         
         if (this.isValidCell(newRow, newCol) && 
             !visited[newRow][newCol] && 
-            this.grid[newRow][newCol] !== null &&
-            this.grid[newRow][newCol] > lastValue) {
+            grid[newRow][newCol] !== null &&
+            grid[newRow][newCol] > lastValue) {
           
           visited[newRow][newCol] = true;
           currentSequence.push({
             row: newRow, 
             col: newCol, 
-            value: this.grid[newRow][newCol]
+            value: grid[newRow][newCol]
           });
           
-          this.dfsFindSequence(newRow, newCol, currentSequence, visited, allSequences);
+          this.dfsFindSequenceFromCell(newRow, newCol, currentSequence, visited, allSequences, grid);
           
           currentSequence.pop();
           visited[newRow][newCol] = false;
         }
       }
+    },
+
+    findSequenceFrom(startRow, startCol, visited) {
+      const sequences = [];
+      const currentSequence = [{row: startRow, col: startCol, value: this.grid[startRow][startCol]}];
+      
+      this.dfsFindSequenceFromCell(startRow, startCol, currentSequence, visited, sequences, this.grid);
+      
+      return sequences;
     },
 
     isValidCell(row, col) {
@@ -212,7 +305,7 @@ export default GameComponentPresets.puzzleGame({
       }
       
       // 下落效果
-      this.applyGravity();
+      this.applyGravityToGrid(this.grid);
       
       // 更新分数
       this.score += sequence.length * 10;
@@ -258,22 +351,6 @@ export default GameComponentPresets.puzzleGame({
       }
 
       return true;
-    },
-
-    applyGravity() {
-      for (let col = 0; col < this.gridSize; col++) {
-        // 从底部开始，将非空单元格下移
-        let writePos = this.gridSize - 1;
-        for (let row = this.gridSize - 1; row >= 0; row--) {
-          if (this.grid[row][col] !== null) {
-            if (row !== writePos) {
-              this.grid[writePos][col] = this.grid[row][col];
-              this.grid[row][col] = null;
-            }
-            writePos--;
-          }
-        }
-      }
     },
 
     checkGameState() {
