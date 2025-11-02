@@ -17,6 +17,7 @@
           <div
             class="cardsul center"
             style="
+              gap: 0;
               padding-left: 0;
               margin: 0;
               width: 100%;

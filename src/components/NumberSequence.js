@@ -125,15 +125,17 @@ export default GameComponentPresets.puzzleGame({
         return;
       }
 
-      // AI前瞻一步：选择"不能被任何序列消除的格子数量最少"的序列
-      const bestSequence = this.findBestSequenceWithLookahead(validSequences);
-      
-      this.selectedCells = [];
-      for (let seq of bestSequence) {
-        this.selectedCells.push(seq);
-        await this.wait();
-      }
-      this.confirmSequence();
+      await this.gameManager.step(async () => {
+        // AI前瞻一步：选择"不能被任何序列消除的格子数量最少"的序列
+        const bestSequence = this.findBestSequenceWithLookahead(validSequences);
+        
+        this.selectedCells = [];
+        for (let seq of bestSequence) {
+          this.selectedCells.push(seq);
+          await this.wait();
+        }
+        this.confirmSequence();
+      })
     },
 
     findAllValidSequences() {
