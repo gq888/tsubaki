@@ -30,7 +30,7 @@
               v-for="(item, i) in grid"
               :key="i"
               class="m-0 center"
-              style="width: 16%; height: 3.125rem; border-radius: 0.3125rem; overflow: hidden; margin: 0.125rem; cursor: pointer;"
+              style="width: 16%; height: 3.125rem; border-radius: 0.3125rem; overflow: hidden; margin: 0.125rem; cursor: pointer; box-sizing: border-box;"
               @click="canOperate && clickNumber(i)"
               :style="{
                 backgroundColor: item === 0 ? '#4CAF50' : item === 99 ? '#FF5722' : item === -1 ? '#E0E0E0' : '#5FB878',

@@ -141,7 +141,7 @@ const NumberMaze = {
       console.log('grid[pos]:', this.grid[pos]);
       
       if (this.grid[pos] <= 0 || this.grid[pos] === 99) {
-        console.log('clickNumber returning early - invalid position');
+        this.emptyPos = pos;
         return; // 不能移动起点、终点或空位
       }
       
@@ -149,24 +149,23 @@ const NumberMaze = {
       
       // 找到相邻的空位
       const neighbors = this.getNeighbors(pos);
-      let moved = false;
+
+      if (neighbors.find(neighbor => this.emptyPos === neighbor)) {
+        // 尝试移动到相邻的空位
+        if (this.moveNumber(pos, this.emptyPos)) {
+          console.log('moveNumber succeeded to emptyPos:', this.emptyPos);
+          return;
+        }
+      }
       
       for (const neighbor of neighbors) {
         if (this.grid[neighbor] === -1) {
           // 尝试移动到相邻的空位
           if (this.moveNumber(pos, neighbor)) {
             console.log('moveNumber succeeded to neighbor:', neighbor);
-            moved = true;
             break;
           }
         }
-      }
-      
-      if (moved) {
-        // 移动成功，检查游戏状态
-        this.autoCalc();
-      } else {
-        console.log('moveNumber failed - no valid adjacent empty position');
       }
     },
     
