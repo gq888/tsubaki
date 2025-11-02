@@ -228,36 +228,233 @@ const NumberMaze = {
     
     // 获取自动移动的下一步
     getNextAutoMove() {
-      // 简单的启发式算法：尝试将数字移动到能够创建递增路径的位置
-      const currentNumbers = [];
-      for (let i = 0; i < this.grid.length; i++) {
-        if (this.grid[i] > 0 && this.grid[i] < 99) {
-          currentNumbers.push({pos: i, value: this.grid[i]});
+      // 计算曼哈顿距离
+      const getManhattanDistance = (pos1, pos2) => {
+        const row1 = Math.floor(pos1 / this.gridSize);
+        const col1 = pos1 % this.gridSize;
+        const row2 = Math.floor(pos2 / this.gridSize);
+        const col2 = pos2 % this.gridSize;
+        return Math.abs(row1 - row2) + Math.abs(col1 - col2);
+      };
+      
+      // 根据深度计算数字区间
+      const getNumberRange = (deep) => {
+        const minNum = Math.floor((this.number / 9 * deep) * 100) / 100;
+        const maxNum = Math.floor((this.number / 9 * (deep + 1)) * 100) / 100;
+        return { min: Math.ceil(minNum), max: Math.floor(maxNum) };
+      };
+      
+      // 找到网格中指定值的数字位置
+      const findNumberPosition = (value) => {
+        for (let i = 0; i < this.grid.length; i++) {
+          if (this.grid[i] === value) return i;
         }
+        return -1;
+      };
+      
+      // DFS搜索最优路径
+      let bestPath = null;
+      let bestTotalDistance = Infinity;
+      let iterationCount = 0;
+      const maxIterations = 5000; // 限制迭代次数，防止过度计算
+      
+      const dfs = (row, col, deep, path, selectedNumbers, totalDistance, visited) => {
+        // 迭代次数限制
+        if (++iterationCount > maxIterations) return;
+        // 剪枝：如果当前总距离已经超过最优解，直接返回
+        if (totalDistance >= bestTotalDistance) return;
+        
+        // 增加随机剪枝：在深度大于5时有10%概率剪枝，增加随机性
+        if (deep > 5 && Math.random() < 0.1) return;
+        
+        // 计算当前路径位置
+        const currentPos = row * this.gridSize + col;
+        
+        // 到达深度9，记录路径
+        if (deep === 9) {
+          if (totalDistance < bestTotalDistance) {
+            bestTotalDistance = totalDistance;
+            bestPath = {
+              path: [...path],
+              numbers: [...selectedNumbers],
+              totalDistance: totalDistance
+            };
+          }
+          return;
+        }
+        
+        // 获取当前深度的数字区间
+        const range = getNumberRange(deep);
+        const candidates = [];
+        
+        // 在区间内找到所有候选数字（排除0和99）
+        for (let num = Math.max(1, range.min); num <= range.max && num <= this.number; num++) {
+          if (!selectedNumbers.includes(num)) {
+            const numPos = findNumberPosition(num);
+            if (numPos >= 0) {
+              candidates.push({ value: num, pos: numPos });
+            }
+          }
+        }
+        
+        // 如果没有候选数字，尝试扩展搜索范围（同样排除0和99）
+        if (candidates.length === 0) {
+          for (let num = 1; num <= this.number; num++) {
+            if (!selectedNumbers.includes(num)) {
+              const numPos = findNumberPosition(num);
+              if (numPos >= 0 && this.grid[numPos] !== 0 && this.grid[numPos] !== 99) {
+                candidates.push({ value: num, pos: numPos });
+              }
+            }
+          }
+        }
+        
+        // 如果还是没有候选数字，直接返回
+        if (candidates.length === 0) return;
+        
+        // 为每个候选数字计算到当前路径位置的距离并排序
+        const candidatesWithDistance = candidates.map(c => ({
+          ...c,
+          distance: getManhattanDistance(currentPos, c.pos)
+        }));
+        candidatesWithDistance.sort((a, b) => a.distance - b.distance);
+        
+        // 选择距离最小的数字（取前5个增加多样性，提高找到解的概率）
+        const topCandidates = candidatesWithDistance.slice(0, Math.min(5, candidatesWithDistance.length));
+        
+        for (const candidate of topCandidates) {
+          const newTotalDistance = totalDistance + candidate.distance;
+          const newSelectedNumbers = [...selectedNumbers, candidate.value];
+          
+          // 尝试向右移动（如果未越界）
+          if (col < this.gridSize - 1) {
+            const rightKey = `${row},${col + 1}`;
+            const nextPos = row * this.gridSize + (col + 1);
+            if (!visited.has(rightKey)) {
+              visited.add(rightKey);
+              dfs(row, col + 1, deep + 1, [...path, nextPos], newSelectedNumbers, newTotalDistance, visited);
+              visited.delete(rightKey);
+            }
+          }
+          
+          // 尝试向下移动（如果未越界）
+          if (row < this.gridSize - 1) {
+            const downKey = `${row + 1},${col}`;
+            const nextPos = (row + 1) * this.gridSize + col;
+            if (!visited.has(downKey)) {
+              visited.add(downKey);
+              dfs(row + 1, col, deep + 1, [...path, nextPos], newSelectedNumbers, newTotalDistance, visited);
+              visited.delete(downKey);
+            }
+          }
+        }
+      };
+      
+      // 从起点(0,0)开始DFS搜索
+      const visited = new Set();
+      visited.add('0,0');
+      dfs(0, 0, 0, [], [], 0, visited);
+      
+      // 如果没有找到路径或超过迭代限制，返回null
+      if (!bestPath || iterationCount > maxIterations) {
+        if (iterationCount > maxIterations) {
+          console.log('DFS exceeded max iterations:', iterationCount);
+        } else {
+          console.log('No valid path found in DFS');
+        }
+        return this.getRandomMove();
       }
       
-      // 按值排序
-      currentNumbers.sort((a, b) => a.value - b.value);
+      console.log('Best path found:', bestPath);
+      console.log('Total distance:', bestPath.totalDistance);
       
-      // 尝试为每个数字找到合适的位置
-      for (const num of currentNumbers) {
-        const neighbors = this.getNeighbors(num.pos);
+      // 生成移动方案
+      const targetNumbers = bestPath.numbers;
+      const targetPositions = bestPath.path;
+      
+      // 找到所有目标数字及其相邻空位
+      const validMoves = [];
+      const numbersAtTarget = new Set(); // 记录已到达目标位置的数字
+      
+      for (let i = 0; i < targetNumbers.length; i++) {
+        const targetNum = targetNumbers[i];
+        const targetPos = targetPositions[i];
+        const currentPos = findNumberPosition(targetNum);
+        
+        if (currentPos < 0) continue;
+        
+        // 如果数字已经在目标位置，记录并跳过
+        if (currentPos === targetPos) {
+          numbersAtTarget.add(targetNum);
+          continue;
+        }
+        
+        // 获取数字当前位置的相邻位置
+        const neighbors = this.getNeighbors(currentPos);
+        
         for (const neighbor of neighbors) {
           if (this.grid[neighbor] === -1) {
-            // 检查移动后是否能帮助创建路径
-            const testGrid = [...this.grid];
-            testGrid[neighbor] = num.value;
-            testGrid[num.pos] = -1;
+            // 这是一个空位，检查移动是否能减少距离
+            const currentDistance = getManhattanDistance(currentPos, targetPos);
+            const newDistance = getManhattanDistance(neighbor, targetPos);
             
-            // 简单的路径检查
-            if (this.hasPotentialPath(testGrid, neighbor)) {
-              return {from: num.pos, to: neighbor};
+            if (newDistance < currentDistance) {
+              validMoves.push({
+                from: currentPos,
+                to: neighbor,
+                reduction: currentDistance - newDistance
+              });
             }
           }
         }
       }
       
-      return null;
+      // 如果有有效移动，随机选择一个
+      if (validMoves.length > 0) {
+        const randomIndex = Math.floor(Math.random() * validMoves.length);
+        const move = validMoves[randomIndex];
+        console.log('Selected valid move:', move);
+        return { from: move.from, to: move.to };
+      }
+      
+      // 没有有效移动，完全随机移动（排除已到达目标位置的数字）
+      console.log('No valid moves, trying random move (excluding numbers at target)');
+      return this.getRandomMove(numbersAtTarget);
+    },
+    
+    // 获取随机移动
+    getRandomMove(excludeNumbers = new Set()) {
+      const movableNumbers = [];
+      
+      for (let i = 0; i < this.grid.length; i++) {
+        const value = this.grid[i];
+        if (value > 0 && value < 99 && !excludeNumbers.has(value)) {
+          const neighbors = this.getNeighbors(i);
+          const hasEmptyNeighbor = neighbors.some(n => this.grid[n] === -1);
+          if (hasEmptyNeighbor) {
+            movableNumbers.push(i);
+          }
+        }
+      }
+      
+      if (movableNumbers.length === 0) return null;
+      
+      // 完全随机选择一个可移动的数字
+      const randomNumIndex = Math.floor(Math.random() * movableNumbers.length);
+      const fromPos = movableNumbers[randomNumIndex];
+      
+      // 找到该数字的空位邻居
+      const neighbors = this.getNeighbors(fromPos);
+      const emptyNeighbors = neighbors.filter(n => this.grid[n] === -1);
+      
+      if (emptyNeighbors.length === 0) return null;
+      
+      // 完全随机选择一个空位
+      const randomEmptyIndex = Math.floor(Math.random() * emptyNeighbors.length);
+      const toPos = emptyNeighbors[randomEmptyIndex];
+      
+      console.log('Random move:', { from: fromPos, to: toPos, value: this.grid[fromPos] });
+      return { from: fromPos, to: toPos };
     },
     
     // 检查是否有潜在的路径可能
