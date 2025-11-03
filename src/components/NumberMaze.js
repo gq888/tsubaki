@@ -237,6 +237,14 @@ const NumberMaze = {
         return Math.abs(row1 - row2) + Math.abs(col1 - col2);
       };
       
+      // 找到网格中指定值的数字位置
+      const findNumberPosition = (value) => {
+        for (let i = 0; i < this.grid.length; i++) {
+          if (this.grid[i] === value) return i;
+        }
+        return -1;
+      };
+      
       // 根据深度计算数字区间（使用严格小于，避免重叠）
       const getNumberRange = (deep) => {
         const minNum = this.number / 9 * deep;
@@ -252,13 +260,76 @@ const NumberMaze = {
         return deep + 1; // deep=0的数字理想距离为1，deep=1的数字理想距离为2，以此类推
       };
       
-      // 找到网格中指定值的数字位置
-      const findNumberPosition = (value) => {
-        for (let i = 0; i < this.grid.length; i++) {
-          if (this.grid[i] === value) return i;
+      // 计算所有数字到理想位置的总距离
+      const calculateGlobalDistance = () => {
+        let totalDistance = 0;
+        for (let num = 1; num <= this.number; num++) {
+          const pos = findNumberPosition(num);
+          if (pos >= 0) {
+            const currentDist = getManhattanDistance(0, pos);
+            const idealDist = getIdealDistance(num);
+            totalDistance += Math.abs(currentDist - idealDist);
+          }
         }
-        return -1;
+        return totalDistance;
       };
+      
+      // ========== 阶段1：全局整理阶段 ==========
+      // 尝试找到能减少全局距离的移动（让所有数字更接近理想位置）
+      const currentGlobalDistance = calculateGlobalDistance();
+      const globalOptimizationMoves = [];
+      
+      for (let num = 1; num <= this.number; num++) {
+        const currentPos = findNumberPosition(num);
+        if (currentPos < 0) continue;
+        
+        const neighbors = this.getNeighbors(currentPos);
+        const currentDist = getManhattanDistance(0, currentPos);
+        const idealDist = getIdealDistance(num);
+        const currentDeviation = Math.abs(currentDist - idealDist);
+        
+        for (const neighbor of neighbors) {
+          if (this.grid[neighbor] === -1) {
+            const newDist = getManhattanDistance(0, neighbor);
+            const newDeviation = Math.abs(newDist - idealDist);
+            
+            // 如果这个移动能让该数字更接近理想位置
+            if (newDeviation < currentDeviation) {
+              const improvement = currentDeviation - newDeviation;
+              globalOptimizationMoves.push({
+                from: currentPos,
+                to: neighbor,
+                number: num,
+                improvement: improvement
+              });
+            }
+          }
+        }
+      }
+      
+      // 如果找到能改善全局距离的移动，且还在初期阶段（前50步），优先执行全局优化
+      // 50步后切换到DFS路径搜索，此时棋盘应该已经较为有序
+      const currentStep = this.step || 0;
+      if (globalOptimizationMoves.length > 0 && currentStep < 50) {
+        // 按改善程度排序，选择改善最大的移动
+        globalOptimizationMoves.sort((a, b) => b.improvement - a.improvement);
+        // 从前30%中随机选择，保持多样性
+        const topCount = Math.max(1, Math.ceil(globalOptimizationMoves.length * 0.3));
+        const randomIndex = Math.floor(Math.random() * topCount);
+        const move = globalOptimizationMoves[randomIndex];
+        console.log('Global optimization move:', { 
+          number: move.number, 
+          from: move.from, 
+          to: move.to, 
+          improvement: move.improvement.toFixed(2),
+          globalDist: currentGlobalDistance
+        });
+        return { from: move.from, to: move.to };
+      }
+      
+      console.log('Switching to DFS path search. Global distance:', currentGlobalDistance);
+      
+      // ========== 阶段2：路径搜索阶段 ==========
       
       // DFS搜索最优路径
       let bestPath = null;
@@ -272,8 +343,8 @@ const NumberMaze = {
         // 剪枝：如果当前总距离已经超过最优解，直接返回
         if (totalDistance >= bestTotalDistance) return;
         
-        // 增加随机剪枝：在深度大于5时有10%概率剪枝，增加随机性
-        if (deep > 5 && Math.random() < 0.1) return;
+        // 轻微随机剪枝：深度较大时有5%概率剪枝
+        if (deep > 6 && Math.random() < 0.05) return;
         
         // 计算当前路径位置
         const currentPos = row * this.gridSize + col;
@@ -436,7 +507,7 @@ const NumberMaze = {
                 to: neighbor,
                 reduction: pathReduction,
                 idealBonus: idealBonus,
-                priority: pathReduction + idealBonus * 0.3 // 综合优先级，降低idealBonus权重
+                priority: pathReduction + idealBonus * 0.3 // 综合优先级
               });
             }
           }
