@@ -311,15 +311,24 @@ const NumberMaze = {
         }
       }
       
-      // 如果找到能改善全局距离的移动，且还在初期阶段（前50步），优先执行全局优化
-      // 50步后切换到DFS路径搜索，此时棋盘应该已经较为有序
+      // 动态调整两阶段切换策略：全局距离越大，越需要全局优化
       const currentStep = this.step || 0;
-      if (globalOptimizationMoves.length > 0 && currentStep % 10 < 6) {
-        // 按改善程度排序，选择改善最大的移动
-        globalOptimizationMoves.sort((a, b) => b.improvement - a.improvement);
-        // 从前30%中随机选择，保持多样性
-        const topCount = Math.max(1, Math.ceil(globalOptimizationMoves.length * 0.3));
-        const randomIndex = Math.floor(Math.random() * topCount);
+      // 全局距离>40: 80%时间做全局优化
+      // 全局距离30-40: 60%时间做全局优化  
+      // 全局距离<30: 40%时间做全局优化
+      let globalOptRatio;
+      if (currentGlobalDistance > 40) {
+        globalOptRatio = 0.8;
+      } else if (currentGlobalDistance > 30) {
+        globalOptRatio = 0.6;
+      } else {
+        globalOptRatio = 0.4;
+      }
+      
+      const shouldDoGlobalOpt = (currentStep % 10) < (globalOptRatio * 10);
+      
+      if (globalOptimizationMoves.length > 0 && shouldDoGlobalOpt) {
+        const randomIndex = Math.floor(Math.random() * globalOptimizationMoves.length);
         const move = globalOptimizationMoves[randomIndex];
         console.log('Global optimization move:', { 
           number: move.number, 
@@ -338,7 +347,7 @@ const NumberMaze = {
       // BFS搜索最优路径，使用同层比较进行剪枝
       let bestPath = null;
       let bestTotalDistance = Infinity;
-      const maxIterations = 5000; // 限制迭代次数，防止过度计算
+      const maxIterations = 8000; // 增加迭代次数，应对复杂布局
       
       // 队列存储搜索状态：{row, col, deep, path, selectedNumbers, totalDistance, visited}
       let queue = [{
@@ -424,8 +433,9 @@ const NumberMaze = {
           });
           candidatesWithDistance.sort((a, b) => a.score - b.score);
           
-          // 选择距离最小的数字（取前3个，更聚焦最优解）
-          const topCandidates = candidatesWithDistance.slice(0, Math.min(3, candidatesWithDistance.length));
+          // 动态调整候选数量：深度越大，候选越多，增加搜索空间
+          const candidateCount = Math.min(3 + Math.floor(deep / 3), 7, candidatesWithDistance.length);
+          const topCandidates = candidatesWithDistance.slice(0, candidateCount);
           
           for (const candidate of topCandidates) {
             const newTotalDistance = totalDistance + candidate.distance;
@@ -474,9 +484,10 @@ const NumberMaze = {
         }
         
         // 同层剪枝：对下一层队列按totalDistance排序，只保留最优的部分
-        if (nextQueue.length > 100) {
+        // 扩大队列容量到150，应对复杂布局
+        if (nextQueue.length > 150) {
           nextQueue.sort((a, b) => a.totalDistance - b.totalDistance);
-          queue = nextQueue.slice(0, 100);
+          queue = nextQueue.slice(0, 150);
         } else {
           queue = nextQueue;
         }
