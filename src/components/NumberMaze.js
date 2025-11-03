@@ -304,10 +304,33 @@ const NumberMaze = {
                 from: currentPos,
                 to: neighbor,
                 number: num,
-                improvement: improvement
+                improvement: improvement,
               });
             }
           }
+        }
+      }
+      
+      // 震荡检测：记录最近10步的全局距离
+      if (!this._globalDistHistory) {
+        this._globalDistHistory = [];
+      }
+      this._globalDistHistory.push(currentGlobalDistance);
+      if (this._globalDistHistory.length > 10) {
+        this._globalDistHistory.shift();
+      }
+      
+      // 检测是否在震荡：计算方差
+      let isOscillating = false;
+      if (this._globalDistHistory.length === 10) {
+        const avg = this._globalDistHistory.reduce((a, b) => a + b) / 10;
+        const variance = this._globalDistHistory.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / 10;
+        // 放宽阈值：方差小于3且平均值在一定范围，说明在震荡
+        if (variance < 3 && avg < 50) {
+          isOscillating = true;
+          console.log('Oscillation detected! Variance:', variance.toFixed(2), 'Avg:', avg.toFixed(2));
+          // 清空历史记录，给BFS一次机会
+          this._globalDistHistory = [];
         }
       }
       
@@ -316,18 +339,26 @@ const NumberMaze = {
       // 全局距离>40: 80%时间做全局优化
       // 全局距离30-40: 60%时间做全局优化  
       // 全局距离<30: 40%时间做全局优化
-      let globalOptRatio;
+      let globalOptRatio = 0.1;
+      if (currentStep > 200) {
+        globalOptRatio += 0;
+      } else if (currentStep > 100) {
+        globalOptRatio += 0.1;
+      } else if (currentStep > 50) {
+        globalOptRatio += 0.2;
+      }
       if (currentGlobalDistance > 40) {
-        globalOptRatio = 0.8;
+        globalOptRatio += 0.5;
       } else if (currentGlobalDistance > 30) {
-        globalOptRatio = 0.6;
+        globalOptRatio += 0.3;
       } else {
-        globalOptRatio = 0.4;
+        globalOptRatio += 0.1;
       }
       
       const shouldDoGlobalOpt = (currentStep % 10) < (globalOptRatio * 10);
       
-      if (globalOptimizationMoves.length > 0 && shouldDoGlobalOpt) {
+      // 如果检测到震荡，强制切换到BFS
+      if (globalOptimizationMoves.length > 0 && shouldDoGlobalOpt && !isOscillating) {
         const randomIndex = Math.floor(Math.random() * globalOptimizationMoves.length);
         const move = globalOptimizationMoves[randomIndex];
         console.log('Global optimization move:', { 
@@ -347,7 +378,7 @@ const NumberMaze = {
       // BFS搜索最优路径，使用同层比较进行剪枝
       let bestPath = null;
       let bestTotalDistance = Infinity;
-      const maxIterations = 8000; // 增加迭代次数，应对复杂布局
+      const maxIterations = 10000; // 进一步增加迭代次数，处理困难布局
       
       // 队列存储搜索状态：{row, col, deep, path, selectedNumbers, totalDistance, visited}
       let queue = [{
