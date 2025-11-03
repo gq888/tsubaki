@@ -260,16 +260,23 @@ const NumberMaze = {
         return deep + 1; // deep=0的数字理想距离为1，deep=1的数字理想距离为2，以此类推
       };
       
+      // 缓存每个数字的当前位置和理想距离偏差
+      const numberDeviationCache = new Map();
+      for (let num = 1; num <= this.number; num++) {
+        const pos = findNumberPosition(num);
+        if (pos >= 0) {
+          const currentDist = getManhattanDistance(0, pos);
+          const idealDist = getIdealDistance(num);
+          const deviation = Math.abs(currentDist - idealDist);
+          numberDeviationCache.set(num, { pos, currentDist, idealDist, deviation });
+        }
+      }
+      
       // 计算所有数字到理想位置的总距离
       const calculateGlobalDistance = () => {
         let totalDistance = 0;
-        for (let num = 1; num <= this.number; num++) {
-          const pos = findNumberPosition(num);
-          if (pos >= 0) {
-            const currentDist = getManhattanDistance(0, pos);
-            const idealDist = getIdealDistance(num);
-            totalDistance += Math.abs(currentDist - idealDist);
-          }
+        for (const [num, data] of numberDeviationCache) {
+          totalDistance += data.deviation;
         }
         return totalDistance;
       };
@@ -279,14 +286,11 @@ const NumberMaze = {
       const currentGlobalDistance = calculateGlobalDistance();
       const globalOptimizationMoves = [];
       
-      for (let num = 1; num <= this.number; num++) {
-        const currentPos = findNumberPosition(num);
-        if (currentPos < 0) continue;
-        
+      for (const [num, data] of numberDeviationCache) {
+        const currentPos = data.pos;
         const neighbors = this.getNeighbors(currentPos);
-        const currentDist = getManhattanDistance(0, currentPos);
-        const idealDist = getIdealDistance(num);
-        const currentDeviation = Math.abs(currentDist - idealDist);
+        const currentDeviation = data.deviation;
+        const idealDist = data.idealDist;
         
         for (const neighbor of neighbors) {
           if (this.grid[neighbor] === -1) {
@@ -310,7 +314,7 @@ const NumberMaze = {
       // 如果找到能改善全局距离的移动，且还在初期阶段（前50步），优先执行全局优化
       // 50步后切换到DFS路径搜索，此时棋盘应该已经较为有序
       const currentStep = this.step || 0;
-      if (globalOptimizationMoves.length > 0 && currentStep < 50) {
+      if (globalOptimizationMoves.length > 0 && currentStep % 10 < 6) {
         // 按改善程度排序，选择改善最大的移动
         globalOptimizationMoves.sort((a, b) => b.improvement - a.improvement);
         // 从前30%中随机选择，保持多样性
@@ -329,129 +333,161 @@ const NumberMaze = {
       
       console.log('Switching to DFS path search. Global distance:', currentGlobalDistance);
       
-      // ========== 阶段2：路径搜索阶段 ==========
+      // ========== 阶段2：路径搜索阶段（BFS同层搜索） ==========
       
-      // DFS搜索最优路径
+      // BFS搜索最优路径，使用同层比较进行剪枝
       let bestPath = null;
       let bestTotalDistance = Infinity;
-      let iterationCount = 0;
       const maxIterations = 5000; // 限制迭代次数，防止过度计算
       
-      const dfs = (row, col, deep, path, selectedNumbers, totalDistance, visited) => {
-        // 迭代次数限制
-        if (++iterationCount > maxIterations) return;
-        // 剪枝：如果当前总距离已经超过最优解，直接返回
-        if (totalDistance >= bestTotalDistance) return;
+      // 队列存储搜索状态：{row, col, deep, path, selectedNumbers, totalDistance, visited}
+      let queue = [{
+        row: 0,
+        col: 0,
+        deep: 0,
+        path: [],
+        selectedNumbers: [],
+        totalDistance: 0,
+        visited: new Set(['0,0'])
+      }];
+      
+      let iterationCount = 0;
+      
+      // 按深度进行BFS搜索
+      while (queue.length > 0 && iterationCount < maxIterations) {
+        const currentLevelSize = queue.length;
+        const nextQueue = [];
         
-        // 轻微随机剪枝：深度较大时有5%概率剪枝
-        if (deep > 6 && Math.random() < 0.05) return;
-        
-        // 计算当前路径位置
-        const currentPos = row * this.gridSize + col;
-        
-        // 到达深度9，记录路径
-        if (deep === 9) {
-          if (totalDistance < bestTotalDistance) {
-            bestTotalDistance = totalDistance;
-            bestPath = {
-              path: [...path],
-              numbers: [...selectedNumbers],
-              totalDistance: totalDistance
-            };
+        // 处理当前层的所有节点
+        for (let i = 0; i < currentLevelSize && iterationCount < maxIterations; i++) {
+          iterationCount++;
+          const state = queue[i];
+          const { row, col, deep, path, selectedNumbers, totalDistance, visited } = state;
+          
+          // 剪枝：如果当前总距离已经超过最优解，跳过此节点
+          if (totalDistance >= bestTotalDistance) continue;
+          
+          // 计算当前路径位置
+          const currentPos = row * this.gridSize + col;
+          
+          // 到达深度9，记录路径
+          if (deep === 9) {
+            if (totalDistance < bestTotalDistance) {
+              bestTotalDistance = totalDistance;
+              bestPath = {
+                path: [...path],
+                numbers: [...selectedNumbers],
+                totalDistance: totalDistance
+              };
+            }
+            continue;
           }
-          return;
-        }
-        
-        // 获取当前深度的数字区间
-        const range = getNumberRange(deep);
-        const candidates = [];
-        
-        // 在区间内找到所有候选数字
-        for (let num = range.min; num <= range.max && num <= this.number; num++) {
-          if (!selectedNumbers.includes(num)) {
-            const numPos = findNumberPosition(num);
-            if (numPos >= 0) {
-              candidates.push({ value: num, pos: numPos });
+          
+          // 获取当前深度应该选择的数字范围
+          const range = getNumberRange(deep);
+          
+          // 利用缓存快速找出在范围内的候选数字
+          const candidates = [];
+          for (let num = range.min; num <= range.max && num <= this.number; num++) {
+            if (!selectedNumbers.includes(num)) {
+              const cachedData = numberDeviationCache.get(num);
+              if (cachedData) {
+                candidates.push({ value: num, pos: cachedData.pos });
+              }
             }
           }
-        }
-        
-        // 如果没有候选数字，尝试扩展搜索范围
-        if (candidates.length === 0) {
-          for (let num = 1; num <= this.number; num++) {
-            if (!selectedNumbers.includes(num)) {
-              const numPos = findNumberPosition(num);
-              if (numPos >= 0) {
-                candidates.push({ value: num, pos: numPos });
+          
+          // 如果范围内没有候选数字，扩大搜索范围
+          if (candidates.length === 0) {
+            for (const [num, data] of numberDeviationCache) {
+              if (!selectedNumbers.includes(num)) {
+                candidates.push({ value: num, pos: data.pos });
+              }
+            }
+          }
+          
+          // 如果还是没有候选数字，跳过此节点
+          if (candidates.length === 0) continue;
+          
+          // 为每个候选数字计算综合得分并排序
+          const candidatesWithDistance = candidates.map(c => {
+            const distanceToPath = getManhattanDistance(currentPos, c.pos);
+            const cachedData = numberDeviationCache.get(c.value);
+            const idealPenalty = cachedData ? cachedData.deviation * 0.2 : 0;
+            const score = distanceToPath + idealPenalty;
+            
+            return {
+              ...c,
+              distance: distanceToPath,
+              score: score
+            };
+          });
+          candidatesWithDistance.sort((a, b) => a.score - b.score);
+          
+          // 选择距离最小的数字（取前3个，更聚焦最优解）
+          const topCandidates = candidatesWithDistance.slice(0, Math.min(3, candidatesWithDistance.length));
+          
+          for (const candidate of topCandidates) {
+            const newTotalDistance = totalDistance + candidate.distance;
+            const newSelectedNumbers = [...selectedNumbers, candidate.value];
+            
+            // 尝试向右移动（如果未越界）
+            if (col < this.gridSize - 1) {
+              const rightKey = `${row},${col + 1}`;
+              const nextPos = row * this.gridSize + (col + 1);
+              if (!visited.has(rightKey)) {
+                const newVisited = new Set(visited);
+                newVisited.add(rightKey);
+                const newPath = [...path, nextPos];
+                nextQueue.push({
+                  row: row,
+                  col: col + 1,
+                  deep: deep + 1,
+                  path: newPath,
+                  selectedNumbers: newSelectedNumbers,
+                  totalDistance: newTotalDistance,
+                  visited: newVisited
+                });
+              }
+            }
+            
+            // 尝试向下移动（如果未越界）
+            if (row < this.gridSize - 1) {
+              const downKey = `${row + 1},${col}`;
+              const nextPos = (row + 1) * this.gridSize + col;
+              if (!visited.has(downKey)) {
+                const newVisited = new Set(visited);
+                newVisited.add(downKey);
+                const newPath = [...path, nextPos];
+                nextQueue.push({
+                  row: row + 1,
+                  col: col,
+                  deep: deep + 1,
+                  path: newPath,
+                  selectedNumbers: newSelectedNumbers,
+                  totalDistance: newTotalDistance,
+                  visited: newVisited
+                });
               }
             }
           }
         }
         
-        // 如果还是没有候选数字，直接返回
-        if (candidates.length === 0) return;
-        
-        // 为每个候选数字计算综合得分并排序
-        const candidatesWithDistance = candidates.map(c => {
-          const distanceToPath = getManhattanDistance(currentPos, c.pos);
-          const currentDistanceFromStart = getManhattanDistance(0, c.pos);
-          const idealDistance = getIdealDistance(c.value);
-          
-          // 综合得分：距离路径的距离 + 偏离理想位置的轻微惩罚
-          const idealPenalty = Math.abs(currentDistanceFromStart - idealDistance) * 0.2;
-          const score = distanceToPath + idealPenalty;
-          
-          return {
-            ...c,
-            distance: distanceToPath,
-            score: score,
-            idealDistance: idealDistance
-          };
-        });
-        candidatesWithDistance.sort((a, b) => a.score - b.score);
-        
-        // 选择距离最小的数字（取前5个增加多样性，提高找到解的概率）
-        const topCandidates = candidatesWithDistance.slice(0, Math.min(5, candidatesWithDistance.length));
-        
-        for (const candidate of topCandidates) {
-          const newTotalDistance = totalDistance + candidate.distance;
-          const newSelectedNumbers = [...selectedNumbers, candidate.value];
-          
-          // 尝试向右移动（如果未越界）
-          if (col < this.gridSize - 1) {
-            const rightKey = `${row},${col + 1}`;
-            const nextPos = row * this.gridSize + (col + 1);
-            if (!visited.has(rightKey)) {
-              visited.add(rightKey);
-              dfs(row, col + 1, deep + 1, [...path, nextPos], newSelectedNumbers, newTotalDistance, visited);
-              visited.delete(rightKey);
-            }
-          }
-          
-          // 尝试向下移动（如果未越界）
-          if (row < this.gridSize - 1) {
-            const downKey = `${row + 1},${col}`;
-            const nextPos = (row + 1) * this.gridSize + col;
-            if (!visited.has(downKey)) {
-              visited.add(downKey);
-              dfs(row + 1, col, deep + 1, [...path, nextPos], newSelectedNumbers, newTotalDistance, visited);
-              visited.delete(downKey);
-            }
-          }
-        }
-      };
-      
-      // 从起点(0,0)开始DFS搜索
-      const visited = new Set();
-      visited.add('0,0');
-      dfs(0, 0, 0, [], [], 0, visited);
-      
-      // 如果没有找到路径或超过迭代限制，返回null
-      if (!bestPath || iterationCount > maxIterations) {
-        if (iterationCount > maxIterations) {
-          console.log('DFS exceeded max iterations:', iterationCount);
+        // 同层剪枝：对下一层队列按totalDistance排序，只保留最优的部分
+        if (nextQueue.length > 100) {
+          nextQueue.sort((a, b) => a.totalDistance - b.totalDistance);
+          queue = nextQueue.slice(0, 100);
         } else {
-          console.log('No valid path found in DFS');
+          queue = nextQueue;
+        }
+      }
+      
+      // 检查是否找到有效路径
+      if (!bestPath || iterationCount >= maxIterations) {
+        if (iterationCount >= maxIterations) {
+          console.log('BFS exceeded max iterations:', iterationCount);
+        } else {
+          console.log('No valid path found in BFS');
         }
         return this.getRandomMove();
       }
