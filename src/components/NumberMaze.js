@@ -24,7 +24,7 @@ const NumberMaze = {
       emptyPos: -1, // 空位位置
       targetPath: [], // 目标路径
       pathFound: false, // 是否找到有效路径
-      number: 20, // 使用20个数字方块
+      number: 24, // 数字方块（最优难度：能保持100%胜率）
       
       // 以下属性由工厂函数GameComponentPresets.puzzleGame添加：
       // gameManager: 游戏状态管理器实例，提供游戏状态控制和自动操作功能
@@ -43,7 +43,7 @@ const NumberMaze = {
       this.pathFound = false;
       this.targetPath = [];
       
-      // 生成数字方块（1-20）
+      // 生成数字方块
       for (let i = 0; i < this.number; i++) {
         this.numbers.push(i + 1);
       }
@@ -334,12 +334,12 @@ const NumberMaze = {
         }
       }
       
-      // 动态调整两阶段切换策略：全局距离越大，越需要全局优化
+      // 动态调整两阶段切换策略：根据全局距离和步数调整
       const currentStep = this.step || 0;
-      // 全局距离>40: 80%时间做全局优化
-      // 全局距离30-40: 60%时间做全局优化  
-      // 全局距离<30: 40%时间做全局优化
+      
       let globalOptRatio = 0.1;
+      
+      // 步数调整：初期更多全局优化
       if (currentStep > 200) {
         globalOptRatio += 0;
       } else if (currentStep > 100) {
@@ -347,6 +347,8 @@ const NumberMaze = {
       } else if (currentStep > 50) {
         globalOptRatio += 0.2;
       }
+      
+      // 全局距离调整：距离越大越需要全局优化
       if (currentGlobalDistance > 40) {
         globalOptRatio += 0.5;
       } else if (currentGlobalDistance > 30) {
@@ -378,7 +380,8 @@ const NumberMaze = {
       // BFS搜索最优路径，使用同层比较进行剪枝
       let bestPath = null;
       let bestTotalDistance = Infinity;
-      const maxIterations = 10000; // 进一步增加迭代次数，处理困难布局
+      // 根据number规模动态调整迭代次数
+      const maxIterations = this.number >= 25 ? 15000 : 10000;
       
       // 队列存储搜索状态：{row, col, deep, path, selectedNumbers, totalDistance, visited}
       let queue = [{
@@ -515,10 +518,11 @@ const NumberMaze = {
         }
         
         // 同层剪枝：对下一层队列按totalDistance排序，只保留最优的部分
-        // 扩大队列容量到150，应对复杂布局
-        if (nextQueue.length > 150) {
+        // 根据number规模动态调整队列容量
+        const queueCapacity = this.number >= 25 ? 200 : 150;
+        if (nextQueue.length > queueCapacity) {
           nextQueue.sort((a, b) => a.totalDistance - b.totalDistance);
-          queue = nextQueue.slice(0, 150);
+          queue = nextQueue.slice(0, queueCapacity);
         } else {
           queue = nextQueue;
         }
