@@ -24,7 +24,7 @@ const NumberMaze = {
       emptyPos: -1, // 空位位置
       targetPath: [], // 目标路径
       pathFound: false, // 是否找到有效路径
-      number: 24, // 数字方块（最优难度：97%胜率，平均298步）
+      number: 26, // 数字方块（推荐难度：100%胜率，平均340步@1100maxstep）
       
       // 以下属性由工厂函数GameComponentPresets.puzzleGame添加：
       // gameManager: 游戏状态管理器实例，提供游戏状态控制和自动操作功能
@@ -330,10 +330,16 @@ const NumberMaze = {
       if (this._globalDistHistory.length === 10) {
         const avg = this._globalDistHistory.reduce((a, b) => a + b) / 10;
         const variance = this._globalDistHistory.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / 10;
-        // 放宽阈值：方差小且平均值在一定范围，说明在震荡
-        if (variance < 3 && avg < this.number * 2) {
+        // 震荡检测：方差小说明在小范围徘徊，无论距离高低都应识别
+        // 1. 低距离震荡（接近目标）：variance < 3 且 avg < number*2
+        // 2. 高距离震荡（困在高位）：variance < 8 且 avg >= number*2
+        const isLowDistanceOscillation = variance < 3 && avg < this.number * 2;
+        const isHighDistanceOscillation = variance < 6 && avg >= this.number * 2;
+        
+        if (isLowDistanceOscillation || isHighDistanceOscillation) {
           isOscillating = true;
-          console.log('Oscillation detected! Variance:', variance.toFixed(2), 'Avg:', avg.toFixed(2));
+          console.log('Oscillation detected! Type:', isLowDistanceOscillation ? 'Low' : 'High', 
+                      'Variance:', variance.toFixed(2), 'Avg:', avg.toFixed(2));
           
           // 如果方差极小且距离很近目标，说明陷入严重死锁
           if (variance < 1 && avg < this.number * 1.5) {
@@ -375,8 +381,10 @@ const NumberMaze = {
       } else {
         globalOptRatio += 0.1;
       }
+
+      const round = this.number * 0.5;
       
-      const shouldDoGlobalOpt = (currentStep % 10) < (globalOptRatio * 10);
+      const shouldDoGlobalOpt = (currentStep % round) < (globalOptRatio * round);
       
       // 如果检测到震荡，强制切换到BFS
       if (globalOptimizationMoves.length > 0 && shouldDoGlobalOpt && !isOscillating) {
