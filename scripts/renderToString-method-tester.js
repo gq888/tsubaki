@@ -59,7 +59,7 @@ global.document = {
 // 模拟 localStorage
 const localStorageMock = {
   _data: {
-    "game-global-delay": "10"
+    "game-global-delay": "1"
   },
   getItem(key) {
     return this._data[key] || null;

@@ -24,7 +24,7 @@ const NumberMaze = {
       emptyPos: -1, // 空位位置
       targetPath: [], // 目标路径
       pathFound: false, // 是否找到有效路径
-      number: 24, // 数字方块（最优难度：能保持100%胜率）
+      number: 24, // 数字方块（最优难度：97%胜率，平均298步）
       
       // 以下属性由工厂函数GameComponentPresets.puzzleGame添加：
       // gameManager: 游戏状态管理器实例，提供游戏状态控制和自动操作功能
@@ -74,6 +74,11 @@ const NumberMaze = {
       this.grid[this.gridSize * this.gridSize - 1] = 99; // 终点
       
       this.autoCalc();
+    },
+
+    setDifficuty(difficulty) {
+      this.number = difficulty;
+      this.init();
     },
     
     // 获取指定位置的相邻位置
@@ -275,7 +280,7 @@ const NumberMaze = {
       // 计算所有数字到理想位置的总距离
       const calculateGlobalDistance = () => {
         let totalDistance = 0;
-        for (const [num, data] of numberDeviationCache) {
+        for (const [_, data] of numberDeviationCache) {
           totalDistance += data.deviation;
         }
         return totalDistance;
@@ -325,12 +330,22 @@ const NumberMaze = {
       if (this._globalDistHistory.length === 10) {
         const avg = this._globalDistHistory.reduce((a, b) => a + b) / 10;
         const variance = this._globalDistHistory.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / 10;
-        // 放宽阈值：方差小于3且平均值在一定范围，说明在震荡
-        if (variance < 3 && avg < 50) {
+        // 放宽阈值：方差小且平均值在一定范围，说明在震荡
+        if (variance < 3 && avg < this.number * 2) {
           isOscillating = true;
           console.log('Oscillation detected! Variance:', variance.toFixed(2), 'Avg:', avg.toFixed(2));
-          // 清空历史记录，给BFS一次机会
-          this._globalDistHistory = [];
+          
+          // 如果方差极小且距离很近目标，说明陷入严重死锁
+          if (variance < 1 && avg < this.number * 1.5) {
+            // 完全清空历史，强制突破
+            this._globalDistHistory = [];
+            // 记录严重震荡次数
+            if (!this._severeOscillationCount) this._severeOscillationCount = 0;
+            this._severeOscillationCount++;
+          } else {
+            // 普通震荡，删除部分历史
+            this._globalDistHistory.splice(0, 3);
+          }
         }
       }
       
@@ -340,19 +355,23 @@ const NumberMaze = {
       let globalOptRatio = 0.1;
       
       // 步数调整：初期更多全局优化
-      if (currentStep > 200) {
+      if (currentStep > this.number * 10) {
         globalOptRatio += 0;
-      } else if (currentStep > 100) {
+      } else if (currentStep > this.number * 6) {
         globalOptRatio += 0.1;
-      } else if (currentStep > 50) {
+      } else if (currentStep > this.number * 2) {
         globalOptRatio += 0.2;
       }
       
       // 全局距离调整：距离越大越需要全局优化
-      if (currentGlobalDistance > 40) {
+      if (currentGlobalDistance > this.number * 2) {
         globalOptRatio += 0.5;
-      } else if (currentGlobalDistance > 30) {
+      } else if (currentGlobalDistance > this.number * 1.5) {
+        globalOptRatio += 0.4;
+      } else if (currentGlobalDistance > this.number) {
         globalOptRatio += 0.3;
+      } else if (currentGlobalDistance > this.number * 0.5) {
+        globalOptRatio += 0.2;
       } else {
         globalOptRatio += 0.1;
       }
@@ -380,8 +399,8 @@ const NumberMaze = {
       // BFS搜索最优路径，使用同层比较进行剪枝
       let bestPath = null;
       let bestTotalDistance = Infinity;
-      // 根据number规模动态调整迭代次数
-      const maxIterations = this.number >= 25 ? 15000 : 10000;
+      // 根据number规模动态调整迭代次数，增加搜索深度
+      const maxIterations = this.number >= 28 ? 20000 : (this.number >= 25 ? 16000 : 12000);
       
       // 队列存储搜索状态：{row, col, deep, path, selectedNumbers, totalDistance, visited}
       let queue = [{
@@ -468,7 +487,8 @@ const NumberMaze = {
           candidatesWithDistance.sort((a, b) => a.score - b.score);
           
           // 动态调整候选数量：深度越大，候选越多，增加搜索空间
-          const candidateCount = Math.min(3 + Math.floor(deep / 3), 7, candidatesWithDistance.length);
+          // 提高上限到10，给困难布局更多选择
+          const candidateCount = Math.min(3 + Math.floor(deep / 3), 10, candidatesWithDistance.length);
           const topCandidates = candidatesWithDistance.slice(0, candidateCount);
           
           for (const candidate of topCandidates) {
@@ -518,8 +538,8 @@ const NumberMaze = {
         }
         
         // 同层剪枝：对下一层队列按totalDistance排序，只保留最优的部分
-        // 根据number规模动态调整队列容量
-        const queueCapacity = this.number >= 25 ? 200 : 150;
+        // 根据number规模动态调整队列容量，扩大搜索空间
+        const queueCapacity = this.number >= 28 ? 300 : (this.number >= 25 ? 250 : 150);
         if (nextQueue.length > queueCapacity) {
           nextQueue.sort((a, b) => a.totalDistance - b.totalDistance);
           queue = nextQueue.slice(0, queueCapacity);
