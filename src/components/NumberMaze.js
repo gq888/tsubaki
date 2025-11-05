@@ -24,7 +24,7 @@ const NumberMaze = {
       emptyPos: -1, // 空位位置
       targetPath: [], // 目标路径
       pathFound: false, // 是否找到有效路径
-      number: 26, // 数字方块（推荐难度：100%胜率，平均340步@1100maxstep）
+      number: 28, // 数字方块（推荐难度：98%胜率，平均334步@1100maxstep）
       
       // 以下属性由工厂函数GameComponentPresets.puzzleGame添加：
       // gameManager: 游戏状态管理器实例，提供游戏状态控制和自动操作功能
@@ -33,7 +33,7 @@ const NumberMaze = {
       // history: 操作历史记录数组，支持撤销重做功能
     };
   },
-  
+
   // 初始化
   methods: {
     init() {
@@ -250,12 +250,9 @@ const NumberMaze = {
         return -1;
       };
       
-      // 根据深度计算数字区间（使用严格小于，避免重叠）
+      // 根据深度计算数字区间（使用优化后的分配规则）
       const getNumberRange = (deep) => {
-        const minNum = this.number / 9 * deep;
-        const maxNum = this.number / 9 * (deep + 1);
-        // 使用 minNum < num <= maxNum 的区间划分
-        return { min: Math.floor(minNum) + 1, max: Math.floor(maxNum) };
+        return this.numberRanges[deep];
       };
       
       // 根据数字值计算其理想的曼哈顿距离范围（应该距离起点多远）
@@ -315,21 +312,23 @@ const NumberMaze = {
           }
         }
       }
+
+      const round = this.number * 0.5;
       
-      // 震荡检测：记录最近10步的全局距离
+      // 震荡检测：记录最近的全局距离
       if (!this._globalDistHistory) {
         this._globalDistHistory = [];
       }
       this._globalDistHistory.push(currentGlobalDistance);
-      if (this._globalDistHistory.length > 10) {
+      if (this._globalDistHistory.length > round) {
         this._globalDistHistory.shift();
       }
       
       // 检测是否在震荡：计算方差
       let isOscillating = false;
-      if (this._globalDistHistory.length === 10) {
-        const avg = this._globalDistHistory.reduce((a, b) => a + b) / 10;
-        const variance = this._globalDistHistory.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / 10;
+      if (this._globalDistHistory.length === round) {
+        const avg = this._globalDistHistory.reduce((a, b) => a + b) / round;
+        const variance = this._globalDistHistory.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / round;
         // 震荡检测：方差小说明在小范围徘徊，无论距离高低都应识别
         // 1. 低距离震荡（接近目标）：variance < 3 且 avg < number*2
         // 2. 高距离震荡（困在高位）：variance < 8 且 avg >= number*2
@@ -350,7 +349,7 @@ const NumberMaze = {
             this._severeOscillationCount++;
           } else {
             // 普通震荡，删除部分历史
-            this._globalDistHistory.splice(0, 3);
+            this._globalDistHistory.splice(0, Math.floor(round * 0.3));
           }
         }
       }
@@ -381,8 +380,6 @@ const NumberMaze = {
       } else {
         globalOptRatio += 0.1;
       }
-
-      const round = this.number * 0.5;
       
       const shouldDoGlobalOpt = (currentStep % round) < (globalOptRatio * round);
       
@@ -820,7 +817,66 @@ const NumberMaze = {
     // 计算网格状态（用于状态检测）
     gridState() {
       return this.grid.join(',');
-    }
+    },
+
+    // 根据深度计算数字区间（优化分配规则）
+    numberRanges() {
+      // 固定分配规则：0层和8层各2个，1层和7层各3个，2层和6层各4个
+      const fixedAllocation = {
+        0: 2,  // 第0层：2个数字
+        1: 3,  // 第1层：3个数字
+        2: 4,  // 第2层：4个数字
+        6: 4,  // 第6层：4个数字
+        7: 3,  // 第7层：3个数字
+        8: 2   // 第8层：2个数字
+      };
+      
+      // 计算固定分配的总数量
+      const fixedTotal = Object.values(fixedAllocation).reduce((sum, count) => sum + count, 0);
+      
+      // 剩余的数字数量分配给中间3层（3,4,5层）
+      const remainingNumbers = this.number - fixedTotal;
+      const middleLayersCount = 3; // 3,4,5层
+      const middleLayerAverage = Math.max(1, Math.floor(remainingNumbers / middleLayersCount));
+      
+      // 构建完整的分配映射
+      const allocationMap = {
+        0: fixedAllocation[0],
+        1: fixedAllocation[1],
+        2: fixedAllocation[2],
+        3: middleLayerAverage,
+        4: middleLayerAverage,
+        5: middleLayerAverage,
+        6: fixedAllocation[6],
+        7: fixedAllocation[7],
+        8: fixedAllocation[8]
+      };
+      
+      // 处理剩余数字的分配（如果有余数）
+      let remaining = remainingNumbers - (middleLayerAverage * middleLayersCount);
+      if (remaining > 0) {
+        // 从中间层开始，依次每层多分配1个，直到分配完
+        for (let layer = 3; layer <= 5 && remaining > 0; layer++) {
+          allocationMap[layer]++;
+          remaining--;
+        }
+      }
+      
+      // 计算累积分配，确定每层的起始和结束数字
+      let cumulativeStart = 1;
+      const ranges = {};
+      
+      for (let layer = 0; layer < 9; layer++) {
+        const count = allocationMap[layer];
+        ranges[layer] = {
+          min: cumulativeStart,
+          max: cumulativeStart + count - 1
+        };
+        cumulativeStart += count;
+      }
+      
+      return ranges;
+    },
   }
 };
 

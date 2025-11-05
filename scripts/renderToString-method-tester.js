@@ -629,7 +629,44 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           this._testCapture.errorStack = error.stack;
         }
         
-        // 捕获执行后状态 - 使用JSON深拷贝避免循环引用
+        // 对于同步方法，返回过滤了循环引用的JSON序列化结果
+        if (!this._testCapture.isAsync && this._testCapture.result !== undefined) {
+          try {
+            // 使用与之前相同的replacer处理循环引用
+            const seen = new WeakMap();
+            const pathStack = [];
+            
+            const replacer = function(key, value) {
+              // 跳过以_开头的属性
+              if (typeof key === 'string' && key.startsWith('_')) {
+                return undefined;
+              }
+              
+              // 处理对象循环引用
+              if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) {
+                  return '[Circular]';
+                }
+                
+                const currentPath = pathStack.join('.') + (key ? '.' + key : '');
+                seen.set(value, currentPath);
+                pathStack.push(key);
+              }
+              
+              return value;
+            };
+            
+            // 将JSON编码为base64 ASCII格式，避免被渲染函数二次处理
+            const jsonStr = JSON.stringify(this._testCapture.result, replacer);
+            this.jsonResult = Buffer.from(jsonStr).toString('base64');
+          } catch (e) {
+            // 如果序列化失败，返回错误信息
+            this.jsonResult = e.message;
+          }
+        }
+        else this.jsonResult = "";
+        
+        // 捕获执行后状态 - 使用JSON深拷贝避免循环引用（在jsonResult设置之后）
         const afterState = JSON.parse(JSON.stringify(this.$data, (key, value) => {
           if (key.startsWith('_')) return undefined;
           return value;
@@ -675,42 +712,6 @@ async function executeMethodWithRenderToString(componentPath, methodName, curren
           // console.log(JSON.stringify(testResult, replacer, 2));
           process.exit(0);
         }
-        // 对于同步方法，返回过滤了循环引用的JSON序列化结果
-        if (!this._testCapture.isAsync && this._testCapture.result !== undefined) {
-          try {
-            // 使用与之前相同的replacer处理循环引用
-            const seen = new WeakMap();
-            const pathStack = [];
-            
-            const replacer = function(key, value) {
-              // 跳过以_开头的属性
-              if (typeof key === 'string' && key.startsWith('_')) {
-                return undefined;
-              }
-              
-              // 处理对象循环引用
-              if (typeof value === 'object' && value !== null) {
-                if (seen.has(value)) {
-                  return '[Circular]';
-                }
-                
-                const currentPath = pathStack.join('.') + (key ? '.' + key : '');
-                seen.set(value, currentPath);
-                pathStack.push(key);
-              }
-              
-              return value;
-            };
-            
-            // 将JSON编码为base64 ASCII格式，避免被渲染函数二次处理
-            const jsonStr = JSON.stringify(this._testCapture.result, replacer);
-            this.jsonResult = Buffer.from(jsonStr).toString('base64');
-          } catch (e) {
-            // 如果序列化失败，返回错误信息
-            this.jsonResult = e.message;
-          }
-        }
-        else this.jsonResult = "empty";
       },
       template: "<div>{{jsonResult}}</div>"
     };
