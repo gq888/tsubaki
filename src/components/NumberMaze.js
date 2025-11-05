@@ -24,7 +24,7 @@ const NumberMaze = {
       emptyPos: -1, // 空位位置
       targetPath: [], // 目标路径
       pathFound: false, // 是否找到有效路径
-      number: 28, // 数字方块（推荐难度：98%胜率，平均334步@1100maxstep）
+      number: 30
       
       // 以下属性由工厂函数GameComponentPresets.puzzleGame添加：
       // gameManager: 游戏状态管理器实例，提供游戏状态控制和自动操作功能
@@ -42,6 +42,11 @@ const NumberMaze = {
       this.emptyPos = -1;
       this.pathFound = false;
       this.targetPath = [];
+      
+      // 清除强制移动任务和震荡检测状态
+      this._forcedMoveTask = null;
+      this._severeOscillationCount = 0;
+      this._globalDistHistory = [];
       
       // 生成数字方块
       for (let i = 0; i < this.number; i++) {
@@ -145,9 +150,13 @@ const NumberMaze = {
       console.log('clickNumber called with pos:', pos);
       console.log('grid[pos]:', this.grid[pos]);
       
-      if (this.grid[pos] <= 0 || this.grid[pos] === 99) {
+      if (this.grid[pos] == 0 || this.grid[pos] === 99) {
+        return; // 不能移动起点、终点
+      }
+      
+      if (this.grid[pos] < 0) {
         this.emptyPos = pos;
-        return; // 不能移动起点、终点或空位
+        return;
       }
       
       console.log('clickNumber proceeding with move');
@@ -277,8 +286,8 @@ const NumberMaze = {
       // 计算所有数字到理想位置的总距离
       const calculateGlobalDistance = () => {
         let totalDistance = 0;
-        for (const [_, data] of numberDeviationCache) {
-          totalDistance += data.deviation;
+        for (const cache of numberDeviationCache) {
+          totalDistance += cache[1].deviation;
         }
         return totalDistance;
       };
@@ -382,6 +391,93 @@ const NumberMaze = {
       }
       
       const shouldDoGlobalOpt = (currentStep % round) < (globalOptRatio * round);
+      
+      // ========== 严重震荡强制突破机制 ==========
+      // 检查是否有正在进行的强制移动任务
+      if (this._forcedMoveTask) {
+        const task = this._forcedMoveTask;
+        const currentPos = findNumberPosition(task.number);
+        const currentDistFromStart = getManhattanDistance(0, currentPos);
+        
+        // 检查是否已到达理想距离
+        if (Math.abs(currentDistFromStart - task.idealDist) <= 0.5) {
+          console.log('Forced move task completed:', {
+            number: task.number,
+            currentDist: currentDistFromStart,
+            idealDist: task.idealDist
+          });
+          this._forcedMoveTask = null;
+          this._severeOscillationCount = 0;
+        } else {
+          // 继续执行强制移动
+          const move = this.calculateForcedMove(currentPos, task.idealDist, this._forcedMoveTask.number);
+          if (move) {
+            console.log('Continuing forced move:', {
+              number: task.number,
+              from: move.from,
+              to: move.to,
+              currentDist: currentDistFromStart,
+              targetDist: task.idealDist
+            });
+            return move;
+          } else {
+            // 无法继续移动，取消任务
+            console.log('Cannot continue forced move, canceling task');
+            this._forcedMoveTask = null;
+            this._severeOscillationCount = 0;
+          }
+        }
+      }
+      
+      // 检查是否需要启动新的强制移动任务
+      const shouldForceBreakthrough = this._severeOscillationCount > 0;
+      
+      if (shouldForceBreakthrough && !this._forcedMoveTask) {
+        console.log('Severe oscillation detected! Count:', this._severeOscillationCount);
+        
+        // 找到距离理想位置最远的数字
+        let maxDeviation = -1;
+        let worstNumber = null;
+        let worstNumberPos = null;
+        let worstNumberIdealDist = null;
+        
+        for (const [num, data] of numberDeviationCache) {
+          if (data.deviation > maxDeviation) {
+            maxDeviation = data.deviation;
+            worstNumber = num;
+            worstNumberPos = data.pos;
+            worstNumberIdealDist = data.idealDist;
+          }
+        }
+        
+        if (worstNumber && worstNumberPos !== null && worstNumberIdealDist !== null) {
+          // 启动强制移动任务
+          this._forcedMoveTask = {
+            number: worstNumber,
+            idealDist: worstNumberIdealDist
+          };
+          
+          const currentDistFromStart = getManhattanDistance(0, worstNumberPos);
+          
+          console.log('Starting forced move task:', {
+            number: worstNumber,
+            currentPos: worstNumberPos,
+            currentDist: currentDistFromStart,
+            idealDist: worstNumberIdealDist,
+            deviation: maxDeviation
+          });
+          
+          // 计算第一步移动
+          const move = this.calculateForcedMove(worstNumberPos, worstNumberIdealDist, this._forcedMoveTask.number);
+          if (move) {
+            return move;
+          } else {
+            // 无法移动，取消任务
+            this._forcedMoveTask = null;
+            this._severeOscillationCount = 0;
+          }
+        }
+      }
       
       // 如果检测到震荡，强制切换到BFS
       if (globalOptimizationMoves.length > 0 && shouldDoGlobalOpt && !isOscillating) {
@@ -563,10 +659,7 @@ const NumberMaze = {
         return this.getRandomMove();
       }
       
-      console.log('Best path found:', bestPath);
-      console.log('Total distance:', bestPath.totalDistance);
-      
-      // 生成移动方案
+      // ========== 阶段3：选择最优移动 ==========
       const targetNumbers = bestPath.numbers;
       const targetPositions = bestPath.path;
       
@@ -672,6 +765,140 @@ const NumberMaze = {
       
       console.log('Random move:', { from: fromPos, to: toPos, value: this.grid[fromPos] });
       return { from: fromPos, to: toPos };
+    },
+    
+    /**
+     * 计算强制移动的下一步
+     * @param {number} currentPos - 当前位置
+     * @param {number} currentDist - 当前距离起点的曼哈顿距离
+     * @param {number} idealDist - 理想距离
+     * @returns {Object|null} 返回移动{from, to}或null
+     */
+    calculateForcedMove(currentPos, idealDist, targetNumber) {
+      const getManhattanDistance = (pos1, pos2) => {
+        const row1 = Math.floor(pos1 / this.gridSize);
+        const col1 = pos1 % this.gridSize;
+        const row2 = Math.floor(pos2 / this.gridSize);
+        const col2 = pos2 % this.gridSize;
+        return Math.abs(row1 - row2) + Math.abs(col1 - col2);
+      };
+      
+      // 获取当前位置的所有邻居
+      const neighbors = this.getNeighborPositions(currentPos);
+      
+      if (neighbors.length === 0) {
+        return null;
+      }
+      
+      // 计算每个空位邻居移动后的距离偏差
+      const moves = neighbors.map(neighborPos => {
+        const newDist = getManhattanDistance(0, neighborPos);
+        const deviation = Math.abs(newDist - idealDist);
+        return {
+          to: neighborPos,
+          newDist: newDist,
+          deviation: deviation
+        };
+      });
+      
+      // 选择能让距离最接近idealDist的移动
+      moves.sort((a, b) => a.deviation - b.deviation);
+
+      // 计算空位需要移动到的位置（数字路径的下一步）
+      const requiredEmptyPos = moves[0].to;
+      
+      for (let i = 0; i < this.grid.length; i++) {
+        if (this.grid[i] === -1) {
+          let emptyPos = i;
+
+          // 如果空位已经在所需位置，直接移动数字
+          if (emptyPos === requiredEmptyPos) {
+            return { from: currentPos, to: requiredEmptyPos };
+          }
+
+          // 计算空位到所需位置的路径，避开目标数字
+          const emptyPath = this.findShortestPathForNumber(emptyPos, requiredEmptyPos, targetNumber);
+          if (!emptyPath || emptyPath.length === 0) continue;
+
+          // 返回空位移动的下一步
+          return { to: emptyPos, from: emptyPath[0] };
+        }
+      }
+      return null;
+    },
+    
+    /**
+     * 使用BFS算法找到数字从当前位置到目标位置的最短移动路径
+     * @param {number} fromPos - 起始位置（一维索引）
+     * @param {number} toPos - 目标位置（一维索引）
+     * @returns {Array} 返回移动路径（位置数组），不包含起始位置
+     */
+    findShortestPathForNumber(fromPos, toPos, excludeNumber = -1) {
+      if (fromPos === toPos) {
+        return [];
+      }
+      
+      // BFS队列：存储{pos, path}
+      const queue = [{ pos: fromPos, path: [] }];
+      const visited = new Set([fromPos]);
+      
+      while (queue.length > 0) {
+        const { pos, path } = queue.shift();
+        
+        // 获取当前位置的四个方向邻居
+        const neighbors = this.getNeighborPositions(pos);
+        
+        for (const neighborPos of neighbors) {
+          if (visited.has(neighborPos)) continue;
+          
+          const neighborValue = this.grid[neighborPos];
+
+          // 检查是否是需要避开的数字（起点、终点、空位、目标数字），防止无效移动
+          if ([0, -1, 99, excludeNumber].includes(neighborValue)) {
+            continue;
+          }
+          
+          const newPath = [...path, neighborPos];
+          
+          // 检查是否到达目标位置
+          if (neighborPos === toPos) {
+            return newPath;
+          }
+          
+          visited.add(neighborPos);
+          queue.push({ pos: neighborPos, path: newPath });
+        }
+      }
+      
+      return null; // 如果没有找到路径
+    },
+    
+    /**
+     * 获取指定位置的所有有效邻居位置
+     */
+    getNeighborPositions(pos) {
+      const row = Math.floor(pos / this.gridSize);
+      const col = pos % this.gridSize;
+      const neighbors = [];
+      
+      // 上
+      if (row > 0) {
+        neighbors.push((row - 1) * this.gridSize + col);
+      }
+      // 下
+      if (row < this.gridSize - 1) {
+        neighbors.push((row + 1) * this.gridSize + col);
+      }
+      // 左
+      if (col > 0) {
+        neighbors.push(row * this.gridSize + (col - 1));
+      }
+      // 右
+      if (col < this.gridSize - 1) {
+        neighbors.push(row * this.gridSize + (col + 1));
+      }
+      
+      return neighbors;
     },
     
     // 检查是否有潜在的路径可能
