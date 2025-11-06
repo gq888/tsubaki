@@ -24,7 +24,7 @@ const NumberMaze = {
       emptyPos: -1, // 空位位置
       targetPath: [], // 目标路径
       pathFound: false, // 是否找到有效路径
-      number: 30
+      number: 33, // 数字方块（状态哈希检测+calculateForcedMove全面应用）
       
       // 以下属性由工厂函数GameComponentPresets.puzzleGame添加：
       // gameManager: 游戏状态管理器实例，提供游戏状态控制和自动操作功能
@@ -43,10 +43,10 @@ const NumberMaze = {
       this.pathFound = false;
       this.targetPath = [];
       
-      // 清除强制移动任务和震荡检测状态
+      // 清除强制移动任务和状态检测
       this._forcedMoveTask = null;
-      this._severeOscillationCount = 0;
-      this._globalDistHistory = [];
+      this._stateHashHistory = []; // 状态哈希历史
+      this._globalDistHistory = []; // 全局距离历史
       
       // 生成数字方块
       for (let i = 0; i < this.number; i++) {
@@ -267,7 +267,7 @@ const NumberMaze = {
       // 根据数字值计算其理想的曼哈顿距离范围（应该距离起点多远）
       const getIdealDistance = (num) => {
         // 数字所属的区间深度
-        const deep = Math.floor((num - 1) / (this.number / 9));
+        const deep = this.numberDeeps[num - 1].deep;
         return deep + 1; // deep=0的数字理想距离为1，deep=1的数字理想距离为2，以此类推
       };
       
@@ -321,50 +321,52 @@ const NumberMaze = {
           }
         }
       }
-
-      const round = this.number * 0.5;
       
-      // 震荡检测：记录最近的全局距离
+      const currentStateHash = this.gridState;
+      const historyWindow = Math.max(10, Math.floor(this.number * 0.5)); // 状态历史窗口
+      
+      // 初始化状态历史
+      if (!this._stateHashHistory) {
+        this._stateHashHistory = [];
+      }
       if (!this._globalDistHistory) {
         this._globalDistHistory = [];
       }
+      
+      // 检测状态是否重复
+      let hasRepeatedState = false;
+      if (this._stateHashHistory.includes(currentStateHash)) {
+        hasRepeatedState = true;
+      }
+      
+      // 记录当前状态
+      this._stateHashHistory.push(currentStateHash);
+      if (this._stateHashHistory.length > historyWindow) {
+        this._stateHashHistory.shift();
+      }
+      
+      // 记录全局距离用于震荡检测
       this._globalDistHistory.push(currentGlobalDistance);
-      if (this._globalDistHistory.length > round) {
+      if (this._globalDistHistory.length > historyWindow) {
         this._globalDistHistory.shift();
       }
       
-      // 检测是否在震荡：计算方差
+      // 简化的震荡检测：只检测方差
       let isOscillating = false;
-      if (this._globalDistHistory.length === round) {
-        const avg = this._globalDistHistory.reduce((a, b) => a + b) / round;
-        const variance = this._globalDistHistory.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / round;
-        // 震荡检测：方差小说明在小范围徘徊，无论距离高低都应识别
-        // 1. 低距离震荡（接近目标）：variance < 3 且 avg < number*2
-        // 2. 高距离震荡（困在高位）：variance < 8 且 avg >= number*2
-        const isLowDistanceOscillation = variance < 3 && avg < this.number * 2;
-        const isHighDistanceOscillation = variance < 6 && avg >= this.number * 2;
+      if (this._globalDistHistory.length >= historyWindow) {
+        const recent = this._globalDistHistory;
+        const avg = recent.reduce((a, b) => a + b) / recent.length;
+        const variance = recent.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / recent.length;
         
-        if (isLowDistanceOscillation || isHighDistanceOscillation) {
+        if (variance < 1) {
           isOscillating = true;
-          console.log('Oscillation detected! Type:', isLowDistanceOscillation ? 'Low' : 'High', 
-                      'Variance:', variance.toFixed(2), 'Avg:', avg.toFixed(2));
-          
-          // 如果方差极小且距离很近目标，说明陷入严重死锁
-          if (variance < 1 && avg < this.number * 1.5) {
-            // 完全清空历史，强制突破
-            this._globalDistHistory = [];
-            // 记录严重震荡次数
-            if (!this._severeOscillationCount) this._severeOscillationCount = 0;
-            this._severeOscillationCount++;
-          } else {
-            // 普通震荡，删除部分历史
-            this._globalDistHistory.splice(0, Math.floor(round * 0.3));
-          }
+          console.log('📊 Oscillation detected! Variance:', variance.toFixed(2), 'Avg:', avg.toFixed(2));
         }
       }
       
       // 动态调整两阶段切换策略：根据全局距离和步数调整
       const currentStep = this.step || 0;
+      const round = this.number * 0.5; // 周期长度
       
       let globalOptRatio = 0.1;
       
@@ -407,7 +409,8 @@ const NumberMaze = {
             idealDist: task.idealDist
           });
           this._forcedMoveTask = null;
-          this._severeOscillationCount = 0;
+          this._stateHashHistory = [];
+          console.log('✅ Forced move task completed successfully');
         } else {
           // 继续执行强制移动
           const move = this.calculateForcedMove(currentPos, task.idealDist, this._forcedMoveTask.number);
@@ -422,18 +425,27 @@ const NumberMaze = {
             return move;
           } else {
             // 无法继续移动，取消任务
-            console.log('Cannot continue forced move, canceling task');
             this._forcedMoveTask = null;
-            this._severeOscillationCount = 0;
+            console.log('⚠️ Cannot continue forced move, canceling task');
           }
         }
       }
       
-      // 检查是否需要启动新的强制移动任务
-      const shouldForceBreakthrough = this._severeOscillationCount > 0;
+      // ========== calculateForcedMove 触发策略 ==========
+      // 核心理念：任何异常情况都立即使用 calculateForcedMove
+      // 触发条件（满足任一即可）：
+      // 1. 检测到重复状态（最高优先级）
+      // 2. 检测到震荡（方差 < 10）
+      // 3. 全局距离停滞不前
+      
+      const shouldForceBreakthrough = hasRepeatedState ||           // 状态重复
+                                       isOscillating ||              // 震荡
+                                       (currentStep > this.number * 10 && currentGlobalDistance > this.number * 1.5);
       
       if (shouldForceBreakthrough && !this._forcedMoveTask) {
-        console.log('Severe oscillation detected! Count:', this._severeOscillationCount);
+        const reason = hasRepeatedState ? 'Repeated State' : 
+                       isOscillating ? 'Oscillation' : 'Distance Stagnation';
+        console.log('⚡ Triggering calculateForcedMove! Reason:', reason, 'Step:', currentStep);
         
         // 找到距离理想位置最远的数字
         let maxDeviation = -1;
@@ -952,11 +964,18 @@ const NumberMaze = {
           type: type,
           ...data,
           timestamp: Date.now(),
+          stateHash: this.gridState, // 添加状态哈希用于重复检测
         });
         console.log('Operation recorded successfully');
       } else {
         console.error('Cannot record operation - gameManager not available');
       }
+    },
+    
+    // 检查状态是否重复
+    isStateRepeated() {
+      const currentStateHash = this.gridState;
+      return this.gameManager.history.find((record) => record.stateHash === currentStateHash);
     },
     
     // 处理撤销操作
@@ -1103,6 +1122,20 @@ const NumberMaze = {
       }
       
       return ranges;
+    },
+    numberDeeps() {
+      const distances = [];
+      let deep = 0;
+      for (let i = 1; i <= this.number; i++) {
+        if (i > this.numberRanges[deep].max) {
+          deep++;
+        }
+        distances.push({
+          number: i,
+          deep: deep
+        });
+      }
+      return distances;
     },
   }
 };
