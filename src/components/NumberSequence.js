@@ -8,7 +8,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      gridSize: 4,
+      gridSize: 5,
       minSequenceLength: 3
     };
   },
@@ -140,14 +140,15 @@ export default GameComponentPresets.puzzleGame({
 
     findAllValidSequences(grid) {
       const sequences = [];
-      const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
       
       for (let i = 0; i < this.gridSize; i++) {
         for (let j = 0; j < this.gridSize; j++) {
           if (grid[i][j] !== null) {
-            const res = this.findSequenceFrom(i, j, visited);
-            res.filter(seq => seq.length >= this.minSequenceLength);
-            sequences.push(...res);
+            // ✅ 修复：为每个起始点创建独立的visited数组
+            const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+            const res = this.findSequenceFrom(i, j, visited, grid);
+            const validSequences = res.filter(seq => seq.length >= this.minSequenceLength);
+            sequences.push(...validSequences);
           }
         }
       }
@@ -189,6 +190,10 @@ export default GameComponentPresets.puzzleGame({
       
       // 对每个有效序列进行递归探索
       for (const sequence of validSequences) {
+        if (bestResult.remainingCells === 0) {
+          return bestResult;
+        }
+
         // 模拟执行当前序列后的状态
         const futureGrid = this.simulateSequenceExecution(sequence, grid);
         
@@ -283,11 +288,11 @@ export default GameComponentPresets.puzzleGame({
       }
     },
 
-    findSequenceFrom(startRow, startCol, visited) {
+    findSequenceFrom(startRow, startCol, visited, grid) {
       const sequences = [];
-      const currentSequence = [{row: startRow, col: startCol, value: this.grid[startRow][startCol]}];
+      const currentSequence = [{row: startRow, col: startCol, value: grid[startRow][startCol]}];
       
-      this.dfsSequences(startRow, startCol, currentSequence, visited, sequences, this.grid);
+      this.dfsSequences(startRow, startCol, currentSequence, visited, sequences, grid);
       
       return sequences;
     },
