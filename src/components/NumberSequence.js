@@ -8,7 +8,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      gridSize: 5,
+      gridSize: 4,
       minSequenceLength: 3
     };
   },
@@ -173,7 +173,7 @@ export default GameComponentPresets.puzzleGame({
           bestSequence = sequence;
         }
       }
-      console.log('bestSequence', bestSequence, minUnreachableCount);
+      console.log('bestSequence =', bestSequence, 'minUnreachableCount =', minUnreachableCount);
       return bestSequence;
     },
 
