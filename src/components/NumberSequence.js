@@ -19,7 +19,7 @@ export default GameComponentPresets.puzzleGame({
     },
     
     hasValidMoves() {
-      return this.findAllValidSequences().length > 0;
+      return this.findAllValidSequences(this.grid).length > 0;
     }
   },
 
@@ -119,7 +119,7 @@ export default GameComponentPresets.puzzleGame({
         return;
       }
 
-      const validSequences = this.findAllValidSequences();
+      const validSequences = this.findAllValidSequences(this.grid);
       if (validSequences.length === 0) {
         this.gameManager.setLose();
         return;
@@ -138,13 +138,13 @@ export default GameComponentPresets.puzzleGame({
       })
     },
 
-    findAllValidSequences() {
+    findAllValidSequences(grid) {
       const sequences = [];
       const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
       
       for (let i = 0; i < this.gridSize; i++) {
         for (let j = 0; j < this.gridSize; j++) {
-          if (this.grid[i][j] !== null) {
+          if (grid[i][j] !== null) {
             const res = this.findSequenceFrom(i, j, visited);
             res.filter(seq => seq.length >= this.minSequenceLength);
             sequences.push(...res);
@@ -156,30 +156,72 @@ export default GameComponentPresets.puzzleGame({
     },
 
     findBestSequenceWithLookahead(validSequences) {
-      let bestSequence = validSequences[0];
-      let minUnreachableCount = Infinity;
-
-      for (const sequence of validSequences) {
-        // 前瞻一步：模拟执行这个序列后的状态
-        const futureState = this.simulateSequenceExecution(sequence);
-        
-        // 计算执行后"不能被任何序列消除的格子"数量
-        const unreachableCount = this.countUnreachableCells(futureState);
-        
-        // 优先选择该数量最少的序列，如果数量相同则选择更长的序列
-        if (unreachableCount < minUnreachableCount || 
-            (unreachableCount === minUnreachableCount && sequence.length > bestSequence.length)) {
-          minUnreachableCount = unreachableCount;
-          bestSequence = sequence;
-        }
+      // 使用递归深度优先搜索找到最优消除路径
+      const result = this.findOptimalSequencePath(this.grid, []);
+      
+      if (result.path.length === 0) {
+        // 如果没有找到路径，返回第一个序列（保险措施）
+        return validSequences[0];
       }
-      console.log('bestSequence =', bestSequence, 'minUnreachableCount =', minUnreachableCount);
-      return bestSequence;
+      
+      console.log('最优路径长度:', result.path.length, '最终剩余格子数:', result.remainingCells);
+      return result.path[0];
     },
 
-    simulateSequenceExecution(sequence) {
-      // 创建当前状态的深拷贝
-      const simulatedGrid = this.copyGrid(this.grid);
+    findOptimalSequencePath(grid, currentPath) {
+      // 查找当前状态下的所有有效序列
+      const validSequences = this.findAllValidSequences(grid);
+      
+      // 基础情况：没有有效序列，返回当前路径和剩余格子数
+      if (validSequences.length === 0) {
+        const remainingCells = this.countRemainingCells(grid);
+        return {
+          path: [...currentPath],
+          remainingCells: remainingCells
+        };
+      }
+      
+      // 记录所有可能路径中的最优结果
+      let bestResult = {
+        path: [],
+        remainingCells: Infinity
+      };
+      
+      // 对每个有效序列进行递归探索
+      for (const sequence of validSequences) {
+        // 模拟执行当前序列后的状态
+        const futureGrid = this.simulateSequenceExecution(sequence, grid);
+        
+        // 递归探索执行该序列后的所有可能路径
+        const result = this.findOptimalSequencePath(
+          futureGrid,
+          [...currentPath, sequence]
+        );
+        
+        // 更新最优结果（优先选择剩余格子最少的路径）
+        if (result.remainingCells < bestResult.remainingCells) {
+          bestResult = result;
+        }
+      }
+      
+      return bestResult;
+    },
+
+    countRemainingCells(grid) {
+      let count = 0;
+      for (let row = 0; row < this.gridSize; row++) {
+        for (let col = 0; col < this.gridSize; col++) {
+          if (grid[row][col] !== null) {
+            count++;
+          }
+        }
+      }
+      return count;
+    },
+
+    simulateSequenceExecution(sequence, grid = this.grid) {
+      // 创建传入状态的深拷贝
+      const simulatedGrid = this.copyGrid(grid);
       
       // 模拟消除序列
       for (const cell of sequence) {
@@ -207,80 +249,9 @@ export default GameComponentPresets.puzzleGame({
       }
     },
 
-    countUnreachableCells(grid) {
-      let unreachableCount = 0;
-      
-      // 遍历每个格子
-      for (let row = 0; row < this.gridSize; row++) {
-        for (let col = 0; col < this.gridSize; col++) {
-          if (grid[row][col] !== null) {
-            // 检查这个格子是否能被任何有效序列消除
-            const canReach = this.canCellBeReachedInAnySequence(row, col, grid);
-            if (!canReach) {
-              unreachableCount++;
-            }
-          }
-        }
-      }
-      
-      return unreachableCount;
-    },
-
-    canCellBeReachedInAnySequence(targetRow, targetCol, grid) {
-      // ✅ 正确实现：检查目标格子是否能被任何有效序列包含
-      
-      // 方法1：检查从目标格子出发的递增序列
-      const sequence = [];
-      const foundSequences = [];
-      
-      if (grid[targetRow][targetCol] !== null) {
-        sequence.push({
-          row: targetRow, 
-          col: targetCol, 
-          value: grid[targetRow][targetCol]
-        });
-        
-        const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
-        visited[targetRow][targetCol] = true;
-        
-        this.dfsFindSequenceFromCell(targetRow, targetCol, sequence, visited, foundSequences, grid);
-      }
-      
-      // 方法2：检查目标格子是否可以作为其他序列的一部分
-      // 遍历所有可能的起始点，看是否能形成包含目标格子的序列
-      if (foundSequences.length === 0) {
-        for (let startRow = 0; startRow < this.gridSize; startRow++) {
-          for (let startCol = 0; startCol < this.gridSize; startCol++) {
-            if (grid[startRow][startCol] !== null && !(startRow === targetRow && startCol === targetCol)) {
-              const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
-              const startSequence = [{
-                row: startRow, 
-                col: startCol, 
-                value: grid[startRow][startCol]
-              }];
-              
-              visited[startRow][startCol] = true;
-              const sequences = [];
-              
-              this.dfsFindSequenceFromCell(startRow, startCol, startSequence, visited, sequences, grid, targetRow, targetCol);
-              
-              if (sequences.length > 0) {
-                foundSequences.push(...sequences);
-              }
-            }
-          }
-        }
-      }
-      
-      return foundSequences.length > 0;
-    },
-
-    dfsFindSequenceFromCell(row, col, sequence, visited, foundSequences, grid, targetRow = row, targetCol = col) {
-      // 检查当前序列是否包含目标格子
-      const containsTarget = sequence.some(cell => cell.row === targetRow && cell.col === targetCol);
-      
-      // 如果序列长度达到要求且包含目标格子，记录当前序列
-      if (sequence.length >= this.minSequenceLength && containsTarget) {
+    dfsSequences(row, col, sequence, visited, foundSequences, grid) {
+      // 如果序列长度达到要求，记录当前序列
+      if (sequence.length >= this.minSequenceLength) {
         foundSequences.push([...sequence]);
       }
       
@@ -303,7 +274,7 @@ export default GameComponentPresets.puzzleGame({
             value: grid[newRow][newCol]
           });
           
-          this.dfsFindSequenceFromCell(newRow, newCol, sequence, visited, foundSequences, grid, targetRow, targetCol);
+          this.dfsSequences(newRow, newCol, sequence, visited, foundSequences, grid);
           
           // 回溯
           sequence.pop();
@@ -316,7 +287,7 @@ export default GameComponentPresets.puzzleGame({
       const sequences = [];
       const currentSequence = [{row: startRow, col: startCol, value: this.grid[startRow][startCol]}];
       
-      this.dfsFindSequenceFromCell(startRow, startCol, currentSequence, visited, sequences, this.grid);
+      this.dfsSequences(startRow, startCol, currentSequence, visited, sequences, this.grid);
       
       return sequences;
     },
