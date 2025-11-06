@@ -215,7 +215,8 @@ export default GameComponentPresets.puzzleGame({
         for (let col = 0; col < this.gridSize; col++) {
           if (grid[row][col] !== null) {
             // 检查这个格子是否能被任何有效序列消除
-            if (!this.canCellBeReachedInAnySequence(row, col, grid)) {
+            const canReach = this.canCellBeReachedInAnySequence(row, col, grid);
+            if (!canReach) {
               unreachableCount++;
             }
           }
@@ -226,10 +227,9 @@ export default GameComponentPresets.puzzleGame({
     },
 
     canCellBeReachedInAnySequence(targetRow, targetCol, grid) {
-      // 检查是否存在包含目标格子的有效序列
-      const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+      // ✅ 正确实现：检查目标格子是否能被任何有效序列包含
       
-      // 从目标格子开始DFS寻找序列
+      // 方法1：检查从目标格子出发的递增序列
       const sequence = [];
       const foundSequences = [];
       
@@ -240,22 +240,53 @@ export default GameComponentPresets.puzzleGame({
           value: grid[targetRow][targetCol]
         });
         
+        const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+        visited[targetRow][targetCol] = true;
+        
         this.dfsFindSequenceFromCell(targetRow, targetCol, sequence, visited, foundSequences, grid);
+      }
+      
+      // 方法2：检查目标格子是否可以作为其他序列的一部分
+      // 遍历所有可能的起始点，看是否能形成包含目标格子的序列
+      if (foundSequences.length === 0) {
+        for (let startRow = 0; startRow < this.gridSize; startRow++) {
+          for (let startCol = 0; startCol < this.gridSize; startCol++) {
+            if (grid[startRow][startCol] !== null && !(startRow === targetRow && startCol === targetCol)) {
+              const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+              const startSequence = [{
+                row: startRow, 
+                col: startCol, 
+                value: grid[startRow][startCol]
+              }];
+              
+              visited[startRow][startCol] = true;
+              const sequences = [];
+              
+              this.dfsFindSequenceFromCell(startRow, startCol, startSequence, visited, sequences, grid, targetRow, targetCol);
+              
+              if (sequences.length > 0) {
+                foundSequences.push(...sequences);
+              }
+            }
+          }
+        }
       }
       
       return foundSequences.length > 0;
     },
 
-    dfsFindSequenceFromCell(row, col, currentSequence, visited, allSequences, grid) {
-      // 如果当前序列满足最小长度，保存它（但继续探索更长的序列）
-      if (currentSequence.length >= this.minSequenceLength) {
-        allSequences.push([...currentSequence]);
-        // ❌ 不要在这里返回！继续探索更长的序列
+    dfsFindSequenceFromCell(row, col, sequence, visited, foundSequences, grid, targetRow = row, targetCol = col) {
+      // 检查当前序列是否包含目标格子
+      const containsTarget = sequence.some(cell => cell.row === targetRow && cell.col === targetCol);
+      
+      // 如果序列长度达到要求且包含目标格子，记录当前序列
+      if (sequence.length >= this.minSequenceLength && containsTarget) {
+        foundSequences.push([...sequence]);
       }
-
+      
       const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-      const lastValue = currentSequence[currentSequence.length - 1].value;
-
+      const currentValue = sequence[sequence.length - 1].value;
+      
       for (const [dr, dc] of directions) {
         const newRow = row + dr;
         const newCol = col + dc;
@@ -263,23 +294,22 @@ export default GameComponentPresets.puzzleGame({
         if (this.isValidCell(newRow, newCol) && 
             !visited[newRow][newCol] && 
             grid[newRow][newCol] !== null &&
-            grid[newRow][newCol] > lastValue) {
+            grid[newRow][newCol] > currentValue) {
           
           visited[newRow][newCol] = true;
-          currentSequence.push({
+          sequence.push({
             row: newRow, 
             col: newCol, 
             value: grid[newRow][newCol]
           });
           
-          this.dfsFindSequenceFromCell(newRow, newCol, currentSequence, visited, allSequences, grid);
+          this.dfsFindSequenceFromCell(newRow, newCol, sequence, visited, foundSequences, grid, targetRow, targetCol);
           
-          currentSequence.pop();
+          // 回溯
+          sequence.pop();
           visited[newRow][newCol] = false;
         }
       }
-      
-      // ✅ 只有在所有方向都探索完后才返回
     },
 
     findSequenceFrom(startRow, startCol, visited) {
