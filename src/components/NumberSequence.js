@@ -169,6 +169,45 @@ export default GameComponentPresets.puzzleGame({
       return result.path[0];
     },
 
+    // 一步前瞻函数：获取执行序列后的所有可达单元格
+    getReachableCellsAfterSequence(grid, sequence) {
+      // 应用序列到网格
+      const newGrid = this.simulateSequenceExecution(sequence, grid);
+      
+      // 获取新网格中的所有有效序列
+      const allSequences = this.findAllValidSequences(newGrid);
+      
+      // 收集所有序列经过的单元格
+      const reachableCells = new Set();
+      
+      for (const seq of allSequences) {
+        for (const cell of seq) {
+          const key = `${cell.row},${cell.col}`;
+          reachableCells.add(key);
+        }
+      }
+      
+      return reachableCells;
+    },
+    
+    // 统计未经过的单元格数量
+    countUnreachableCellsAfterSequence(grid, sequence) {
+      const reachableCells = this.getReachableCellsAfterSequence(grid, sequence);
+      
+      // 统计网格中所有非空单元格
+      let totalNonEmptyCells = 0;
+      for (let i = 0; i < this.gridSize; i++) {
+        for (let j = 0; j < this.gridSize; j++) {
+          if (grid[i][j] !== null) {
+            totalNonEmptyCells++;
+          }
+        }
+      }
+      
+      // 未经过的单元格数量 = 总非空单元格 - 可达单元格
+      return totalNonEmptyCells - reachableCells.size;
+    },
+    
     findOptimalSequencePath(grid, currentPath) {
       // 查找当前状态下的所有有效序列
       const validSequences = this.findAllValidSequences(grid);
@@ -182,6 +221,15 @@ export default GameComponentPresets.puzzleGame({
         };
       }
       
+      // ✅ 优化：对序列进行排序，优先处理未经过单元格数量最少的分支
+      const sequencesWithScore = validSequences.map(sequence => ({
+        sequence,
+        unreachableCount: this.countUnreachableCellsAfterSequence(grid, sequence)
+      }));
+      
+      // 按照未经过单元格数量由少到多排序
+      sequencesWithScore.sort((a, b) => a.unreachableCount - b.unreachableCount);
+      
       // 记录所有可能路径中的最优结果
       let bestResult = {
         path: [],
@@ -189,7 +237,7 @@ export default GameComponentPresets.puzzleGame({
       };
       
       // 对每个有效序列进行递归探索
-      for (const sequence of validSequences) {
+      for (const {sequence} of sequencesWithScore) {
         if (bestResult.remainingCells === 0) {
           return bestResult;
         }
