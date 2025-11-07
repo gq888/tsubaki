@@ -8,7 +8,8 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      gridSize: 5,
+      rowCount: 4,
+      columnCount: 6,
       minSequenceLength: 3
     };
   },
@@ -99,9 +100,9 @@ export default GameComponentPresets.puzzleGame({
 
     generateGrid() {
       const grid = [];
-      for (let i = 0; i < this.gridSize; i++) {
+      for (let i = 0; i < this.rowCount; i++) {
         const row = [];
-        for (let j = 0; j < this.gridSize; j++) {
+        for (let j = 0; j < this.columnCount; j++) {
           row.push(Math.floor(Math.random() * 9) + 1);
         }
         grid.push(row);
@@ -140,11 +141,11 @@ export default GameComponentPresets.puzzleGame({
     findAllValidSequences(grid, allowStacking = true) {
       const sequences = [];
       
-      for (let i = 0; i < this.gridSize; i++) {
-        for (let j = 0; j < this.gridSize; j++) {
+      for (let i = 0; i < this.rowCount; i++) {
+        for (let j = 0; j < this.columnCount; j++) {
           if (grid[i][j] !== null) {
             // ✅ 修复：为每个起始点创建独立的visited数组
-            const visited = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(false));
+            const visited = Array(this.rowCount).fill().map(() => Array(this.columnCount).fill(false));
             const res = this.findSequenceFrom(i, j, visited, grid);
             const validSequences = res.filter(seq => seq.length >= this.minSequenceLength);
             sequences.push(...validSequences);
@@ -177,9 +178,7 @@ export default GameComponentPresets.puzzleGame({
     },
     
     // 统计未经过的单元格数量
-    countUnreachableCellsAfterSequence(grid, sequence) {
-      // 应用序列到网格
-      const newGrid = this.simulateSequenceExecution(sequence, grid);
+    countUnreachableCellsAfterSequence(newGrid) {
       
       // 获取新网格中的所有有效序列
       const allSequences = this.findAllValidSequences(newGrid);
@@ -195,8 +194,8 @@ export default GameComponentPresets.puzzleGame({
       
       // 统计执行后网格中所有非空单元格
       let totalNonEmptyCells = 0;
-      for (let i = 0; i < this.gridSize; i++) {
-        for (let j = 0; j < this.gridSize; j++) {
+      for (let i = 0; i < this.rowCount; i++) {
+        for (let j = 0; j < this.columnCount; j++) {
           if (newGrid[i][j] !== null) {
             totalNonEmptyCells++;
           }
@@ -208,9 +207,8 @@ export default GameComponentPresets.puzzleGame({
     },
     
     findOptimalSequencePath(grid, currentPath, allowStacking = true) {
-      let notStackingResult = null;
       if (allowStacking) {
-        notStackingResult = this.findOptimalSequencePath(grid, currentPath, false);
+        const notStackingResult = this.findOptimalSequencePath(grid, currentPath, false);
         if (notStackingResult.remainingCells === 0) {
           return notStackingResult;
         }
@@ -227,20 +225,33 @@ export default GameComponentPresets.puzzleGame({
         };
       }
       
-      // ✅ 优化：对序列进行排序，优先处理未经过单元格数量最少的分支
-      const sequencesWithScore = validSequences.map(sequence => ({
-        sequence,
-        score: (notStackingResult ? notStackingResult.remainingCells * 10000 : 0) + this.countUnreachableCellsAfterSequence(grid, sequence) * 100 - sequence.length
-      }));
-      
-      // 按照分数由低到高排序（分数越低越好）
-      sequencesWithScore.sort((a, b) => a.score - b.score);
-      
       // 记录所有可能路径中的最优结果
       let bestResult = {
         path: [],
         remainingCells: Infinity
       };
+      
+      // ✅ 优化：启发式评分并排序
+      const sequencesWithScore = validSequences.map((sequence) => {
+        // 应用序列到网格
+        const newGrid = this.simulateSequenceExecution(sequence, grid);
+        const result = this.findOptimalSequencePath(
+          newGrid,
+          [...currentPath, sequence],
+          false
+        );
+        
+        // 更新最优结果（优先选择剩余格子最少的路径）
+        if (result.remainingCells < bestResult.remainingCells) {
+          bestResult = result;
+        }
+        const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
+        const score = result.remainingCells * 10000 + unreachable * 100 - sequence.length;
+        return { sequence, score };
+      });
+      
+      // 按照分数由低到高排序（分数越低越好）
+      sequencesWithScore.sort((a, b) => a.score - b.score);
       
       // 对每个有效序列进行递归探索
       for (const {sequence} of sequencesWithScore) {
@@ -270,8 +281,8 @@ export default GameComponentPresets.puzzleGame({
 
     countRemainingCells(grid) {
       let count = 0;
-      for (let row = 0; row < this.gridSize; row++) {
-        for (let col = 0; col < this.gridSize; col++) {
+      for (let row = 0; row < this.rowCount; row++) {
+        for (let col = 0; col < this.columnCount; col++) {
           if (grid[row][col] !== null) {
             count++;
           }
@@ -296,9 +307,9 @@ export default GameComponentPresets.puzzleGame({
     },
 
     applyGravityToGrid(grid) {
-      for (let col = 0; col < this.gridSize; col++) {
-        let writePos = this.gridSize - 1;
-        for (let row = this.gridSize - 1; row >= 0; row--) {
+      for (let col = 0; col < this.columnCount; col++) {
+        let writePos = this.rowCount - 1;
+        for (let row = this.rowCount - 1; row >= 0; row--) {
           if (grid[row][col] !== null) {
             if (row !== writePos) {
               grid[writePos][col] = grid[row][col];
@@ -354,7 +365,7 @@ export default GameComponentPresets.puzzleGame({
     },
 
     isValidCell(row, col) {
-      return row >= 0 && row < this.gridSize && col >= 0 && col < this.gridSize;
+      return row >= 0 && row < this.rowCount && col >= 0 && col < this.columnCount;
     },
 
     selectSequence(sequence) {
@@ -439,11 +450,11 @@ export default GameComponentPresets.puzzleGame({
 
     renderTextView() {
       let output = `数字接龙 - 分数: ${this.score}\n`;
-      output += '═'.repeat(this.gridSize * 4 + 1) + '\n';
+      output += '═'.repeat(this.columnCount * 4 + 1) + '\n';
       
-      for (let i = 0; i < this.gridSize; i++) {
+      for (let i = 0; i < this.rowCount; i++) {
         output += '║';
-        for (let j = 0; j < this.gridSize; j++) {
+        for (let j = 0; j < this.columnCount; j++) {
           const cell = this.grid[i][j];
           if (cell === null) {
             output += '   ║';
@@ -452,12 +463,12 @@ export default GameComponentPresets.puzzleGame({
           }
         }
         output += '\n';
-        if (i < this.gridSize - 1) {
-          output += '╠' + '═══╬'.repeat(this.gridSize - 1) + '═══╣\n';
+        if (i < this.rowCount - 1) {
+          output += '╠' + '═══╬'.repeat(this.columnCount - 1) + '═══╣\n';
         }
       }
       
-      output += '═'.repeat(this.gridSize * 4 + 1) + '\n';
+      output += '═'.repeat(this.columnCount * 4 + 1) + '\n';
       
       if (this.gameManager.winflag) {
         output += '🎉 恭喜！你清空了所有数字！\n';
