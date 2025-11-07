@@ -10,7 +10,9 @@ export default GameComponentPresets.puzzleGame({
       score: 0,
       rowCount: 6,
       columnCount: 4,
-      minSequenceLength: 3
+      minSequenceLength: 3,
+      // 状态缓存
+      _stateCache: null
     };
   },
 
@@ -127,8 +129,12 @@ export default GameComponentPresets.puzzleGame({
       }
 
       await this.gameManager.step(async () => {
+        this._stateCache = new Map();
+        
         const result = this.findOptimalSequencePath(this.grid, []);
         const bestSequence = result.path[0] || validSequences[0];
+        
+        this._stateCache = null; // 清理缓存
         
         this.selectedCells = [];
         for (let seq of bestSequence) {
@@ -267,8 +273,12 @@ export default GameComponentPresets.puzzleGame({
       return regions;
     },
     
-    findOptimalSequencePath(grid, currentPath, allowStacking = null) {
-      // 查找当前状态下的所有有效序列
+    findOptimalSequencePath(grid, currentPath, allowStacking = null, depth = 0) {
+      const gridKey = this.getGridKey(grid);
+      if (this._stateCache && this._stateCache.has(gridKey)) {
+        return this._stateCache.get(gridKey);
+      }
+      
       const validSequences = this.findAllValidSequences(grid, allowStacking);
       
       // 基础情况：没有有效序列，返回当前路径和剩余格子数
@@ -281,23 +291,34 @@ export default GameComponentPresets.puzzleGame({
       }
       
       const sequencesWithScore = [];
+      
       for (const sequence of validSequences) {
         const newGrid = this.simulateSequenceExecution(sequence, grid);
-        // 优先处理没有堆叠的不会引发重力下落的简单序列，用于对序列排序，其他存在堆叠的序列最后处理
-        const result = this.findOptimalSequencePath(
+        
+        const noStackingResult = this.findOptimalSequencePath(
           newGrid,
           [...currentPath, sequence],
-          false
+          false,
+          depth + 1,
         );
-        if (result.remainingCells === 0) {
-          return result;
+        
+        // 如果找到完美解，立即返回
+        if (noStackingResult.remainingCells === 0) {
+          return noStackingResult;
         }
+        
         const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
-        const score = result.remainingCells * 10000 + unreachable * 100 - sequence.length;
-        sequencesWithScore.push({ sequence, score, result, newGrid });
+        const score = noStackingResult.remainingCells * 10000 + unreachable * 100 - sequence.length * 10;
+        
+        sequencesWithScore.push({ 
+          sequence, 
+          score, 
+          newGrid, 
+        });
       }
       
-      // 对每个有效序列进行递归探索
+      sequencesWithScore.sort((a, b) => a.score - b.score);
+      
       let bestResult = null;
       
       for (const {sequence, newGrid} of sequencesWithScore) {
@@ -317,7 +338,8 @@ export default GameComponentPresets.puzzleGame({
             const regionResult = this.findOptimalSequencePath(
               regionGrid,
               [], // 区域独立求解，不传入currentPath
-              true
+              true,
+              depth + 1,
             );
             
             regionResults.push(regionResult);
@@ -344,7 +366,8 @@ export default GameComponentPresets.puzzleGame({
           const result = this.findOptimalSequencePath(
             newGrid,
             [...currentPath, sequence],
-            true
+            true,
+            depth + 1,
           );
           
           if (result.remainingCells === 0) {
@@ -363,6 +386,11 @@ export default GameComponentPresets.puzzleGame({
         path: [...currentPath],
         remainingCells: this.countRemainingCells(grid)
       };
+    },
+    
+    getGridKey(grid) {
+      // 生成网格的唯一标识符
+      return grid.map(row => row.map(cell => cell === null ? '_' : cell).join(',')).join('|');
     },
 
     countRemainingCells(grid) {
