@@ -126,8 +126,7 @@ export default GameComponentPresets.puzzleGame({
       }
 
       await this.gameManager.step(async () => {
-        // AI前瞻一步：选择"不能被任何序列消除的格子数量最少"的序列
-        const bestSequence = this.findBestSequenceWithLookahead(validSequences);
+        const bestSequence = this.findOptimalSequencePath(this.grid, [], true).path[0] || validSequences[0];
         
         this.selectedCells = [];
         for (let seq of bestSequence) {
@@ -138,7 +137,7 @@ export default GameComponentPresets.puzzleGame({
       })
     },
 
-    findAllValidSequences(grid) {
+    findAllValidSequences(grid, allowStacking = true) {
       const sequences = [];
       
       for (let i = 0; i < this.gridSize; i++) {
@@ -153,24 +152,32 @@ export default GameComponentPresets.puzzleGame({
         }
       }
       
-      return sequences;
-    },
-
-    findBestSequenceWithLookahead(validSequences) {
-      // 使用递归深度优先搜索找到最优消除路径
-      const result = this.findOptimalSequencePath(this.grid, []);
-      
-      if (result.path.length === 0) {
-        // 如果没有找到路径，返回第一个序列（保险措施）
-        return validSequences[0];
+      // ✅ 新增：如果不允许堆叠，过滤掉上方有未消除格子的序列
+      if (!allowStacking) {
+        return sequences.filter(seq => !this.hasStackingAboveSequence(grid, seq));
       }
       
-      console.log('最优路径长度:', result.path.length, '最终剩余格子数:', result.remainingCells);
-      return result.path[0];
+      return sequences;
     },
-
-    // 一步前瞻函数：获取执行序列后的所有可达单元格
-    getReachableCellsAfterSequence(grid, sequence) {
+    
+    // 检查序列上方是否存在未消除的格子
+    hasStackingAboveSequence(grid, sequence) {
+      if (!sequence || sequence.length === 0) return false;
+      
+      // 对于序列中的每个单元格，检查其上方是否有非空单元格
+      for (const cell of sequence) {
+        for (let row = cell.row - 1; row >= 0; row--) {
+          if (grid[row][cell.col] !== null && !sequence.find(seqCell => seqCell.row === row && seqCell.col === cell.col)) {
+            return true; // 上方存在未消除的格子
+          }
+        }
+      }
+      
+      return false; // 上方没有未消除的格子
+    },
+    
+    // 统计未经过的单元格数量
+    countUnreachableCellsAfterSequence(grid, sequence) {
       // 应用序列到网格
       const newGrid = this.simulateSequenceExecution(sequence, grid);
       
@@ -179,7 +186,6 @@ export default GameComponentPresets.puzzleGame({
       
       // 收集所有序列经过的单元格
       const reachableCells = new Set();
-      
       for (const seq of allSequences) {
         for (const cell of seq) {
           const key = `${cell.row},${cell.col}`;
@@ -187,18 +193,11 @@ export default GameComponentPresets.puzzleGame({
         }
       }
       
-      return reachableCells;
-    },
-    
-    // 统计未经过的单元格数量
-    countUnreachableCellsAfterSequence(grid, sequence) {
-      const reachableCells = this.getReachableCellsAfterSequence(grid, sequence);
-      
-      // 统计网格中所有非空单元格
+      // 统计执行后网格中所有非空单元格
       let totalNonEmptyCells = 0;
       for (let i = 0; i < this.gridSize; i++) {
         for (let j = 0; j < this.gridSize; j++) {
-          if (grid[i][j] !== null) {
+          if (newGrid[i][j] !== null) {
             totalNonEmptyCells++;
           }
         }
@@ -208,9 +207,16 @@ export default GameComponentPresets.puzzleGame({
       return totalNonEmptyCells - reachableCells.size;
     },
     
-    findOptimalSequencePath(grid, currentPath) {
+    findOptimalSequencePath(grid, currentPath, allowStacking = true) {
+      let notStackingResult = null;
+      if (allowStacking) {
+        notStackingResult = this.findOptimalSequencePath(grid, currentPath, false);
+        if (notStackingResult.remainingCells === 0) {
+          return notStackingResult;
+        }
+      }
       // 查找当前状态下的所有有效序列
-      const validSequences = this.findAllValidSequences(grid);
+      const validSequences = this.findAllValidSequences(grid, allowStacking);
       
       // 基础情况：没有有效序列，返回当前路径和剩余格子数
       if (validSequences.length === 0) {
@@ -224,11 +230,11 @@ export default GameComponentPresets.puzzleGame({
       // ✅ 优化：对序列进行排序，优先处理未经过单元格数量最少的分支
       const sequencesWithScore = validSequences.map(sequence => ({
         sequence,
-        unreachableCount: this.countUnreachableCellsAfterSequence(grid, sequence)
+        score: (notStackingResult ? notStackingResult.remainingCells * 10000 : 0) + this.countUnreachableCellsAfterSequence(grid, sequence) * 100 - sequence.length
       }));
       
-      // 按照未经过单元格数量由少到多排序
-      sequencesWithScore.sort((a, b) => a.unreachableCount - b.unreachableCount);
+      // 按照分数由低到高排序（分数越低越好）
+      sequencesWithScore.sort((a, b) => a.score - b.score);
       
       // 记录所有可能路径中的最优结果
       let bestResult = {
@@ -238,8 +244,9 @@ export default GameComponentPresets.puzzleGame({
       
       // 对每个有效序列进行递归探索
       for (const {sequence} of sequencesWithScore) {
+        // 完美最优解剪枝
         if (bestResult.remainingCells === 0) {
-          return bestResult;
+          break;
         }
 
         // 模拟执行当前序列后的状态
@@ -248,7 +255,8 @@ export default GameComponentPresets.puzzleGame({
         // 递归探索执行该序列后的所有可能路径
         const result = this.findOptimalSequencePath(
           futureGrid,
-          [...currentPath, sequence]
+          [...currentPath, sequence],
+          allowStacking
         );
         
         // 更新最优结果（优先选择剩余格子最少的路径）
