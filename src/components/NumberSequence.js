@@ -8,8 +8,8 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 4,
-      columnCount: 6,
+      rowCount: 6,
+      columnCount: 4,
       minSequenceLength: 3
     };
   },
@@ -206,13 +206,65 @@ export default GameComponentPresets.puzzleGame({
       return totalNonEmptyCells - reachableCells.size;
     },
     
-    findOptimalSequencePath(grid, currentPath, allowStacking = true) {
-      if (allowStacking) {
-        const notStackingResult = this.findOptimalSequencePath(grid, currentPath, false);
-        if (notStackingResult.remainingCells === 0) {
-          return notStackingResult;
+    createRegionSubgrid(region) {
+      // 创建区域子网格，只包含该区域内的单元格
+      const regionGrid = Array.from({length: this.rowCount}, () => Array(this.columnCount).fill(null));
+      
+      for (const cell of region.cells) {
+        regionGrid[cell.row][cell.col] = cell.value;
+      }
+      
+      return regionGrid;
+    },
+    
+    detectRegionsAfterColumnElimination(grid) {
+      const regions = [];
+      const visited = Array.from({length: this.rowCount}, () => Array(this.columnCount).fill(false));
+      
+      for (let row = 0; row < this.rowCount; row++) {
+        for (let col = 0; col < this.columnCount; col++) {
+          if (grid[row][col] !== null && !visited[row][col]) {
+            // 发现新的区域，使用BFS探索
+            const region = {
+              cells: [],
+              remainingCells: 0
+            };
+            
+            const queue = [{row, col}];
+            visited[row][col] = true;
+            
+            while (queue.length > 0) {
+              const {row: r, col: c} = queue.shift();
+              region.cells.push({row: r, col: c, value: grid[r][c]});
+              region.remainingCells++;
+              
+              // 检查四个方向的邻居
+              const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+              for (const [dr, dc] of directions) {
+                const newRow = r + dr;
+                const newCol = c + dc;
+                
+                if (this.isValidCell(newRow, newCol) && 
+                    !visited[newRow][newCol] && 
+                    grid[newRow][newCol] !== null) {
+                  visited[newRow][newCol] = true;
+                  queue.push({row: newRow, col: newCol});
+                }
+              }
+            }
+            
+            regions.push(region);
+          }
         }
       }
+      
+      // 按剩余单元格数量排序
+      regions.sort((a, b) => a.remainingCells - b.remainingCells);
+      
+      return regions;
+    },
+    
+    findOptimalSequencePath(grid, currentPath, allowStacking = true) {
       // 查找当前状态下的所有有效序列
       const validSequences = this.findAllValidSequences(grid, allowStacking);
       
@@ -225,12 +277,6 @@ export default GameComponentPresets.puzzleGame({
         };
       }
       
-      // 记录所有可能路径中的最优结果
-      let bestResult = {
-        path: [],
-        remainingCells: Infinity
-      };
-      
       // ✅ 优化：启发式评分并排序
       const sequencesWithScore = validSequences.map((sequence) => {
         // 应用序列到网格
@@ -240,43 +286,62 @@ export default GameComponentPresets.puzzleGame({
           [...currentPath, sequence],
           false
         );
-        
-        // 更新最优结果（优先选择剩余格子最少的路径）
-        if (result.remainingCells < bestResult.remainingCells) {
-          bestResult = result;
-        }
         const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
         const score = result.remainingCells * 10000 + unreachable * 100 - sequence.length;
-        return { sequence, score };
+        return { sequence, score, result };
       });
       
       // 按照分数由低到高排序（分数越低越好）
       sequencesWithScore.sort((a, b) => a.score - b.score);
+      if (sequencesWithScore[0].result.remainingCells === 0) {
+        return sequencesWithScore[0].result;
+      }
       
       // 对每个有效序列进行递归探索
       for (const {sequence} of sequencesWithScore) {
-        // 完美最优解剪枝
-        if (bestResult.remainingCells === 0) {
-          break;
-        }
 
         // 模拟执行当前序列后的状态
         const futureGrid = this.simulateSequenceExecution(sequence, grid);
         
-        // 递归探索执行该序列后的所有可能路径
-        const result = this.findOptimalSequencePath(
-          futureGrid,
-          [...currentPath, sequence],
-          allowStacking
-        );
+        // 区域检测：检查是否存在因整列消除导致的纵向分割
+        const regions = this.detectRegionsAfterColumnElimination(futureGrid);
+        let totalRemainingCells = 0;
+        const regionResults = [];
         
-        // 更新最优结果（优先选择剩余格子最少的路径）
-        if (result.remainingCells < bestResult.remainingCells) {
-          bestResult = result;
+        for (const region of regions) {
+          // 创建该区域的子网格
+          const regionGrid = this.createRegionSubgrid(region);
+          
+          // 对该区域递归调用findOptimalSequencePath
+          const regionResult = this.findOptimalSequencePath(
+            regionGrid,
+            [...currentPath, sequence],
+            allowStacking
+          );
+          
+          regionResults.push(regionResult);
+          totalRemainingCells += regionResult.remainingCells;
+          if (totalRemainingCells !== 0) break;
+        }
+        
+        // 剪枝机制：如果任何区域的remainingCells不为0，则此分支不会产生最优解
+        if (totalRemainingCells == 0) {
+          // 合并各区域的结果路径
+          const mergedPath = [];
+          for (const regionResult of regionResults) {
+            mergedPath.push(...regionResult.path);
+          }
+          return {
+            path: mergedPath,
+            remainingCells: 0
+          };
         }
       }
       
-      return bestResult;
+      return {
+        path: [...currentPath],
+        remainingCells: this.countRemainingCells(grid)
+      };
     },
 
     countRemainingCells(grid) {
