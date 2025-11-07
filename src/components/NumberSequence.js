@@ -127,7 +127,8 @@ export default GameComponentPresets.puzzleGame({
       }
 
       await this.gameManager.step(async () => {
-        const bestSequence = this.findOptimalSequencePath(this.grid, [], true).path[0] || validSequences[0];
+        const result = this.findOptimalSequencePath(this.grid, []);
+        const bestSequence = result.path[0] || validSequences[0];
         
         this.selectedCells = [];
         for (let seq of bestSequence) {
@@ -138,7 +139,7 @@ export default GameComponentPresets.puzzleGame({
       })
     },
 
-    findAllValidSequences(grid, allowStacking = true) {
+    findAllValidSequences(grid, allowStacking = null) {
       const sequences = [];
       
       for (let i = 0; i < this.rowCount; i++) {
@@ -153,9 +154,11 @@ export default GameComponentPresets.puzzleGame({
         }
       }
       
-      // ✅ 新增：如果不允许堆叠，过滤掉上方有未消除格子的序列
-      if (!allowStacking) {
-        return sequences.filter(seq => !this.hasStackingAboveSequence(grid, seq));
+      if (allowStacking !== null) {
+        return sequences.filter(seq => {
+          const hasStacking = this.hasStackingAboveSequence(grid, seq);
+          return allowStacking ? !hasStacking : hasStacking;
+        });
       }
       
       return sequences;
@@ -264,7 +267,7 @@ export default GameComponentPresets.puzzleGame({
       return regions;
     },
     
-    findOptimalSequencePath(grid, currentPath, allowStacking = true) {
+    findOptimalSequencePath(grid, currentPath, allowStacking = null) {
       // 查找当前状态下的所有有效序列
       const validSequences = this.findAllValidSequences(grid, allowStacking);
       
@@ -277,68 +280,86 @@ export default GameComponentPresets.puzzleGame({
         };
       }
       
-      // ✅ 优化：启发式评分并排序
-      const sequencesWithScore = validSequences.map((sequence) => {
-        // 应用序列到网格
+      const sequencesWithScore = [];
+      for (const sequence of validSequences) {
         const newGrid = this.simulateSequenceExecution(sequence, grid);
+        // 优先处理没有堆叠的不会引发重力下落的简单序列，用于对序列排序，其他存在堆叠的序列最后处理
         const result = this.findOptimalSequencePath(
           newGrid,
           [...currentPath, sequence],
           false
         );
+        if (result.remainingCells === 0) {
+          return result;
+        }
         const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
         const score = result.remainingCells * 10000 + unreachable * 100 - sequence.length;
-        return { sequence, score, result };
-      });
-      
-      // 按照分数由低到高排序（分数越低越好）
-      sequencesWithScore.sort((a, b) => a.score - b.score);
-      if (sequencesWithScore[0].result.remainingCells === 0) {
-        return sequencesWithScore[0].result;
+        sequencesWithScore.push({ sequence, score, result, newGrid });
       }
       
       // 对每个有效序列进行递归探索
-      for (const {sequence} of sequencesWithScore) {
-
-        // 模拟执行当前序列后的状态
-        const futureGrid = this.simulateSequenceExecution(sequence, grid);
-        
-        // 区域检测：检查是否存在因整列消除导致的纵向分割
-        const regions = this.detectRegionsAfterColumnElimination(futureGrid);
-        let totalRemainingCells = 0;
-        const regionResults = [];
-        
-        for (const region of regions) {
-          // 创建该区域的子网格
-          const regionGrid = this.createRegionSubgrid(region);
-          
-          // 对该区域递归调用findOptimalSequencePath
-          const regionResult = this.findOptimalSequencePath(
-            regionGrid,
-            [...currentPath, sequence],
-            allowStacking
-          );
-          
-          regionResults.push(regionResult);
-          totalRemainingCells += regionResult.remainingCells;
-          if (totalRemainingCells !== 0) break;
+      let bestResult = null;
+      
+      for (const {sequence, newGrid} of sequencesWithScore) {
+        if (bestResult && bestResult.remainingCells === 0) {
+          break;
         }
         
-        // 剪枝机制：如果任何区域的remainingCells不为0，则此分支不会产生最优解
-        if (totalRemainingCells == 0) {
-          // 合并各区域的结果路径
-          const mergedPath = [];
-          for (const regionResult of regionResults) {
-            mergedPath.push(...regionResult.path);
+        // 区域检测：检查是否存在因整列消除导致的纵向分割
+        const regions = this.detectRegionsAfterColumnElimination(newGrid);
+        
+        if (regions.length > 1) {
+          let totalRemainingCells = 0;
+          const regionResults = [];
+          
+          for (const region of regions) {
+            const regionGrid = this.createRegionSubgrid(region);
+            const regionResult = this.findOptimalSequencePath(
+              regionGrid,
+              [], // 区域独立求解，不传入currentPath
+              true
+            );
+            
+            regionResults.push(regionResult);
+            totalRemainingCells += regionResult.remainingCells;
+            
+            if (regionResult.remainingCells !== 0) {
+              break;
+            }
           }
-          return {
-            path: mergedPath,
-            remainingCells: 0
-          };
+          
+          // 如果所有区域都能完美解决
+          if (totalRemainingCells === 0) {
+            const mergedPath = [sequence];
+            for (const regionResult of regionResults) {
+              mergedPath.push(...regionResult.path);
+            }
+            return {
+              path: [...currentPath, ...mergedPath],
+              remainingCells: 0
+            };
+          }
+        } else {
+          // 单区域情况，直接递归
+          const result = this.findOptimalSequencePath(
+            newGrid,
+            [...currentPath, sequence],
+            true
+          );
+          
+          if (result.remainingCells === 0) {
+            return result;
+          }
+          
+          // 更新最优结果
+          if (!bestResult || result.remainingCells < bestResult.remainingCells) {
+            bestResult = result;
+          }
         }
       }
       
-      return {
+      // 返回找到的最优结果，或当前状态
+      return bestResult || {
         path: [...currentPath],
         remainingCells: this.countRemainingCells(grid)
       };
