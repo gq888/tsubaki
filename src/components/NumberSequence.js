@@ -9,7 +9,7 @@ export default GameComponentPresets.puzzleGame({
       selectedCells: [],
       score: 0,
       rowCount: 6,
-      columnCount: 5,
+      columnCount: 6,
       minSequenceLength: 3,
       // 状态缓存
       _stateCache: null
@@ -294,28 +294,37 @@ export default GameComponentPresets.puzzleGame({
       // 区域检测：检查是否存在纵向子问题分割
       const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
       const crossSequences = [];
+      const subGrids = [];
+      let rightSubGrid = grid;
 
       for (const sequence of sequencesWithMinCrossColumnsCount) {
         if (sequence.crossSequences.length === 0) {
-          const leftRegion = this.createRegionSubgrid(grid, sequence.index, true);
-          const rightRegion = this.createRegionSubgrid(grid, sequence.index, false);
-          const leftResults = this.findOptimalSequencePath(leftRegion, [], null, depth + 1);
-
-          if (leftResults.remainingCells === 0) {
-            const rightResults = this.findOptimalSequencePath(rightRegion, [], null, depth + 1);
-
-            if (rightResults.remainingCells === 0) {
-              // 合并区域结果
-              bestResult = {
-                path: [...leftResults.path, ...rightResults.path],
-                remainingCells: 0
-              };
-              console.log('合并区域结果', JSON.stringify(bestResult));
-              break;
-            }
-          }
+          subGrids.push(this.createRegionSubgrid(rightSubGrid, sequence.index, true));
+          rightSubGrid = this.createRegionSubgrid(rightSubGrid, sequence.index, false);
         } else {
           crossSequences.push(...sequence.crossSequences);
+        }
+      }
+      if (subGrids.length > 0) {
+        subGrids.push(rightSubGrid);
+        const mergedPath = [];
+        let isAllSubGridSolved = true;
+        for (const subGrid of subGrids) {
+          const result = this.findOptimalSequencePath(subGrid, [], null, depth + 1);
+          
+          if (result.remainingCells !== 0) {
+            isAllSubGridSolved = false;
+            break;
+          }
+          mergedPath.push(...result.path);
+        }
+
+        if (isAllSubGridSolved === 0) {
+          // 合并区域结果
+          bestResult = {
+            path: mergedPath,
+            remainingCells: 0
+          };
         }
       }
       
