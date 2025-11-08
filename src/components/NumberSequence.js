@@ -9,7 +9,7 @@ export default GameComponentPresets.puzzleGame({
       selectedCells: [],
       score: 0,
       rowCount: 6,
-      columnCount: 4,
+      columnCount: 5,
       minSequenceLength: 3,
       // 状态缓存
       _stateCache: null
@@ -145,7 +145,7 @@ export default GameComponentPresets.puzzleGame({
       })
     },
 
-    findAllValidSequences(grid, allowStacking = null) {
+    findAllValidSequences(grid) {
       const sequences = [];
       
       for (let i = 0; i < this.rowCount; i++) {
@@ -159,6 +159,43 @@ export default GameComponentPresets.puzzleGame({
           }
         }
       }
+      
+      return sequences;
+    },
+
+    sortSequencesWithMinCrossColumnsCount(sequences) {
+      const crossColumnsCount = new Array(this.columnCount - 1)
+        .fill(null)
+        .map((_, index) => ({
+          crossSequences: [],
+          leftSequences: [],
+          rightSequences: [],
+          index,
+        }));
+
+      sequences.map(seq => {
+        const crossColumns = new Array(this.columnCount).fill(false);
+        seq.map(cell => crossColumns[cell.col] = true);
+        for (let i = 0; i < this.columnCount - 1; i ++) {
+          if (crossColumns[i] && crossColumns[i + 1]) {
+            crossColumnsCount[i].crossSequences.push(seq);
+          } else if (seq[0].col <= i && !crossColumns[i + 1]) {
+            crossColumnsCount[i].leftSequences.push(seq);
+          } else {
+            crossColumnsCount[i].rightSequences.push(seq);
+          }
+        }
+      })
+      
+      return crossColumnsCount.filter(item => item.leftSequences.length > 0 && item.rightSequences.length > 0).sort((a, b) => {
+        const aCount = a.crossSequences.length;
+        const bCount = b.crossSequences.length;  
+        return bCount - aCount;
+      });
+    },
+
+    findAllValidSequencesWithStackingOrNot(grid, allowStacking = null) {
+      const sequences = this.findAllValidSequences(grid);
       
       if (allowStacking !== null) {
         return sequences.filter(seq => {
@@ -215,100 +252,98 @@ export default GameComponentPresets.puzzleGame({
       return totalNonEmptyCells - reachableCells.size;
     },
     
-    createRegionSubgrid(region) {
+    createRegionSubgrid(grid, index, left) {
       // 创建区域子网格，只包含该区域内的单元格
       const regionGrid = Array.from({length: this.rowCount}, () => Array(this.columnCount).fill(null));
       
-      for (const cell of region.cells) {
-        regionGrid[cell.row][cell.col] = cell.value;
+      for (let col = 0; col < this.columnCount; col++) {
+        if (!left) {
+          if (col <= index) continue;
+        } else {
+          if (col > index) continue;
+        }
+        for(let row = 0; row < this.rowCount; row++) {
+          regionGrid[row][col] = grid[row][col];
+        }
       }
       
       return regionGrid;
     },
     
-    detectRegionsAfterColumnElimination(grid) {
-      const regions = [];
-      const visited = Array.from({length: this.rowCount}, () => Array(this.columnCount).fill(false));
-      
-      for (let row = 0; row < this.rowCount; row++) {
-        for (let col = 0; col < this.columnCount; col++) {
-          if (grid[row][col] !== null && !visited[row][col]) {
-            // 发现新的区域，使用BFS探索
-            const region = {
-              cells: [],
-              remainingCells: 0
-            };
-            
-            const queue = [{row, col}];
-            visited[row][col] = true;
-            
-            while (queue.length > 0) {
-              const {row: r, col: c} = queue.shift();
-              region.cells.push({row: r, col: c, value: grid[r][c]});
-              region.remainingCells++;
-              
-              // 检查四个方向的邻居
-              const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-              for (const [dr, dc] of directions) {
-                const newRow = r + dr;
-                const newCol = c + dc;
-                
-                if (this.isValidCell(newRow, newCol) && 
-                    !visited[newRow][newCol] && 
-                    grid[newRow][newCol] !== null) {
-                  visited[newRow][newCol] = true;
-                  queue.push({row: newRow, col: newCol});
-                }
-              }
-            }
-            
-            regions.push(region);
-          }
-        }
-      }
-      
-      // 按剩余单元格数量排序
-      regions.sort((a, b) => a.remainingCells - b.remainingCells);
-      
-      return regions;
-    },
-    
     findOptimalSequencePath(grid, currentPath, allowStacking = null, depth = 0) {
       const gridKey = this.getGridKey(grid);
       if (this._stateCache && this._stateCache.has(gridKey)) {
-        return this._stateCache.get(gridKey);
+        const bestResult = this._stateCache.get(gridKey);
+        bestResult.path = [...currentPath, ...bestResult.path];
+        return bestResult;
       }
       
-      const validSequences = this.findAllValidSequences(grid, allowStacking);
+      const validSequences = this.findAllValidSequencesWithStackingOrNot(grid, allowStacking);
+      
+      let bestResult = {
+        path: [],
+        remainingCells: this.countRemainingCells(grid)
+      };
       
       // 基础情况：没有有效序列，返回当前路径和剩余格子数
       if (validSequences.length === 0) {
-        const remainingCells = this.countRemainingCells(grid);
-        return {
-          path: [...currentPath],
-          remainingCells: remainingCells
-        };
+        bestResult.path = [...currentPath, ...bestResult.path];
+        return bestResult;
+      }
+
+      // 区域检测：检查是否存在纵向子问题分割
+      const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
+      const crossSequences = [];
+
+      for (const sequence of sequencesWithMinCrossColumnsCount) {
+        if (sequence.crossSequences.length === 0) {
+          const leftRegion = this.createRegionSubgrid(grid, sequence.index, true);
+          const rightRegion = this.createRegionSubgrid(grid, sequence.index, false);
+          const leftResults = this.findOptimalSequencePath(leftRegion, [], null, depth + 1);
+
+          if (leftResults.remainingCells === 0) {
+            const rightResults = this.findOptimalSequencePath(rightRegion, [], null, depth + 1);
+
+            if (rightResults.remainingCells === 0) {
+              // 合并区域结果
+              bestResult = {
+                path: [...leftResults.path, ...rightResults.path],
+                remainingCells: 0
+              };
+              console.log('合并区域结果', JSON.stringify(bestResult));
+              break;
+            }
+          }
+        } else {
+          crossSequences.push(...sequence.crossSequences);
+        }
       }
       
       const sequencesWithScore = [];
       
       for (const sequence of validSequences) {
+        // 如果找到完美解，立即返回
+        if (bestResult.remainingCells === 0) {
+          break;
+        }
+
         const newGrid = this.simulateSequenceExecution(sequence, grid);
         
-        const noStackingResult = this.findOptimalSequencePath(
+        const result = this.findOptimalSequencePath(
           newGrid,
           [...currentPath, sequence],
           false,
           depth + 1,
         );
         
-        // 如果找到完美解，立即返回
-        if (noStackingResult.remainingCells === 0) {
-          return noStackingResult;
+        // 更新最优结果
+        if (result.remainingCells < bestResult.remainingCells) {
+          bestResult = result;
         }
         
+        const crossSequencesIndex = crossSequences.indexOf(sequence) + 1;
         const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
-        const score = noStackingResult.remainingCells * 10000 + unreachable * 100 - sequence.length * 10;
+        const score = crossSequencesIndex * 10000 + result.remainingCells * 1000 + unreachable * 100 - sequence.length * 10;
         
         sequencesWithScore.push({ 
           sequence, 
@@ -319,73 +354,31 @@ export default GameComponentPresets.puzzleGame({
       
       sequencesWithScore.sort((a, b) => a.score - b.score);
       
-      let bestResult = null;
-      
       for (const {sequence, newGrid} of sequencesWithScore) {
-        if (bestResult && bestResult.remainingCells === 0) {
+        if (bestResult.remainingCells === 0) {
           break;
         }
+        const result = this.findOptimalSequencePath(
+          newGrid,
+          [...currentPath, sequence],
+          true,
+          depth + 1,
+        );
         
-        // 区域检测：检查是否存在因整列消除导致的纵向分割
-        const regions = this.detectRegionsAfterColumnElimination(newGrid);
-        
-        if (regions.length > 1) {
-          let totalRemainingCells = 0;
-          const regionResults = [];
-          
-          for (const region of regions) {
-            const regionGrid = this.createRegionSubgrid(region);
-            const regionResult = this.findOptimalSequencePath(
-              regionGrid,
-              [], // 区域独立求解，不传入currentPath
-              true,
-              depth + 1,
-            );
-            
-            regionResults.push(regionResult);
-            totalRemainingCells += regionResult.remainingCells;
-            
-            if (regionResult.remainingCells !== 0) {
-              break;
-            }
-          }
-          
-          // 如果所有区域都能完美解决
-          if (totalRemainingCells === 0) {
-            const mergedPath = [sequence];
-            for (const regionResult of regionResults) {
-              mergedPath.push(...regionResult.path);
-            }
-            return {
-              path: [...currentPath, ...mergedPath],
-              remainingCells: 0
-            };
-          }
-        } else {
-          // 单区域情况，直接递归
-          const result = this.findOptimalSequencePath(
-            newGrid,
-            [...currentPath, sequence],
-            true,
-            depth + 1,
-          );
-          
-          if (result.remainingCells === 0) {
-            return result;
-          }
-          
-          // 更新最优结果
-          if (!bestResult || result.remainingCells < bestResult.remainingCells) {
-            bestResult = result;
-          }
+        // 更新最优结果
+        if (result.remainingCells < bestResult.remainingCells) {
+          bestResult = result;
         }
       }
       
-      // 返回找到的最优结果，或当前状态
-      return bestResult || {
-        path: [...currentPath],
-        remainingCells: this.countRemainingCells(grid)
-      };
+      // ✅ 缓存结果（所有状态都缓存）
+      if (this._stateCache) {
+        this._stateCache.set(gridKey, bestResult);
+      }
+
+      bestResult.path = [...currentPath, ...bestResult.path];
+
+      return bestResult;
     },
     
     getGridKey(grid) {
@@ -572,6 +565,8 @@ export default GameComponentPresets.puzzleGame({
           const cell = this.grid[i][j];
           if (cell === null) {
             output += '   ║';
+          } else if (this.selectedCells.find(cell => cell.row === i && cell.col === j)) {
+            output += `(${cell})║`;
           } else {
             output += ` ${cell} ║`;
           }
