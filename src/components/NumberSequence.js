@@ -23,6 +23,10 @@ export default GameComponentPresets.puzzleGame({
     
     hasValidMoves() {
       return this.findAllValidSequences(this.grid).length > 0;
+    },
+
+    maxDepth() {
+      return Math.ceil(this.rowCount * this.columnCount / 3);
     }
   },
 
@@ -347,6 +351,17 @@ export default GameComponentPresets.puzzleGame({
         firstSequence: null,
         remainingCells: currentRemaining
       };
+      
+      // 如果深度过大且还有很多剩余，说明很难找到完美解
+      if (depth > this.maxDepth * 0.8) {
+        if (currentRemaining > this.maxDepth * 1.5) {
+          return bestResult;
+        }
+        if (depth > this.maxDepth * 0.9 && currentRemaining > this.maxDepth * 0.5) {
+          return bestResult;
+        }
+      }
+      
       const sequencesWithScore = [];
       const repeatNumberAmount = this.countRepeatNumberAmount(grid);
       
@@ -360,7 +375,8 @@ export default GameComponentPresets.puzzleGame({
         const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0); // 优先消除重复次多的数字利于寻找严格递增序列
         const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
         const notStackingRemainCells = allowStacking ? sequence.notStackingRemainCells : 0;
-        const score = crossSequencesIndex * 100000 + notStackingRemainCells * 1000 + unreachable * 100 - sequence.length * 10 - totalRepeat * 10000;
+        const sequenceLengthBonus = sequence.length * 20; // 增加序列长度奖励
+        const score = crossSequencesIndex * 100000 + notStackingRemainCells * 1000 + unreachable * 100 - sequenceLengthBonus - totalRepeat * 10000;
         
         sequencesWithScore.push({ 
           sequence, 
