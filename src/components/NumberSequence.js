@@ -9,7 +9,7 @@ export default GameComponentPresets.puzzleGame({
       selectedCells: [],
       score: 0,
       rowCount: 6,
-      columnCount: 6,
+      columnCount: 5,
       minSequenceLength: 3,
       // 状态缓存
       _stateCache: null
@@ -131,8 +131,8 @@ export default GameComponentPresets.puzzleGame({
       await this.gameManager.step(async () => {
         this._stateCache = new Map();
         
-        const result = this.findOptimalSequencePath(this.grid, []);
-        const bestSequence = result.path[0] || validSequences[0];
+        const result = this.findOptimalSequencePathWithCache(this.grid);
+        const bestSequence = result.firstSequence || validSequences[0];
         
         this._stateCache = null; // 清理缓存
         
@@ -222,6 +222,18 @@ export default GameComponentPresets.puzzleGame({
       
       return false; // 上方没有未消除的格子
     },
+
+    countRepeatNumberAmount(grid) {
+      const repeatNumberAmount = new Array(10).fill(0);
+      for (let i = 0; i < this.rowCount; i++) {
+        for (let j = 0; j < this.columnCount; j++) {
+          if (grid[i][j] !== null) {
+            repeatNumberAmount[grid[i][j]] ++;
+          }
+        }
+      }
+      return repeatNumberAmount;
+    },
     
     // 统计未经过的单元格数量
     countUnreachableCellsAfterSequence(newGrid) {
@@ -269,29 +281,47 @@ export default GameComponentPresets.puzzleGame({
       
       return regionGrid;
     },
-    
-    findOptimalSequencePath(grid, currentPath, allowStacking = null, depth = 0) {
+
+    findOptimalSequencePathWithCache(grid, firstSequence = null, allowStacking = null, depth = 0) {
       const gridKey = this.getGridKey(grid);
       if (this._stateCache && this._stateCache.has(gridKey)) {
         const bestResult = this._stateCache.get(gridKey);
-        bestResult.path = [...currentPath, ...bestResult.path];
-        return bestResult;
+        if (firstSequence) {
+          bestResult.firstSequence = firstSequence;
+        }
+        // 不堆叠时记录的缓存不一定是最优解，需要重新计算
+        if (bestResult.remainingCells === 0 || bestResult.allowStacking === allowStacking || bestResult.allowStacking !== false) {
+          return bestResult;
+        }
+      }
+
+      const bestResult = this.findOptimalSequencePath(grid, allowStacking, depth);
+      if (this._stateCache) {
+        this._stateCache.set(gridKey, bestResult);
       }
       
+      // firstSequence 不录入缓存，缓存内容应仅与gridKey有关
+      if (firstSequence) {
+        bestResult.firstSequence = firstSequence;
+      }
+      bestResult.allowStacking = allowStacking;
+      return bestResult;
+    },
+    
+    findOptimalSequencePath(grid, allowStacking = null, depth = 0) {
       const validSequences = this.findAllValidSequencesWithStackingOrNot(grid, allowStacking);
       
       let bestResult = {
-        path: [],
+        firstSequence: null,
         remainingCells: this.countRemainingCells(grid)
       };
       
-      // 基础情况：没有有效序列，返回当前路径和剩余格子数
+      // 基础情况：没有有效序列
       if (validSequences.length === 0) {
-        bestResult.path = [...currentPath, ...bestResult.path];
         return bestResult;
       }
 
-      // 区域检测：检查是否存在纵向子问题分割
+      // 区域分解 - 纵向子问题分割
       const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
       const crossSequences = [];
       const subGrids = [];
@@ -305,43 +335,45 @@ export default GameComponentPresets.puzzleGame({
           crossSequences.push(...sequence.crossSequences);
         }
       }
+      
       if (subGrids.length > 0) {
         subGrids.push(rightSubGrid);
-        const mergedPath = [];
-        let isAllSubGridSolved = true;
+        let tempFirstSequence = null;
+        let totalRemainingCells = 0;
+        
         for (const subGrid of subGrids) {
-          const result = this.findOptimalSequencePath(subGrid, [], null, depth + 1);
+          const result = this.findOptimalSequencePathWithCache(subGrid, tempFirstSequence, null, depth + 1);
+          totalRemainingCells += result.remainingCells;
           
+          // ✅ 关键剪枝: 子区域出现非完美解立即终止
           if (result.remainingCells !== 0) {
-            isAllSubGridSolved = false;
             break;
           }
-          mergedPath.push(...result.path);
+          tempFirstSequence = result.firstSequence;
         }
 
-        if (isAllSubGridSolved === 0) {
-          // 合并区域结果
-          bestResult = {
-            path: mergedPath,
+        if (totalRemainingCells === 0) {
+          return {
+            firstSequence: tempFirstSequence,
             remainingCells: 0
           };
         }
       }
       
       const sequencesWithScore = [];
+      const repeatNumberAmount = this.countRepeatNumberAmount(grid);
       
       for (const sequence of validSequences) {
         // 如果找到完美解，立即返回
         if (bestResult.remainingCells === 0) {
-          break;
+          return bestResult;
         }
 
         const newGrid = this.simulateSequenceExecution(sequence, grid);
-        
-        const result = this.findOptimalSequencePath(
+        const result = this.findOptimalSequencePathWithCache(
           newGrid,
-          [...currentPath, sequence],
-          false,
+          sequence,
+          false, // 先只探索非堆叠序列
           depth + 1,
         );
         
@@ -350,9 +382,10 @@ export default GameComponentPresets.puzzleGame({
           bestResult = result;
         }
         
-        const crossSequencesIndex = crossSequences.indexOf(sequence) + 1;
+        const crossSequencesIndex = crossSequences.indexOf(sequence) - 100; // 优先处理列间交叉序列，便于按列划分子问题
+        const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0); // 优先消除重复次多的数字利于寻找严格递增序列
         const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
-        const score = crossSequencesIndex * 10000 + result.remainingCells * 1000 + unreachable * 100 - sequence.length * 10;
+        const score = crossSequencesIndex * 100000 + result.remainingCells * 1000 + unreachable * 100 - sequence.length * 10 - totalRepeat * 10000;
         
         sequencesWithScore.push({ 
           sequence, 
@@ -365,12 +398,12 @@ export default GameComponentPresets.puzzleGame({
       
       for (const {sequence, newGrid} of sequencesWithScore) {
         if (bestResult.remainingCells === 0) {
-          break;
+          return bestResult;
         }
-        const result = this.findOptimalSequencePath(
+        const result = this.findOptimalSequencePathWithCache(
           newGrid,
-          [...currentPath, sequence],
-          true,
+          sequence,
+          true, // 最后探索堆叠序列
           depth + 1,
         );
         
@@ -379,13 +412,6 @@ export default GameComponentPresets.puzzleGame({
           bestResult = result;
         }
       }
-      
-      // ✅ 缓存结果（所有状态都缓存）
-      if (this._stateCache) {
-        this._stateCache.set(gridKey, bestResult);
-      }
-
-      bestResult.path = [...currentPath, ...bestResult.path];
 
       return bestResult;
     },
