@@ -132,6 +132,7 @@ export default GameComponentPresets.puzzleGame({
         this._stateCache = new Map();
         
         const result = this.findOptimalSequencePathWithCache(this.grid);
+        console.log('remainingCells', result.remainingCells)
         const bestSequence = result.firstSequence || validSequences[0];
         
         this._stateCache = null; // 清理缓存
@@ -285,13 +286,14 @@ export default GameComponentPresets.puzzleGame({
     findOptimalSequencePathWithCache(grid, firstSequence = null, allowStacking = null, depth = 0) {
       const gridKey = this.getGridKey(grid);
       if (this._stateCache && this._stateCache.has(gridKey)) {
-        const bestResult = this._stateCache.get(gridKey);
+        const cachedResult = this._stateCache.get(gridKey);
+        // firstSequence 不录入缓存，缓存内容应仅与gridKey有关
         if (firstSequence) {
-          bestResult.firstSequence = firstSequence;
+          cachedResult.firstSequence = firstSequence;
         }
-        // 不堆叠时记录的缓存不一定是最优解，需要重新计算
-        if (bestResult.remainingCells === 0 || bestResult.allowStacking === allowStacking || bestResult.allowStacking !== false) {
-          return bestResult;
+        // 不堆叠时记录的非完美解，可以在非不堆叠的情况重新寻找完美解，其他情况则直接返回缓存结果
+        if (!(cachedResult.allowStacking === false && cachedResult.remainingCells !== 0 && allowStacking !== false)) {
+          return cachedResult;
         }
       }
 
@@ -309,83 +311,56 @@ export default GameComponentPresets.puzzleGame({
     },
     
     findOptimalSequencePath(grid, allowStacking = null, depth = 0) {
+      // findAllValidSequencesWithStackingOrNot 将所有序列分为堆叠和不堆叠两类
       const validSequences = this.findAllValidSequencesWithStackingOrNot(grid, allowStacking);
-      
-      let bestResult = {
-        firstSequence: null,
-        remainingCells: this.countRemainingCells(grid)
-      };
       
       // 基础情况：没有有效序列
       if (validSequences.length === 0) {
-        return bestResult;
+        return {
+          firstSequence: null,
+          remainingCells: this.countRemainingCells(grid)
+        };
       }
 
-      // 区域分解 - 纵向子问题分割
-      const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
+      // ✅ 优化1：区域分割检测（纵向独立子问题）
       const crossSequences = [];
-      const subGrids = [];
-      let rightSubGrid = grid;
-
-      for (const sequence of sequencesWithMinCrossColumnsCount) {
-        if (sequence.crossSequences.length === 0) {
-          subGrids.push(this.createRegionSubgrid(rightSubGrid, sequence.index, true));
-          rightSubGrid = this.createRegionSubgrid(rightSubGrid, sequence.index, false);
-        } else {
-          crossSequences.push(...sequence.crossSequences);
-        }
+      const regionResult = this.tryRegionDecomposition(grid, validSequences, depth, crossSequences);
+      if (regionResult && regionResult.remainingCells === 0) {
+        return regionResult;
       }
       
-      if (subGrids.length > 0) {
-        subGrids.push(rightSubGrid);
-        let tempFirstSequence = null;
-        let totalRemainingCells = 0;
-        
-        for (const subGrid of subGrids) {
-          const result = this.findOptimalSequencePathWithCache(subGrid, tempFirstSequence, null, depth + 1);
-          totalRemainingCells += result.remainingCells;
-          
-          // ✅ 关键剪枝: 子区域出现非完美解立即终止
-          if (result.remainingCells !== 0) {
-            break;
-          }
-          tempFirstSequence = result.firstSequence;
-        }
-
-        if (totalRemainingCells === 0) {
-          return {
-            firstSequence: tempFirstSequence,
-            remainingCells: 0
-          };
-        }
+      // ✅ 优化2：然后横向分割，优先尝试上层无堆叠序列（启发式搜索）
+      const noStackResult = this.exploreSequences(grid, validSequences, false, depth, null, crossSequences);
+      if (noStackResult && noStackResult.remainingCells === 0) {
+        return noStackResult;
       }
       
+      // ✅ 优化3：最后尝试其他堆叠在下层的序列（启发式排序 + 智能剪枝）
+      const result = this.exploreSequences(grid, validSequences, true, depth, noStackResult, crossSequences);
+      
+      return result;
+    },
+    
+    exploreSequences(grid, validSequences, allowStacking, depth, initialBest = null, crossSequences = []) {
+      const currentRemaining = this.countRemainingCells(grid);
+      let bestResult = initialBest || {
+        firstSequence: null,
+        remainingCells: currentRemaining
+      };
       const sequencesWithScore = [];
       const repeatNumberAmount = this.countRepeatNumberAmount(grid);
       
       for (const sequence of validSequences) {
-        // 如果找到完美解，立即返回
         if (bestResult.remainingCells === 0) {
-          return bestResult;
+          break;
         }
-
+        
         const newGrid = this.simulateSequenceExecution(sequence, grid);
-        const result = this.findOptimalSequencePathWithCache(
-          newGrid,
-          sequence,
-          false, // 先只探索非堆叠序列
-          depth + 1,
-        );
-        
-        // 更新最优结果
-        if (result.remainingCells < bestResult.remainingCells) {
-          bestResult = result;
-        }
-        
         const crossSequencesIndex = crossSequences.indexOf(sequence) - 100; // 优先处理列间交叉序列，便于按列划分子问题
         const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0); // 优先消除重复次多的数字利于寻找严格递增序列
         const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
-        const score = crossSequencesIndex * 100000 + result.remainingCells * 1000 + unreachable * 100 - sequence.length * 10 - totalRepeat * 10000;
+        const notStackingRemainCells = allowStacking ? sequence.notStackingRemainCells : 0;
+        const score = crossSequencesIndex * 100000 + notStackingRemainCells * 1000 + unreachable * 100 - sequence.length * 10 - totalRepeat * 10000;
         
         sequencesWithScore.push({ 
           sequence, 
@@ -398,22 +373,70 @@ export default GameComponentPresets.puzzleGame({
       
       for (const {sequence, newGrid} of sequencesWithScore) {
         if (bestResult.remainingCells === 0) {
-          return bestResult;
+          break;
         }
+
         const result = this.findOptimalSequencePathWithCache(
           newGrid,
           sequence,
-          true, // 最后探索堆叠序列
+          allowStacking,
           depth + 1,
         );
+
+        // 记录非堆叠时的剩余单元格数量，用于堆叠时的启发式搜索
+        if (!allowStacking) {
+          sequence.notStackingRemainCells = result.remainingCells;
+        }
         
         // 更新最优结果
         if (result.remainingCells < bestResult.remainingCells) {
           bestResult = result;
+          
+          // ✅ 找到完美解，立即停止
+          if (bestResult.remainingCells === 0) {
+            break;
+          }
         }
       }
-
+      
       return bestResult;
+    },
+    
+    tryRegionDecomposition(grid, validSequences, depth, crossSequences) {
+      const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
+      if (sequencesWithMinCrossColumnsCount.length === 0) return null;
+      
+      const subGrids = [];
+      let rightSubGrid = grid;
+
+      for (const sequence of sequencesWithMinCrossColumnsCount) {
+        if (sequence.crossSequences.length === 0) {
+          subGrids.push(this.createRegionSubgrid(rightSubGrid, sequence.index, true));
+          rightSubGrid = this.createRegionSubgrid(rightSubGrid, sequence.index, false);
+        } else {
+          crossSequences.push(...sequence.crossSequences);
+        }
+      }
+      
+      if (subGrids.length === 0) return null;
+      
+      subGrids.push(rightSubGrid);
+      let tempFirstSequence = null;
+      
+      for (const subGrid of subGrids) {
+        const result = this.findOptimalSequencePathWithCache(subGrid, tempFirstSequence, null, depth + 1);
+        
+        // ✅ 关键剪枝：任何子区域非完美解，立即放弃该分解方案
+        if (result.remainingCells !== 0) {
+          return null;
+        }
+        tempFirstSequence = result.firstSequence;
+      }
+
+      return {
+        firstSequence: tempFirstSequence,
+        remainingCells: 0
+      }
     },
     
     getGridKey(grid) {
