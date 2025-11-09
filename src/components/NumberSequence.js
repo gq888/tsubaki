@@ -9,8 +9,8 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 4,
-      columnCount: 4,
+      rowCount: 5,
+      columnCount: 5,
       minSequenceLength: 3,
       // 状态缓存
       _stateCache: null
@@ -234,7 +234,7 @@ export default GameComponentPresets.puzzleGame({
       if (allowStacking !== null) {
         return sequences.filter(seq => {
           const hasStacking = this.hasStackingAboveSequence(grid, seq);
-          return allowStacking ? !hasStacking : hasStacking;
+          return allowStacking ? hasStacking : !hasStacking;
         });
       }
       
@@ -258,7 +258,7 @@ export default GameComponentPresets.puzzleGame({
     },
 
     countRepeatNumberAmount(grid) {
-      const repeatNumberAmount = new Array(10).fill(0);
+      const repeatNumberAmount = new Array(13).fill(0);
       for (let i = 0; i < this.rowCount; i++) {
         for (let j = 0; j < this.columnCount; j++) {
           if (grid[i][j] !== null) {
