@@ -9,8 +9,8 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 6,
-      columnCount: 6,
+      rowCount: 4,
+      columnCount: 4,
       minSequenceLength: 3,
       // 状态缓存
       _stateCache: null
@@ -32,7 +32,22 @@ export default GameComponentPresets.puzzleGame({
     }
   },
 
+  created() {
+    this.sendCustomButtons();
+  },
+
   methods: {
+    sendCustomButtons() {
+      // 添加Spider游戏特有的发牌按钮（如果牌堆有牌）
+      this.customButtons.push({
+        action: 'handleCellClick',
+        label: 'CLICK',
+        method: 'handleCellClick',
+        args: [],
+        description: 'CLICK ONE CELL'
+      });
+    },
+
     init() {
       this.grid = this.generateGrid();
       this.selectedCells = [];
