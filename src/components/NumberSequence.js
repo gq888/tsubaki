@@ -9,8 +9,8 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 5,
-      columnCount: 5,
+      rowCount: 9,
+      columnCount: 4,
       minSequenceLength: 3,
       // 状态缓存
       _stateCache: null
@@ -197,37 +197,6 @@ export default GameComponentPresets.puzzleGame({
       return sequences;
     },
 
-    sortSequencesWithMinCrossColumnsCount(sequences) {
-      const crossColumnsCount = new Array(this.columnCount - 1)
-        .fill(null)
-        .map((_, index) => ({
-          crossSequences: [],
-          leftSequences: [],
-          rightSequences: [],
-          index,
-        }));
-
-      sequences.map(seq => {
-        const crossColumns = new Array(this.columnCount).fill(false);
-        seq.map(cell => crossColumns[cell.col] = true);
-        for (let i = 0; i < this.columnCount - 1; i ++) {
-          if (crossColumns[i] && crossColumns[i + 1]) {
-            crossColumnsCount[i].crossSequences.push(seq);
-          } else if (seq[0].col <= i && !crossColumns[i + 1]) {
-            crossColumnsCount[i].leftSequences.push(seq);
-          } else {
-            crossColumnsCount[i].rightSequences.push(seq);
-          }
-        }
-      })
-      
-      return crossColumnsCount.filter(item => item.leftSequences.length > 0 && item.rightSequences.length > 0).sort((a, b) => {
-        const aCount = a.crossSequences.length;
-        const bCount = b.crossSequences.length;  
-        return bCount - aCount;
-      });
-    },
-
     findAllValidSequencesWithStackingOrNot(grid, allowStacking = null) {
       const sequences = this.findAllValidSequences(grid);
       
@@ -312,19 +281,57 @@ export default GameComponentPresets.puzzleGame({
       return totalNonEmptyCells - reachableCells.size;
     },
     
-    createRegionSubgrid(grid, index, left) {
-      // 创建区域子网格，只包含该区域内的单元格
+    detectRegionsAfterColumnElimination(grid) {
+      // 使用BFS检测消除操作后的独立区域
+      const visited = Array(this.rowCount).fill(null).map(() => Array(this.columnCount).fill(false));
+      const regions = [];
+      
+      // 遍历所有单元格，找到未访问的非空单元格作为新区域的起始点
+      for (let row = 0; row < this.rowCount; row++) {
+        for (let col = 0; col < this.columnCount; col++) {
+          if (grid[row][col] !== null && !visited[row][col]) {
+            // 找到新区域，使用BFS探索
+            const region = [];
+            const queue = [{row, col}];
+            visited[row][col] = true;
+            
+            while (queue.length > 0) {
+              const {row: r, col: c} = queue.shift();
+              region.push({row: r, col: c, value: grid[r][c]});
+              
+              // 检查四个方向的邻居
+              const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+              for (const [dr, dc] of directions) {
+                const newRow = r + dr;
+                const newCol = c + dc;
+                
+                if (this.isValidCell(newRow, newCol) && 
+                    !visited[newRow][newCol] && 
+                    grid[newRow][newCol] !== null) {
+                  visited[newRow][newCol] = true;
+                  queue.push({row: newRow, col: newCol});
+                }
+              }
+            }
+            
+            regions.push(region);
+          }
+        }
+      }
+      
+      // 按区域大小（剩余单元格数量）排序
+      regions.sort((a, b) => a.length - b.length);
+      
+      return regions;
+    },
+    
+    createRegionSubgrid(regionCells) {
+      // 根据区域单元格创建子网格
       const regionGrid = Array.from({length: this.rowCount}, () => Array(this.columnCount).fill(null));
       
-      for (let col = 0; col < this.columnCount; col++) {
-        if (!left) {
-          if (col <= index) continue;
-        } else {
-          if (col > index) continue;
-        }
-        for(let row = 0; row < this.rowCount; row++) {
-          regionGrid[row][col] = grid[row][col];
-        }
+      // 将区域中的单元格复制到子网格中
+      for (const cell of regionCells) {
+        regionGrid[cell.row][cell.col] = cell.value;
       }
       
       return regionGrid;
@@ -346,7 +353,7 @@ export default GameComponentPresets.puzzleGame({
 
       const bestResult = this.findOptimalSequencePath(grid, allowStacking, depth);
       if (this._stateCache) {
-        // this._stateCache.set(gridKey, bestResult);
+        this._stateCache.set(gridKey, bestResult);
       }
       
       // firstSequence 不录入缓存，缓存内容应仅与gridKey有关
@@ -369,9 +376,8 @@ export default GameComponentPresets.puzzleGame({
         };
       }
 
-      // ✅ 优化1：区域分割检测（纵向独立子问题）
-      const crossSequences = [];
-      const regionResult = this.tryRegionDecomposition(grid, validSequences, depth, crossSequences);
+      // ✅ 优化1：区域分割检测（基于连通性的独立子问题）
+      const regionResult = this.tryRegionDecomposition(grid, depth);
       if (regionResult.remainingCells === 0) {
         return regionResult;
       } else if (regionResult.hasSubGrid) {
@@ -379,18 +385,18 @@ export default GameComponentPresets.puzzleGame({
       }
       
       // ✅ 优化2：然后横向分割，优先尝试上层无堆叠序列，因为无堆叠序列消除时不会触发重力机制打乱数字分布，更容易命中缓存，并可以为堆叠序列提供新的特征信息
-      const noStackResult = this.exploreSequences(grid, validSequences, false, depth, null, crossSequences);
+      const noStackResult = this.exploreSequences(grid, validSequences, false, depth, null);
       if (noStackResult && noStackResult.remainingCells === 0) {
         return noStackResult;
       }
       
       // ✅ 优化3：最后尝试其他堆叠在下层的序列
-      const result = this.exploreSequences(grid, validSequences, true, depth, noStackResult, crossSequences);
+      const result = this.exploreSequences(grid, validSequences, true, depth, noStackResult);
       
       return result;
     },
     
-    exploreSequences(grid, validSequences, allowStacking, depth, initialBest = null, crossSequences = []) {
+    exploreSequences(grid, validSequences, allowStacking, depth, initialBest = null) {
       const currentRemaining = this.countRemainingCells(grid);
       let bestResult = initialBest || {
         firstSequence: null,
@@ -398,14 +404,14 @@ export default GameComponentPresets.puzzleGame({
       };
       
       // 如果深度过大且还有很多剩余，说明很难找到完美解
-      // if (depth > this.maxDepth * 0.8) {
-      //   if (currentRemaining > this.maxDepth * 1.5) {
-      //     return bestResult;
-      //   }
-      //   if (depth > this.maxDepth * 0.9 && currentRemaining > this.maxDepth * 0.5) {
-      //     return bestResult;
-      //   }
-      // }
+      if (depth > this.maxDepth * 0.8) {
+        if (currentRemaining > this.maxDepth * 1.5) {
+          return bestResult;
+        }
+        if (depth > this.maxDepth * 0.9 && currentRemaining > this.maxDepth * 0.5) {
+          return bestResult;
+        }
+      }
       
       const sequencesWithScore = [];
       const repeatNumberAmount = this.countRepeatNumberAmount(grid);
@@ -417,7 +423,6 @@ export default GameComponentPresets.puzzleGame({
         }
         
         const newGrid = this.simulateSequenceExecution(sequence, grid);
-        const crossSequencesIndex = crossSequences.indexOf(sequence) - 100; // 优先处理列间交叉序列，便于按列划分子问题，划分后更容易命中缓存
         const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0); // 优先消除重复次多的数字利于寻找严格递增序列，是与完美解相关度较高的特征
         const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0; // 计算静态不可达单元格数量，代表这些单元格无法被非堆叠序列消除
         const totalVisits = sequence.reduce((total, cell) => total + cellVisits[cell.row][cell.col], 0); // 优先消除被访问次数少的单元格，提前消除这些最难消除的解题瓶颈，更容易找到完美解
@@ -432,7 +437,7 @@ export default GameComponentPresets.puzzleGame({
         // 2. sequenceLengthBonus提升30%（1000→1300），适度偏好长序列
         // 3. totalVisits权重降低15%（10000→8500），减少对访问频率的依赖
         // 4. totalRepeat保持不变（100000），它是核心特征
-        const score = crossSequencesIndex * 5000 + notStackingRemainCells * 10 + unreachable * 120 + totalVisits * 8500 - sequenceLengthBonus * 1.3 - totalRepeat * 100000;
+        const score = notStackingRemainCells * 10 + unreachable * 120 + totalVisits * 8500 - sequenceLengthBonus * 1.3 - totalRepeat * 100000;
         
         sequencesWithScore.push({ 
           sequence, 
@@ -474,40 +479,31 @@ export default GameComponentPresets.puzzleGame({
       return bestResult;
     },
     
-    tryRegionDecomposition(grid, validSequences, depth, crossSequences) {
-      const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
-      const subGrids = [];
-      let rightSubGrid = grid;
-
-      for (const group of sequencesWithMinCrossColumnsCount) {
-        if (group.crossSequences.length === 0) {
-          subGrids.push(this.createRegionSubgrid(rightSubGrid, group.index, true));
-          rightSubGrid = this.createRegionSubgrid(rightSubGrid, group.index, false);
-        } else {
-          crossSequences.push(...group.crossSequences);
-        }
-      }
+    tryRegionDecomposition(grid, depth) {
+      // 检测消除操作后的独立区域
+      const regions = this.detectRegionsAfterColumnElimination(grid);
       let result = {
         hasSubGrid: false,
         firstSequence: null,
         remainingCells: this.countRemainingCells(grid),
       };
       
-      // 子问题没有缩小问题规模，说明分解失败，若不立即退出将陷入死锁
-      if (subGrids.length === 0) return result;
+      // 如果存在多个独立区域，分别处理每个区域
+      if (regions.length <= 1) return result;
 
       result.hasSubGrid = true;
-      subGrids.push(rightSubGrid);
       let tempFirstSequence = null;
-      subGrids.sort((a, b) => this.countRemainingCells(a) - this.countRemainingCells(b));
       
-      for (const subGrid of subGrids) {
-        const subResult = this.findOptimalSequencePathWithCache(subGrid, tempFirstSequence, null, depth + 1);
+      // 按区域大小排序（已从大到小）
+      for (const region of regions) {
+        const regionGrid = this.createRegionSubgrid(region);
+        const subResult = this.findOptimalSequencePathWithCache(regionGrid, tempFirstSequence, null, depth + 1);
         
         // ✅ 关键剪枝：存在子区域无完美解，立即放弃该分解方案
         if (subResult.remainingCells !== 0) {
           return result;
         }
+        
         tempFirstSequence = subResult.firstSequence;
       }
 
