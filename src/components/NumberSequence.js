@@ -1,4 +1,5 @@
 import { GameComponentPresets } from '../utils/gameComponentFactory.js';
+import { shuffleCards } from '../utils/help.js';
 
 export default GameComponentPresets.puzzleGame({
   name: 'NumberSequence',
@@ -9,7 +10,7 @@ export default GameComponentPresets.puzzleGame({
       selectedCells: [],
       score: 0,
       rowCount: 6,
-      columnCount: 5,
+      columnCount: 6,
       minSequenceLength: 3,
       // 状态缓存
       _stateCache: null
@@ -25,6 +26,7 @@ export default GameComponentPresets.puzzleGame({
       return this.findAllValidSequences(this.grid).length > 0;
     },
 
+    // 每层递归最多消除三个格子
     maxDepth() {
       return Math.ceil(this.rowCount * this.columnCount / 3);
     }
@@ -42,37 +44,44 @@ export default GameComponentPresets.puzzleGame({
       
       const cellData = { row, col, value: this.grid[row][col] };
       
-      // 如果点击的是已选中的第一个单元格，清除选择
-      if (this.selectedCells.length > 0 && 
-          this.selectedCells[0].row === row && 
-          this.selectedCells[0].col === col) {
-        this.clearSelection();
-        return;
-      }
-      
       // 如果当前没有选择，开始新选择
       if (this.selectedCells.length === 0) {
         this.selectedCells = [cellData];
         return;
       }
       
-      // 检查是否可以添加到当前序列
-      const lastCell = this.selectedCells[this.selectedCells.length - 1];
-      const distance = Math.abs(row - lastCell.row) + Math.abs(col - lastCell.col);
+      // 如果点击的是已选中的最后一个单元格，确认选择
+      if (this.selectedCells[this.selectedCells.length - 1].row === row && 
+          this.selectedCells[this.selectedCells.length - 1].col === col) {
+        this.confirmSequence();
+        return;
+      }
       
-      // 必须相邻且值更大
-      if (distance === 1 && this.grid[row][col] > lastCell.value) {
-        // 检查是否已经包含这个单元格
-        const alreadySelected = this.selectedCells.some(cell => 
-          cell.row === row && cell.col === col
-        );
-        
-        if (!alreadySelected) {
-          this.selectedCells.push(cellData);
-        }
+      // 如果点击的是已选中的第一个单元格，清除选择
+      if (this.selectedCells[0].row === row && 
+          this.selectedCells[0].col === col) {
+        this.clearSelection();
+        return;
+      }
+      
+      // 检查是否可以添加到当前序列
+      if (this.isCellSelectableNext(row, col)) {
+        const lastCell = this.selectedCells[this.selectedCells.length - 1];
+        const fromLastCell = this.findSequenceFrom(lastCell.row, lastCell.col, undefined, this.grid);
+        const toCell = fromLastCell.filter(seq => seq[seq.length - 1].row === row && seq[seq.length - 1].col === col && !seq.slice(1).some(cell => this.isCellSelected(cell.row, cell.col)));
+        toCell[0].slice(1).forEach(cell => this.selectedCells.push(cell));
       } else {
-        // 不能添加，开始新选择
-        this.selectedCells = [cellData];
+        // 不能添加到当前序列，尝试从第一个单元格开始新选择
+        const firstCell = this.selectedCells[0];
+        const fromFirstCell = this.findSequenceFrom(firstCell.row, firstCell.col, undefined, this.grid);
+        const toCell = fromFirstCell.filter(seq => seq[seq.length - 1].row === row && seq[seq.length - 1].col === col);
+        if (toCell.length > 0) {
+          this.clearSelection();
+          toCell[0].forEach(cell => this.selectedCells.push(cell));
+        } else {
+          // 不能添加，开始新选择
+          this.selectedCells = [cellData];
+        }
       }
     },
 
@@ -96,20 +105,25 @@ export default GameComponentPresets.puzzleGame({
       if (this.grid[row][col] === null) return false;
       
       const lastCell = this.selectedCells[this.selectedCells.length - 1];
-      const distance = Math.abs(row - lastCell.row) + Math.abs(col - lastCell.col);
-      
-      // 必须相邻、值更大且未被选中
-      return distance === 1 && 
-             this.grid[row][col] > lastCell.value &&
-             !this.isCellSelected(row, col);
+      if (lastCell.row === row && lastCell.col === col) return false;
+      const fromLastCell = this.findSequenceFrom(lastCell.row, lastCell.col, undefined, this.grid);
+      const toCell = fromLastCell.filter(seq => seq[seq.length - 1].row === row && seq[seq.length - 1].col === col && !seq.slice(1).some(cell => this.isCellSelected(cell.row, cell.col)));
+      if (toCell.length === 0) return false;
+      return true;
     },
 
     generateGrid() {
+      let cards = [];
+      const total = this.rowCount * this.columnCount;
+      for (let i = 0; i < total; i++) {
+        cards.push(i);
+      }
+      shuffleCards(cards, total);
       const grid = [];
       for (let i = 0; i < this.rowCount; i++) {
         const row = [];
         for (let j = 0; j < this.columnCount; j++) {
-          row.push(Math.floor(Math.random() * 9) + 1);
+          row.push((cards[i * this.columnCount + j] % 9) + 1);
         }
         grid.push(row);
       }
@@ -157,8 +171,7 @@ export default GameComponentPresets.puzzleGame({
         for (let j = 0; j < this.columnCount; j++) {
           if (grid[i][j] !== null) {
             // ✅ 修复：为每个起始点创建独立的visited数组
-            const visited = Array(this.rowCount).fill().map(() => Array(this.columnCount).fill(false));
-            const res = this.findSequenceFrom(i, j, visited, grid);
+            const res = this.findSequenceFrom(i, j, undefined, grid);
             const validSequences = res.filter(seq => seq.length >= this.minSequenceLength);
             sequences.push(...validSequences);
           }
@@ -239,8 +252,22 @@ export default GameComponentPresets.puzzleGame({
       }
       return repeatNumberAmount;
     },
+
+    // 统计所有序列经过每个单元格的次数，次数越多越容易被消除
+    countCellVisits(sequences) {
+      const cellVisits = new Array(this.rowCount).fill(null)
+        .map(() => new Array(this.columnCount).fill(0));
+      
+      for (const seq of sequences) {
+        for (const cell of seq) {
+          cellVisits[cell.row][cell.col]++;
+        }
+      }
+      
+      return cellVisits;
+    },
     
-    // 统计未经过的单元格数量
+    // 统计未经过的单元格数量，代表这些单元格无法被非堆叠序列消除
     countUnreachableCellsAfterSequence(newGrid) {
       
       // 获取新网格中的所有有效序列
@@ -295,7 +322,7 @@ export default GameComponentPresets.puzzleGame({
         if (firstSequence) {
           cachedResult.firstSequence = firstSequence;
         }
-        // 不堆叠时记录的非完美解，可以在非不堆叠的情况重新寻找完美解，其他情况则直接返回缓存结果
+        // 非不堆叠缓存的优先级大于不堆叠缓存，不堆叠时记录的非完美解，可以在非不堆叠的情况重新寻找完美解，其他情况则直接返回缓存结果
         if (!(cachedResult.allowStacking === false && cachedResult.remainingCells !== 0 && allowStacking !== false)) {
           return cachedResult;
         }
@@ -315,7 +342,7 @@ export default GameComponentPresets.puzzleGame({
     },
     
     findOptimalSequencePath(grid, allowStacking = null, depth = 0) {
-      // findAllValidSequencesWithStackingOrNot 将所有序列分为堆叠和不堆叠两类
+      // findAllValidSequencesWithStackingOrNot 函数将所有序列分为堆叠和不堆叠两类
       const validSequences = this.findAllValidSequencesWithStackingOrNot(grid, allowStacking);
       
       // 基础情况：没有有效序列
@@ -329,17 +356,19 @@ export default GameComponentPresets.puzzleGame({
       // ✅ 优化1：区域分割检测（纵向独立子问题）
       const crossSequences = [];
       const regionResult = this.tryRegionDecomposition(grid, validSequences, depth, crossSequences);
-      if (regionResult && regionResult.remainingCells === 0) {
+      if (regionResult.remainingCells === 0) {
         return regionResult;
+      } else if (regionResult.hasSubGrid) {
+        return regionResult; // ✅ 最关键剪枝：区域分解成功，但存在子区域无完美解，立即放弃该分解方案
       }
       
-      // ✅ 优化2：然后横向分割，优先尝试上层无堆叠序列（启发式搜索）
+      // ✅ 优化2：然后横向分割，优先尝试上层无堆叠序列，因为无堆叠序列消除时不会触发重力机制打乱数字分布，更容易命中缓存，并可以为堆叠序列提供新的特征信息
       const noStackResult = this.exploreSequences(grid, validSequences, false, depth, null, crossSequences);
       if (noStackResult && noStackResult.remainingCells === 0) {
         return noStackResult;
       }
       
-      // ✅ 优化3：最后尝试其他堆叠在下层的序列（启发式排序 + 智能剪枝）
+      // ✅ 优化3：最后尝试其他堆叠在下层的序列
       const result = this.exploreSequences(grid, validSequences, true, depth, noStackResult, crossSequences);
       
       return result;
@@ -364,6 +393,7 @@ export default GameComponentPresets.puzzleGame({
       
       const sequencesWithScore = [];
       const repeatNumberAmount = this.countRepeatNumberAmount(grid);
+      const cellVisits = this.countCellVisits(validSequences);
       
       for (const sequence of validSequences) {
         if (bestResult.remainingCells === 0) {
@@ -371,12 +401,13 @@ export default GameComponentPresets.puzzleGame({
         }
         
         const newGrid = this.simulateSequenceExecution(sequence, grid);
-        const crossSequencesIndex = crossSequences.indexOf(sequence) - 100; // 优先处理列间交叉序列，便于按列划分子问题
-        const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0); // 优先消除重复次多的数字利于寻找严格递增序列
-        const unreachable = this.countUnreachableCellsAfterSequence(newGrid);
+        const crossSequencesIndex = crossSequences.indexOf(sequence) - 100; // 优先处理列间交叉序列，便于按列划分子问题，划分后更容易命中缓存
+        const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0); // 优先消除重复次多的数字利于寻找严格递增序列，是与完美解相关度较高的特征
+        const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0; // 计算静态不可达单元格数量，代表这些单元格无法被非堆叠序列消除
+        const totalVisits = sequence.reduce((total, cell) => total + cellVisits[cell.row][cell.col], 0); // 优先消除被访问次数少的单元格，提前消除这些最难消除的解题瓶颈，更容易找到完美解
         const notStackingRemainCells = allowStacking ? sequence.notStackingRemainCells : 0;
-        const sequenceLengthBonus = sequence.length * 20; // 增加序列长度奖励
-        const score = crossSequencesIndex * 100000 + notStackingRemainCells * 1000 + unreachable * 100 - sequenceLengthBonus - totalRepeat * 10000;
+        const sequenceLengthBonus = sequence.length * 1000; // 增加序列长度奖励，剩余数字越少，后续计算规模越小
+        const score = crossSequencesIndex * 5000 + notStackingRemainCells * 10 + unreachable * 100 + totalVisits * 10000 - sequenceLengthBonus - totalRepeat * 100000;
         
         sequencesWithScore.push({ 
           sequence, 
@@ -420,39 +451,43 @@ export default GameComponentPresets.puzzleGame({
     
     tryRegionDecomposition(grid, validSequences, depth, crossSequences) {
       const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
-      if (sequencesWithMinCrossColumnsCount.length === 0) return null;
-      
       const subGrids = [];
       let rightSubGrid = grid;
 
-      for (const sequence of sequencesWithMinCrossColumnsCount) {
-        if (sequence.crossSequences.length === 0) {
-          subGrids.push(this.createRegionSubgrid(rightSubGrid, sequence.index, true));
-          rightSubGrid = this.createRegionSubgrid(rightSubGrid, sequence.index, false);
+      for (const group of sequencesWithMinCrossColumnsCount) {
+        if (group.crossSequences.length === 0) {
+          subGrids.push(this.createRegionSubgrid(rightSubGrid, group.index, true));
+          rightSubGrid = this.createRegionSubgrid(rightSubGrid, group.index, false);
         } else {
-          crossSequences.push(...sequence.crossSequences);
+          crossSequences.push(...group.crossSequences);
         }
       }
+      let result = {
+        hasSubGrid: false,
+        firstSequence: null,
+        remainingCells: this.countRemainingCells(grid),
+      };
       
-      if (subGrids.length === 0) return null;
-      
+      // 子问题没有缩小问题规模，说明分解失败，若不立即退出将陷入死锁
+      if (subGrids.length === 0) return result;
+
+      result.hasSubGrid = true;
       subGrids.push(rightSubGrid);
       let tempFirstSequence = null;
+      subGrids.sort((a, b) => this.countRemainingCells(a) - this.countRemainingCells(b));
       
       for (const subGrid of subGrids) {
-        const result = this.findOptimalSequencePathWithCache(subGrid, tempFirstSequence, null, depth + 1);
+        const subResult = this.findOptimalSequencePathWithCache(subGrid, tempFirstSequence, null, depth + 1);
         
-        // ✅ 关键剪枝：任何子区域非完美解，立即放弃该分解方案
-        if (result.remainingCells !== 0) {
-          return null;
+        // ✅ 关键剪枝：存在子区域无完美解，立即放弃该分解方案
+        if (subResult.remainingCells !== 0) {
+          return result;
         }
-        tempFirstSequence = result.firstSequence;
+        tempFirstSequence = subResult.firstSequence;
       }
 
-      return {
-        firstSequence: tempFirstSequence,
-        remainingCells: 0
-      }
+      result.firstSequence = tempFirstSequence;
+      return result;
     },
     
     getGridKey(grid) {
@@ -503,10 +538,7 @@ export default GameComponentPresets.puzzleGame({
     },
 
     dfsSequences(row, col, sequence, visited, foundSequences, grid) {
-      // 如果序列长度达到要求，记录当前序列
-      if (sequence.length >= this.minSequenceLength) {
-        foundSequences.push([...sequence]);
-      }
+      foundSequences.push([...sequence]);
       
       const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
       const currentValue = sequence[sequence.length - 1].value;
@@ -536,7 +568,7 @@ export default GameComponentPresets.puzzleGame({
       }
     },
 
-    findSequenceFrom(startRow, startCol, visited, grid) {
+    findSequenceFrom(startRow, startCol, visited = Array(this.rowCount).fill().map(() => Array(this.columnCount).fill(false)), grid) {
       const sequences = [];
       const currentSequence = [{row: startRow, col: startCol, value: grid[startRow][startCol]}];
       
