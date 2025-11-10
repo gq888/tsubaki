@@ -9,11 +9,15 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 8,
+      rowCount: 10,
       columnCount: 4,
       minSequenceLength: 3,
+      generateMode: 0,
       // 状态缓存
-      _stateCache: null
+      _stateCache: null,
+      // 特征收集系统
+      _featureCollector: null,
+      _enableFeatureCollection: false
     };
   },
 
@@ -37,6 +41,206 @@ export default GameComponentPresets.puzzleGame({
   },
 
   methods: {
+    // ==================== 特征收集系统 ====================
+    
+    /**
+     * 初始化特征收集器
+     */
+    initFeatureCollector() {
+      this._featureCollector = {
+        totalSearches: 0,
+        perfectSolutionFound: false,
+        depthData: new Map(), // depth -> {candidates: [], perfectIndex: -1, features: []}
+        summary: {
+          totalCandidates: 0,
+          totalDepths: 0,
+          avgPerfectPosition: 0,
+          avgCandidatesPerDepth: 0
+        }
+      };
+      this._enableFeatureCollection = true;
+    },
+    
+    /**
+     * 提取序列的特征
+     */
+    extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount) {
+      const newGrid = this.simulateSequenceExecution(sequence, grid);
+      const repeatNumberAmount = this.countRepeatNumberAmount(grid);
+      const cellVisits = this.countCellVisits(validSequences);
+      
+      // 基础特征
+      const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0); // 优先消除重复次多的数字利于寻找严格递增序列
+      const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0; // 静态不可达单元格数量，代表这些单元格无法被非堆叠序列消除
+      const totalVisits = sequence.reduce((total, cell) => total + cellVisits[cell.row][cell.col], 0); // 优先消除被访问次数少的单元格，提前消除这些最难消除的解题瓶颈，更容易找到完美解
+      const sequenceLength = sequence.length; // 序列长度特征，剩余数字越少，后续计算规模越小，可以快速试错
+      const remainingCells = this.countRemainingCells(newGrid);
+      
+      // 高级特征
+      const avgValue = sequence.reduce((sum, cell) => sum + cell.value, 0) / sequence.length;
+      const valueVariance = sequence.reduce((sum, cell) => sum + Math.pow(cell.value - avgValue, 2), 0) / sequence.length;
+      const valueRange = sequence[sequence.length - 1].value - sequence[0].value;
+      
+      // 位置特征
+      const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;
+      const avgCol = sequence.reduce((sum, cell) => sum + cell.col, 0) / sequence.length;
+      const positionSpread = Math.sqrt(
+        sequence.reduce((sum, cell) => sum + Math.pow(cell.row - avgRow, 2) + Math.pow(cell.col - avgCol, 2), 0) / sequence.length
+      );
+      
+      // 跨列特征
+      const crossColumns = new Array(this.columnCount).fill(false);
+      sequence.forEach(cell => crossColumns[cell.col] = true);
+      const columnSpan = crossColumns.filter(Boolean).length;
+      
+      // 垂直特征
+      const rowSpan = Math.max(...sequence.map(c => c.row)) - Math.min(...sequence.map(c => c.row)) + 1;
+      
+      // 新增特征：crossSequencesIndex，优先消除数量最少的一组列间交叉序列，便于按列划分子问题，可以快速试错，序号越大越优先，-1最不优先
+      const crossSequencesIndex = sequencesWithMinCrossColumnsCount
+        ? sequencesWithMinCrossColumnsCount.findIndex(group => group.crossSequences.indexOf(sequence) >= 0)
+        : -1;
+      
+      // 新增特征：notStackingRemainCells（如果sequence对象包含此属性），没经过统计方法验证的特征默认视为低相关度特征并保留
+      const notStackingRemainCells = sequence.notStackingRemainCells || 0;
+      
+      return {
+        // 原有启发式特征
+        totalRepeat,
+        unreachable,
+        totalVisits,
+        sequenceLength,
+        remainingCells,
+        // 新增特征
+        avgValue,
+        valueVariance,
+        valueRange,
+        avgRow,
+        avgCol,
+        positionSpread,
+        columnSpan,
+        rowSpan,
+        depth,
+        allowStacking,
+        // 访问频率特征
+        minVisits: Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col])),
+        maxVisits: Math.max(...sequence.map(cell => cellVisits[cell.row][cell.col])),
+        avgVisits: totalVisits / sequence.length,
+        // 重复数字特征
+        minRepeat: Math.min(...sequence.map(cell => repeatNumberAmount[cell.value])),
+        maxRepeat: Math.max(...sequence.map(cell => repeatNumberAmount[cell.value])),
+        // ❌ avgRepeat已移除（与totalRepeat完全线性相关）
+        // 新增特征
+        crossSequencesIndex,
+        notStackingRemainCells
+      };
+    },
+    
+    /**
+     * 记录候选序列数据
+     */
+    recordCandidates(depth, sequencesWithScore, bestResultRemainingCells) {
+      if (!this._enableFeatureCollection || !this._featureCollector) return;
+      
+      const isPerfectDepth = bestResultRemainingCells === 0;
+      let perfectIndex = -1;
+      
+      // 找到完美解的位置
+      if (isPerfectDepth) {
+        perfectIndex = sequencesWithScore.findIndex(item => {
+          // 需要实际检查这个序列是否导致完美解
+          const testResult = this.findOptimalSequencePathWithCache(
+            item.newGrid,
+            item.sequence,
+            item.allowStacking,
+            depth + 1
+          );
+          return testResult.remainingCells === 0;
+        });
+      }
+      
+      // 记录深度数据
+      if (!this._featureCollector.depthData.has(depth)) {
+        this._featureCollector.depthData.set(depth, {
+          candidates: [],
+          perfectIndex: -1,
+          totalCandidates: sequencesWithScore.length,
+          isPerfectDepth
+        });
+      }
+      
+      const depthInfo = this._featureCollector.depthData.get(depth);
+      depthInfo.perfectIndex = perfectIndex;
+      depthInfo.candidates = sequencesWithScore.map((item, index) => ({
+        index,
+        score: item.score,
+        isPerfect: index === perfectIndex,
+        features: item.features || {}
+      }));
+      
+      this._featureCollector.totalSearches++;
+      if (isPerfectDepth) {
+        this._featureCollector.perfectSolutionFound = true;
+      }
+    },
+    
+    /**
+     * 生成特征收集报告
+     */
+    generateFeatureReport() {
+      if (!this._featureCollector) return null;
+      
+      const depths = Array.from(this._featureCollector.depthData.entries());
+      const perfectDepths = depths.filter(data => data[1].perfectIndex >= 0);
+      
+      // 计算统计数据
+      const totalCandidates = depths.reduce((sum, data) => sum + data[1].totalCandidates, 0);
+      const avgCandidatesPerDepth = totalCandidates / depths.length;
+      
+      const perfectPositions = perfectDepths.map(data => data[1].perfectIndex);
+      const avgPerfectPosition = perfectPositions.length > 0 
+        ? perfectPositions.reduce((a, b) => a + b, 0) / perfectPositions.length 
+        : -1;
+      
+      const perfectRelativePositions = perfectDepths.map(([_, data]) => {
+        const relativePos = data.perfectIndex / data.totalCandidates;
+        return {
+          depth: _,
+          absolutePosition: data.perfectIndex,
+          relativePosition: relativePos,
+          totalCandidates: data.totalCandidates
+        };
+      });
+      
+      const avgRelativePosition = perfectRelativePositions.length > 0
+        ? perfectRelativePositions.reduce((sum, item) => sum + item.relativePosition, 0) / perfectRelativePositions.length
+        : -1;
+      
+      return {
+        summary: {
+          totalSearches: this._featureCollector.totalSearches,
+          totalDepths: depths.length,
+          totalCandidates,
+          avgCandidatesPerDepth: avgCandidatesPerDepth.toFixed(2),
+          perfectSolutionFound: this._featureCollector.perfectSolutionFound,
+          perfectDepthsCount: perfectDepths.length,
+          avgPerfectPosition: avgPerfectPosition.toFixed(2),
+          avgRelativePosition: (avgRelativePosition * 100).toFixed(2) + '%'
+        },
+        perfectPositionDetails: perfectRelativePositions,
+        depthDetails: depths.map(([depth, data]) => ({
+          depth,
+          totalCandidates: data.totalCandidates,
+          perfectIndex: data.perfectIndex,
+          isPerfectDepth: data.isPerfectDepth,
+          relativePosition: data.perfectIndex >= 0 ? (data.perfectIndex / data.totalCandidates * 100).toFixed(2) + '%' : 'N/A',
+          candidates: data.candidates  // 包含完整的候选序列和特征数据
+        }))
+      };
+    },
+    
+    // ==================== 原有方法 ====================
+    
     sendCustomButtons() {
       // 添加Spider游戏特有的发牌按钮（如果牌堆有牌）
       this.customButtons.push({
@@ -310,6 +514,83 @@ export default GameComponentPresets.puzzleGame({
       return totalNonEmptyCells - reachableCells.size;
     },
     
+    /**
+     * Mode 0 评分函数（generateMode=0：纯随机生成）
+     * 基于449个样本的统计分析
+     * 数据来源：features-baseline-mode0-rowCount8.json
+     * 降维分析：dimensionality-reduction-mode0.json
+     */
+    calculateScoreMode0(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking) {
+      // Top 7 独立特征（所有VIF < 4）
+      const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));      // r=-0.263（最强），VIF=1.74
+      const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0);  // r=-0.254，VIF=3.27
+      const sequenceLength = sequence.length;  // r=-0.221，VIF=2.96
+      const minVisits = Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col]));     // r=0.154，VIF=3.13
+      const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));     // r=-0.144，VIF=3.27
+      const positionSpread = Math.sqrt(
+        sequence.reduce((sum, cell) => {
+          const avgRow = sequence.reduce((s, c) => s + c.row, 0) / sequence.length;
+          const avgCol = sequence.reduce((s, c) => s + c.col, 0) / sequence.length;
+          return sum + Math.pow(cell.row - avgRow, 2) + Math.pow(cell.col - avgCol, 2);
+        }, 0) / sequence.length
+      );  // r=-0.131，VIF=1.91
+      const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;      // r=0.109，VIF=3.12
+      
+      // 权重与相关性成正比，符号与相关性一致
+      return (
+        - minRepeat * 263 +         // r=-0.263（负相关→负权重）
+        - totalRepeat * 254 +       // r=-0.254
+        - sequenceLength * 221 +    // r=-0.221
+        minVisits * 154 +           // r=0.154（正相关→正权重）
+        - maxRepeat * 144 +         // r=-0.144
+        - positionSpread * 131 +    // r=-0.131
+        avgRow * 109                // r=0.109
+      );
+      
+      // 注：移除的特征（VIF>10或相关性<0.05）
+      // - remainingCells/depth（VIF=42.06）
+      // - maxVisits/avgVisits（VIF=27.37）
+      // - totalVisits（VIF=14.23）
+      // - valueVariance/valueRange（VIF=10.15）
+      // - avgCol（r=0.007，最低相关性）
+      // - unreachable（r=0.049）
+      // - crossSequencesIndex（r=0.041）
+    },
+    
+    /**
+     * Mode 1 评分函数（generateMode=1：模数生成）
+     * 基于450个样本的统计分析
+     * 数据来源：features-baseline-mode1-rowCount8.json
+     * 降维分析：dimensionality-reduction-mode1.json
+     */
+    calculateScoreMode1(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking) {
+      // Top 5 独立特征（所有VIF < 7）
+      const avgCol = sequence.reduce((sum, cell) => sum + cell.col, 0) / sequence.length;      // r=-0.577（最强），VIF=1.54
+      const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));     // r=-0.526，VIF=6.57
+      const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;      // r=0.427，VIF=6.57
+      const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0;  // r=-0.399，VIF=2.33
+      const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));     // r=-0.399，VIF=3.08
+      
+      // 权重与相关性成正比，符号与相关性一致
+      return (
+        - avgCol * 577 +            // r=-0.577（最强预测力）
+        - maxRepeat * 526 +         // r=-0.526
+        avgRow * 427 +              // r=0.427（正相关→正权重）
+        - unreachable * 399 +       // r=-0.399
+        - minRepeat * 399           // r=-0.399
+      );
+      
+      // 注：移除的特征（VIF>10或相关性极低）
+      // - avgVisits/maxVisits（VIF=494.53）
+      // - totalVisits（VIF=107.89）
+      // - depth/remainingCells（VIF=856.36）
+      // - valueVariance/valueRange（VIF=20.27）
+      // - minVisits（VIF=12.09）
+      // - sequenceLength（r=0.197，被高VIF特征替代）
+      // - crossSequencesIndex（r=0.301，中等但非最优）
+      // - totalRepeat（r=0.334，被maxRepeat/minRepeat替代）
+    },
+    
     createRegionSubgrid(grid, index, left) {
       // 创建区域子网格，只包含该区域内的单元格
       const regionGrid = Array.from({length: this.rowCount}, () => Array(this.columnCount).fill(null));
@@ -416,61 +697,25 @@ export default GameComponentPresets.puzzleGame({
         
         const newGrid = this.simulateSequenceExecution(sequence, grid);
         
-        // ✨ 评分函数 v5-Corrected - 基于当前难度（rowCount=7）的降维分析
-        // 数据来源：411个样本（种子1-50，rowCount=7），修正后的降维算法
-        // 关键修正：
-        // 1. 使用最新基准数据（rowCount=7）而非历史数据（rowCount=9）
-        // 2. 严格区分特征-特征相关性（降维）和特征-目标相关性（权重）
-        // 3. 基于VIF而非目标相关性来决定移除哪个冗余特征
+        // ✨ 基于generateMode的条件评分函数
+        // 数据来源：450个样本（种子1-50），rowCount=8，两种生成模式独立分析
+        // 已移除avgRepeat（与totalRepeat完全线性相关）
         
-        // 核心发现：难度调整导致特征重要性完全改变！
-        // - totalRepeat: 从r=0（无效）变为r=-0.337（高度有效）
-        // - sequenceLength: 从r=0.575（最强）变为r=-0.114（弱）
-        // - 重复特征组（totalRepeat/avgRepeat/maxRepeat/minRepeat）成为最重要特征
+        const score = this.generateMode === 0 
+          ? this.calculateScoreMode0(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking)
+          : this.calculateScoreMode1(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking);
         
-        // 降维后的6个独立特征（基于VIF和修正后的算法）
-        const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0);  // r=-0.337（高），VIF=6.87
-        const minVisits = Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col]));  // 优先消除被访问次数少的单元格，提前消除这些最难消除的解题瓶颈，更容易找到完美解
-        const avgRepeat = totalRepeat / sequence.length;  // r=-0.364（最高），VIF=6.87
-        const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));  // r=-0.308（高），VIF=5.44，优先消除重复次多的数字利于寻找严格递增序列
-        const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0;  // 静态不可达单元格数量，代表这些单元格无法被非堆叠序列消除
-        const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));  // r=-0.308（高），VIF=1.78
-        const crossSequencesIndex = sequencesWithMinCrossColumnsCount.findIndex(group => group.crossSequences.indexOf(sequence) >=0); // 优先消除数量最少的一组列间交叉序列，便于按列划分子问题，可以快速试错，序号越大越优先，-1最不优先
-        const notStackingRemainCells = allowStacking ? sequence.notStackingRemainCells : 0; // 没经过统计方法验证的特征默认视为低相关度特征并保留
-        const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;  // r=0.199（中），VIF=3.35
-        const sequenceLength = sequence.length;  // r=-0.114（低），VIF=1.40
-        
-        // 评分函数：权重与特征-目标相关性成正比
-        // ⚠️ 关键：相关性为负时使用负权重，确保排序方向正确
-        const score = 
-          // 高相关性特征（重复特征组，总权重占比~88%）
-          // 注：相关性为负，意味着值越大排名越靠前，所以用负权重
-          - avgRepeat * 1000 +         // r=-0.364（负相关→负权重）
-          - totalRepeat * 926 +        // r=-0.337（负相关→负权重）
-          - maxRepeat * 847 +          // r=-0.308（负相关→负权重）
-          - minRepeat * 845 +          // r=-0.308（负相关→负权重）
-          
-          // 中相关性特征（空间特征，权重占比~9%）
-          avgRow * 546 +               // r=0.199（正相关→正权重）
-          minVisits * 680 +
-          unreachable * 190 +
-
-          // 低相关性特征（序列长度，权重占比~3%）
-          - crossSequencesIndex * 100 +
-          notStackingRemainCells * 60 +
-          - sequenceLength * 312;      // r=-0.114（负相关→负权重）
-        
-        // 注：移除的特征（因VIF=∞或相关性极低）：
-        // - 访问频率组（minVisits/avgVisits/maxVisits/totalVisits）：VIF=∞
-        // - 空间进度组（depth/remainingCells/avgCol）：VIF=∞
-        // - 数值特征组（valueVariance/valueRange/avgValue）：相关性<0.06
-        // - 形状特征组（columnSpan/rowSpan/positionSpread）：相关性<0.09
-        // - 领域知识（unreachable）：相关性降至0.036（在新难度下失效）
+        // 提取特征数据（如果启用特征收集）
+        const features = this._enableFeatureCollection 
+          ? this.extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount)
+          : null;
         
         sequencesWithScore.push({ 
           sequence, 
           score, 
-          newGrid, 
+          newGrid,
+          features,
+          allowStacking
         });
       }
       
@@ -502,6 +747,11 @@ export default GameComponentPresets.puzzleGame({
             break;
           }
         }
+      }
+      
+      // 记录候选序列数据（用于特征分析）
+      if (this._enableFeatureCollection) {
+        this.recordCandidates(depth, sequencesWithScore, bestResult.remainingCells);
       }
       
       return bestResult;
