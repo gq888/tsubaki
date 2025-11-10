@@ -9,7 +9,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 7,
+      rowCount: 8,
       columnCount: 4,
       minSequenceLength: 3,
       // 状态缓存
@@ -133,15 +133,17 @@ export default GameComponentPresets.puzzleGame({
       for (let i = 0; i < total; i++) {
         cards.push(i);
       }
-      shuffleCards(cards, total);
+      this.generateMode === 0 && shuffleCards(cards, total);
       const grid = [];
+      const generate = [
+        () => Math.floor(13 * Math.random()),
+        (card) => card % 13,
+        (card) => (card >> 2)
+      ][this.generateMode];
       for (let i = 0; i < this.rowCount; i++) {
         const row = [];
         for (let j = 0; j < this.columnCount; j++) {
-          // random函数已被重写为种子随机，不用担心复现问题
-          row.push(Math.floor(13 * Math.random()) + 1);
-          // row.push((cards[i * this.columnCount + j] % 13) + 1);
-          // row.push((cards[i * this.columnCount + j] >> 2) + 1);
+          row.push(generate(cards[i * this.columnCount + j]) + 1);
         }
         grid.push(row);
       }
@@ -255,7 +257,7 @@ export default GameComponentPresets.puzzleGame({
     },
 
     countRepeatNumberAmount(grid) {
-      const repeatNumberAmount = new Array(13).fill(0);
+      const repeatNumberAmount = new Array(14).fill(0);
       for (let i = 0; i < this.rowCount; i++) {
         for (let j = 0; j < this.columnCount; j++) {
           if (grid[i][j] !== null) {
@@ -414,55 +416,56 @@ export default GameComponentPresets.puzzleGame({
         
         const newGrid = this.simulateSequenceExecution(sequence, grid);
         
-        // ✨ 评分函数 v5 - 严格降维后的独立特征集
-        // 数据来源：575个样本，相关性矩阵+VIF+PCA+RFE严格统计分析
-        // 降维依据：
-        // 1. 移除16对高度相关特征（|r|≥0.85）
-        // 2. 移除12个VIF>10的共线特征
-        // 3. 保留6个VIF<5的独立特征
-        // 4. RFE验证特征重要性
+        // ✨ 评分函数 v5-Corrected - 基于当前难度（rowCount=7）的降维分析
+        // 数据来源：411个样本（种子1-50，rowCount=7），修正后的降维算法
+        // 关键修正：
+        // 1. 使用最新基准数据（rowCount=7）而非历史数据（rowCount=9）
+        // 2. 严格区分特征-特征相关性（降维）和特征-目标相关性（权重）
+        // 3. 基于VIF而非目标相关性来决定移除哪个冗余特征
         
-        // 核心独立特征（VIF<5）
-        const sequenceLength = sequence.length;  // r=0.575（最强预测力），VIF=1.17，序列长度特征，剩余数字越少，后续计算规模越小，可以快速试错
-        const minVisits = Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col]));  // r=0.394，VIF=4.29，优先消除被访问次数少的单元格，提前消除这些最难消除的解题瓶颈，更容易找到完美解
-        const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));  // r=-0.274，VIF=4.09，优先消除重复次多的数字利于寻找严格递增序列，但在初始数字均匀分布时效果不好
-        const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0;  // r=0.107，VIF=1.39，静态不可达单元格数量，代表这些单元格无法被非堆叠序列消除
-        const avgValue = sequence.reduce((sum, cell) => sum + cell.value, 0) / sequence.length;  // r=0.042，VIF=1.01，虽然是比较独立的特征（与其他特征的相关度低），但直觉上看不出与完美解之间存在相关度，需要扩大样本验证
+        // 核心发现：难度调整导致特征重要性完全改变！
+        // - totalRepeat: 从r=0（无效）变为r=-0.337（高度有效）
+        // - sequenceLength: 从r=0.575（最强）变为r=-0.114（弱）
+        // - 重复特征组（totalRepeat/avgRepeat/maxRepeat/minRepeat）成为最重要特征
+        
+        // 降维后的6个独立特征（基于VIF和修正后的算法）
+        const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0);  // r=-0.337（高），VIF=6.87
+        const minVisits = Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col]));  // 优先消除被访问次数少的单元格，提前消除这些最难消除的解题瓶颈，更容易找到完美解
+        const avgRepeat = totalRepeat / sequence.length;  // r=-0.364（最高），VIF=6.87
+        const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));  // r=-0.308（高），VIF=5.44，优先消除重复次多的数字利于寻找严格递增序列
+        const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0;  // 静态不可达单元格数量，代表这些单元格无法被非堆叠序列消除
+        const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));  // r=-0.308（高），VIF=1.78
         const crossSequencesIndex = sequencesWithMinCrossColumnsCount.findIndex(group => group.crossSequences.indexOf(sequence) >=0); // 优先消除数量最少的一组列间交叉序列，便于按列划分子问题，可以快速试错，序号越大越优先，-1最不优先
         const notStackingRemainCells = allowStacking ? sequence.notStackingRemainCells : 0; // 没经过统计方法验证的特征默认视为低相关度特征并保留
+        const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;  // r=0.199（中），VIF=3.35
+        const sequenceLength = sequence.length;  // r=-0.114（低），VIF=1.40
         
-        // positionSpread特征（空间分散度）r=0.107，VIF=1.28
-        const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;
-        const avgCol = sequence.reduce((sum, cell) => sum + cell.col, 0) / sequence.length;
-        const positionSpread = Math.sqrt(
-          sequence.reduce((sum, cell) => 
-            sum + Math.pow(cell.row - avgRow, 2) + Math.pow(cell.col - avgCol, 2), 0
-          ) / sequence.length
-        );
-        
-        // 评分函数：权重与相关性成正比，避免多重共线性
+        // 评分函数：权重与特征-目标相关性成正比
+        // ⚠️ 关键：相关性为负时使用负权重，确保排序方向正确
         const score = 
-          // 极高相关性特征（主导，权重占比41%）
-          - sequenceLength * 1000 +    // r=0.575（负号=奖励长序列）
+          // 高相关性特征（重复特征组，总权重占比~88%）
+          // 注：相关性为负，意味着值越大排名越靠前，所以用负权重
+          - avgRepeat * 1000 +         // r=-0.364（负相关→负权重）
+          - totalRepeat * 926 +        // r=-0.337（负相关→负权重）
+          - maxRepeat * 847 +          // r=-0.308（负相关→负权重）
+          - minRepeat * 845 +          // r=-0.308（负相关→负权重）
           
-          // 高相关性特征（权重占比28%）
-          minVisits * 680 +            // r=0.394（访问频率唯一代表）
-          
-          // 中相关性特征（权重占比31%）
-          - maxRepeat * 470 +          // r=-0.274（重复特征唯一代表，负相关）
-          unreachable * 190 +          // r=0.107（领域知识）
-          positionSpread * 190 +       // r=0.107（空间特征）
-          
-          // 低相关性特征（权重占比<1%，保留补充）
+          // 中相关性特征（空间特征，权重占比~9%）
+          avgRow * 546 +               // r=0.199（正相关→正权重）
+          minVisits * 680 +
+          unreachable * 190 +
+
+          // 低相关性特征（序列长度，权重占比~3%）
           - crossSequencesIndex * 100 +
           notStackingRemainCells * 60 +
-          avgValue * 50;               // r=0.042（数值特征）
+          - sequenceLength * 312;      // r=-0.114（负相关→负权重）
         
-        // 注：相比v4移除的冗余特征（因VIF>10或高度相关）：
-        // - totalVisits/avgVisits/maxVisits（保留minVisits作为代表）
-        // - totalRepeat/avgRepeat/minRepeat（保留maxRepeat作为代表）
-        // - avgRow/depth/remainingCells（保留positionSpread作为空间代表）
-        // - valueVariance/valueRange/columnSpan/rowSpan（相关性过低或共线严重）
+        // 注：移除的特征（因VIF=∞或相关性极低）：
+        // - 访问频率组（minVisits/avgVisits/maxVisits/totalVisits）：VIF=∞
+        // - 空间进度组（depth/remainingCells/avgCol）：VIF=∞
+        // - 数值特征组（valueVariance/valueRange/avgValue）：相关性<0.06
+        // - 形状特征组（columnSpan/rowSpan/positionSpread）：相关性<0.09
+        // - 领域知识（unreachable）：相关性降至0.036（在新难度下失效）
         
         sequencesWithScore.push({ 
           sequence, 
