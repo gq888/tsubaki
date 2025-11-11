@@ -9,7 +9,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 10,
+      rowCount: 8,
       columnCount: 4,
       minSequenceLength: 3,
       generateMode: 0,
@@ -125,11 +125,9 @@ export default GameComponentPresets.puzzleGame({
         // 访问频率特征
         minVisits: Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col])),
         maxVisits: Math.max(...sequence.map(cell => cellVisits[cell.row][cell.col])),
-        avgVisits: totalVisits / sequence.length,
         // 重复数字特征
         minRepeat: Math.min(...sequence.map(cell => repeatNumberAmount[cell.value])),
         maxRepeat: Math.max(...sequence.map(cell => repeatNumberAmount[cell.value])),
-        // ❌ avgRepeat已移除（与totalRepeat完全线性相关）
         // 新增特征
         crossSequencesIndex,
         notStackingRemainCells
@@ -338,6 +336,7 @@ export default GameComponentPresets.puzzleGame({
         cards.push(i);
       }
       this.generateMode === 0 && shuffleCards(cards, total);
+      // this.generateMode !== 0 && shuffleCards(cards, total);
       const grid = [];
       const generate = [
         () => Math.floor(13 * Math.random()),
@@ -516,45 +515,63 @@ export default GameComponentPresets.puzzleGame({
     
     /**
      * Mode 0 评分函数（generateMode=0：纯随机生成）
-     * 基于449个样本的统计分析
-     * 数据来源：features-baseline-mode0-rowCount8.json
-     * 降维分析：dimensionality-reduction-mode0.json
+     * Stage 2优化：基于450样本降维分析的相关性权重
+     * 训练数据：mode0-train-stage2.json (454样本, 50种子)
+     * 降维分析：mode0-reduction-stage2.json
+     * 策略：仅用Top 6独立特征（VIF<5），权重=|相关系数|×1000
      */
     calculateScoreMode0(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking) {
-      // Top 7 独立特征（所有VIF < 4）
-      const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));      // r=-0.263（最强），VIF=1.74
-      const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0);  // r=-0.254，VIF=3.27
-      const sequenceLength = sequence.length;  // r=-0.221，VIF=2.96
-      const minVisits = Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col]));     // r=0.154，VIF=3.13
-      const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));     // r=-0.144，VIF=3.27
+      // 提取Top 6独立特征（Stage 2降维推荐）
       const positionSpread = Math.sqrt(
         sequence.reduce((sum, cell) => {
-          const avgRow = sequence.reduce((s, c) => s + c.row, 0) / sequence.length;
-          const avgCol = sequence.reduce((s, c) => s + c.col, 0) / sequence.length;
-          return sum + Math.pow(cell.row - avgRow, 2) + Math.pow(cell.col - avgCol, 2);
+          const avgRowCalc = sequence.reduce((s, c) => s + c.row, 0) / sequence.length;
+          const avgColCalc = sequence.reduce((s, c) => s + c.col, 0) / sequence.length;
+          return sum + Math.pow(cell.row - avgRowCalc, 2) + Math.pow(cell.col - avgColCalc, 2);
         }, 0) / sequence.length
-      );  // r=-0.131，VIF=1.91
-      const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;      // r=0.109，VIF=3.12
-      
-      // 权重与相关性成正比，符号与相关性一致
-      return (
-        - minRepeat * 263 +         // r=-0.263（负相关→负权重）
-        - totalRepeat * 254 +       // r=-0.254
-        - sequenceLength * 221 +    // r=-0.221
-        minVisits * 154 +           // r=0.154（正相关→正权重）
-        - maxRepeat * 144 +         // r=-0.144
-        - positionSpread * 131 +    // r=-0.131
-        avgRow * 109                // r=0.109
       );
       
-      // 注：移除的特征（VIF>10或相关性<0.05）
-      // - remainingCells/depth（VIF=42.06）
-      // - maxVisits/avgVisits（VIF=27.37）
-      // - totalVisits（VIF=14.23）
-      // - valueVariance/valueRange（VIF=10.15）
-      // - avgCol（r=0.007，最低相关性）
-      // - unreachable（r=0.049）
-      // - crossSequencesIndex（r=0.041）
+      const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0);
+      const sequenceLength = sequence.length;
+      const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));
+      const rowSpan = Math.max(...sequence.map(c => c.row)) - Math.min(...sequence.map(c => c.row)) + 1;
+      const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;
+      
+      // Stage 3优化：9特征原始权重（系数1.0）
+      // 训练数据：mode0-train-stage3.json (910样本, 100种子)
+      // 降维分析：mode0-reduction-stage3.json
+      // 性能：训练76.23%，测试66.36%，泛化误差12.9%
+      // 注：正则化失败，保持原始权重继续扩大样本
+      const valueRange = Math.max(...sequence.map(c => c.value)) - Math.min(...sequence.map(c => c.value));
+      const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));
+      const crossSequencesIndex = sequencesWithMinCrossColumnsCount
+        ? sequencesWithMinCrossColumnsCount.findIndex(group => group.crossSequences.indexOf(sequence) >= 0)
+        : -1;
+      
+      return (
+        - sequenceLength * 288 +           // r=-0.288 ⭐ 最强
+        - totalRepeat * 264 +              // r=-0.264
+        - positionSpread * 253 +           // r=-0.253
+        - rowSpan * 251 +                  // r=-0.251
+        - minRepeat * 213 +                // r=-0.213
+        + crossSequencesIndex * 172 +      // r=+0.172
+        + avgRow * 170 +                   // r=+0.170
+        - valueRange * 136 +               // r=-0.136
+        - maxRepeat * 131                  // r=-0.131
+      );
+      
+      // Stage 2降维移除的14个特征:
+      // 1. VIF>10严重共线性（7个）:
+      //    - remainingCells/depth (VIF=39.55)
+      //    - totalVisits/maxVisits (VIF=11.52)
+      //    - valueVariance/valueRange (VIF=10.90)
+      //    - minVisits (VIF=5.21)
+      //
+      // 2. RFE低重要性（7个）:
+      //    - unreachable, crossSequencesIndex, maxRepeat
+      //    - avgCol, avgValue, notStackingRemainCells, columnSpan
+      //
+      // 关键发现：positionSpread超越sequenceLength成为最强特征
+      // 原因：样本量增加后，空间分布特征的稳定性更高
     },
     
     /**
