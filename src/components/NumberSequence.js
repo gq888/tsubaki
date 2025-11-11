@@ -104,6 +104,48 @@ export default GameComponentPresets.puzzleGame({
       // 新增特征：notStackingRemainCells（如果sequence对象包含此属性），没经过统计方法验证的特征默认视为低相关度特征并保留
       const notStackingRemainCells = sequence.notStackingRemainCells || 0;
       
+      // 🔬 特征工程：交互特征（Feature Engineering）
+      // 基于Stage 3-4的最强特征进行交互组合
+      const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));
+      const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));
+      
+      // 交互特征1：长度×重复（序列长度与总重复次数的乘积）
+      // 假设：长序列+高重复 = 更优（双重效应）
+      const lengthRepeatProduct = sequenceLength * totalRepeat;
+      
+      // 交互特征2：长度×位置分散度（几何特征）
+      // 假设：长序列+分散分布 = 覆盖更广，更优
+      const lengthSpreadProduct = sequenceLength * positionSpread;
+      
+      // 交互特征3：重复×位置分散度
+      // 假设：高重复+分散分布 = 全局优化效果
+      const repeatSpreadProduct = totalRepeat * positionSpread;
+      
+      // 交互特征4：行跨度×位置分散度
+      // 假设：垂直跨度与整体分散度的协同
+      const rowSpreadProduct = rowSpan * positionSpread;
+      
+      // 🔬 非线性变换特征
+      // 对数变换：压缩大值，扩展小值
+      const logLength = Math.log(sequenceLength + 1);
+      const logTotalRepeat = Math.log(totalRepeat + 1);
+      const logPositionSpread = Math.log(positionSpread + 1);
+      
+      // 平方根变换：温和的非线性
+      const sqrtLength = Math.sqrt(sequenceLength);
+      const sqrtTotalRepeat = Math.sqrt(totalRepeat);
+      const sqrtPositionSpread = Math.sqrt(positionSpread);
+      
+      // 🔬 比率特征
+      // 重复密度：平均每个单元格的重复次数
+      const repeatDensity = totalRepeat / sequenceLength;
+      
+      // 跨度效率：序列长度 / 行跨度（紧凑度）
+      const spanEfficiency = sequenceLength / (rowSpan + 0.1); // 避免除零
+      
+      // 位置集中度：1 / (positionSpread + 0.1)（越集中越大）
+      const positionConcentration = 1 / (positionSpread + 0.1);
+      
       return {
         // 原有启发式特征
         totalRepeat,
@@ -126,11 +168,30 @@ export default GameComponentPresets.puzzleGame({
         minVisits: Math.min(...sequence.map(cell => cellVisits[cell.row][cell.col])),
         maxVisits: Math.max(...sequence.map(cell => cellVisits[cell.row][cell.col])),
         // 重复数字特征
-        minRepeat: Math.min(...sequence.map(cell => repeatNumberAmount[cell.value])),
-        maxRepeat: Math.max(...sequence.map(cell => repeatNumberAmount[cell.value])),
+        minRepeat,
+        maxRepeat,
         // 新增特征
         crossSequencesIndex,
-        notStackingRemainCells
+        notStackingRemainCells,
+        
+        // 🆕 交互特征（Feature Engineering）
+        lengthRepeatProduct,      // 长度×重复
+        lengthSpreadProduct,      // 长度×分散度
+        repeatSpreadProduct,      // 重复×分散度
+        rowSpreadProduct,         // 行跨度×分散度
+        
+        // 🆕 非线性变换特征
+        logLength,                // log(长度)
+        logTotalRepeat,           // log(重复)
+        logPositionSpread,        // log(分散度)
+        sqrtLength,               // sqrt(长度)
+        sqrtTotalRepeat,          // sqrt(重复)
+        sqrtPositionSpread,       // sqrt(分散度)
+        
+        // 🆕 比率特征
+        repeatDensity,            // 重复密度
+        spanEfficiency,           // 跨度效率
+        positionConcentration     // 位置集中度
       };
     },
     
@@ -335,8 +396,7 @@ export default GameComponentPresets.puzzleGame({
       for (let i = 0; i < total; i++) {
         cards.push(i);
       }
-      this.generateMode === 0 && shuffleCards(cards, total);
-      // this.generateMode !== 0 && shuffleCards(cards, total);
+      this.generateMode !== 0 && shuffleCards(cards, total);
       const grid = [];
       const generate = [
         () => Math.floor(13 * Math.random()),
@@ -536,11 +596,11 @@ export default GameComponentPresets.puzzleGame({
       const rowSpan = Math.max(...sequence.map(c => c.row)) - Math.min(...sequence.map(c => c.row)) + 1;
       const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;
       
-      // Stage 3优化：9特征原始权重（系数1.0）
+      // ✅ Stage 3最优版本（9特征，历史最佳）
       // 训练数据：mode0-train-stage3.json (910样本, 100种子)
-      // 降维分析：mode0-reduction-stage3.json
-      // 性能：训练76.23%，测试66.36%，泛化误差12.9%
-      // 注：正则化失败，保持原始权重继续扩大样本
+      // 测试集性能：66.36%（历史最佳，改善5.91%）
+      // 泛化误差：12.9%（尚未达标，目标≤3%）
+      // 注：Stage 4(10特征)和FE(交互项)均失败，此版本为当前最优
       const valueRange = Math.max(...sequence.map(c => c.value)) - Math.min(...sequence.map(c => c.value));
       const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));
       const crossSequencesIndex = sequencesWithMinCrossColumnsCount
