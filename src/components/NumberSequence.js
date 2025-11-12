@@ -1,6 +1,43 @@
 import { GameComponentPresets } from '../utils/gameComponentFactory.js';
 import { shuffleCards } from '../utils/help.js';
 
+const XGB_WEIGHTS = {
+  totalRepeat: 9,
+  unreachable: 9,
+  totalVisits: 16,
+  sequenceLength: 17,
+  remainingCells: 38,
+  avgValue: 1,
+  valueVariance: 24,
+  valueRange: 52,
+  avgRow: 29,
+  avgCol: 1,
+  positionSpread: 1,
+  columnSpan: 17,
+  rowSpan: 18,
+  depth: 26,
+  allowStacking: 1,
+  minVisits: 13,
+  maxVisits: 8,
+  minRepeat: 18,
+  maxRepeat: 2,
+  crossSequencesIndex: 14,
+  notStackingRemainCells: 2,
+  lengthRepeatProduct: 226,
+  lengthSpreadProduct: 4,
+  repeatSpreadProduct: 347,
+  rowSpreadProduct: 55,
+  logLength: 0,
+  logTotalRepeat: 18,
+  logPositionSpread: 0,
+  sqrtLength: 0,
+  sqrtTotalRepeat: 5,
+  sqrtPositionSpread: 0,
+  repeatDensity: 6,
+  spanEfficiency: 8,
+  positionConcentration: 0
+};
+
 export default GameComponentPresets.puzzleGame({
   name: 'NumberSequence',
   
@@ -41,6 +78,15 @@ export default GameComponentPresets.puzzleGame({
   },
 
   methods: {
+    computeXgbApproxScore(features) {
+      let s = 0;
+      for (const k in XGB_WEIGHTS) {
+        const w = XGB_WEIGHTS[k] || 0;
+        const v = features && features[k] !== undefined ? features[k] : 0;
+        s += w * v;
+      }
+      return s;
+    },
     // ==================== 特征收集系统 ====================
     
     /**
@@ -778,24 +824,36 @@ export default GameComponentPresets.puzzleGame({
         // 数据来源：450个样本（种子1-50），rowCount=8，两种生成模式独立分析
         // 已移除avgRepeat（与totalRepeat完全线性相关）
         
-        const score = this.generateMode === 0 
+        const linearScore = this.generateMode === 0 
           ? this.calculateScoreMode0(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking)
           : this.calculateScoreMode1(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking);
-        
-        // 提取特征数据（如果启用特征收集）
-        const features = this._enableFeatureCollection 
-          ? this.extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount)
-          : null;
+
+        const features = this.extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount);
+        const xgbApproxScore = this.computeXgbApproxScore(features);
         
         sequencesWithScore.push({ 
           sequence, 
-          score, 
+          linearScore,
+          xgbApproxScore,
           newGrid,
           features,
           allowStacking
         });
       }
       
+      const linOrder = sequencesWithScore
+        .map((v, i) => ({ i, s: v.linearScore }))
+        .sort((a, b) => a.s - b.s)
+        .map(x => x.i);
+      const xgbOrder = sequencesWithScore
+        .map((v, i) => ({ i, s: v.xgbApproxScore }))
+        .sort((a, b) => a.s - b.s)
+        .map(x => x.i);
+      const linRank = new Map(linOrder.map((idx, r) => [idx, r + 1]));
+      const xgbRank = new Map(xgbOrder.map((idx, r) => [idx, r + 1]));
+      sequencesWithScore.forEach((item, idx) => {
+        item.score = 0.6 * (linRank.get(idx) || idx + 1) + 0.4 * (xgbRank.get(idx) || idx + 1);
+      });
       sequencesWithScore.sort((a, b) => a.score - b.score);
       
       for (const {sequence, newGrid} of sequencesWithScore) {
