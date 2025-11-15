@@ -1,5 +1,6 @@
 import { GameComponentPresets } from '../utils/gameComponentFactory.js';
 import { shuffleCards } from '../utils/help.js';
+import { xgbPredict } from '../models/mode0_xgb_ensemble.js';
 
 const XGB_WEIGHTS = {
   totalRepeat: 9,
@@ -477,6 +478,7 @@ export default GameComponentPresets.puzzleGame({
 
       await this.gameManager.step(async () => {
         this._stateCache = new Map();
+        // this.forceUpdate();
         
         const result = this.findOptimalSequencePathWithCache(this.grid);
         console.log('remainingCells', result.remainingCells)
@@ -830,11 +832,13 @@ export default GameComponentPresets.puzzleGame({
 
         const features = this.extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount);
         const xgbApproxScore = this.computeXgbApproxScore(features);
+        const xgbPreciseScore = xgbPredict(features);
         
         sequencesWithScore.push({ 
           sequence, 
           linearScore,
           xgbApproxScore,
+          xgbPreciseScore,
           newGrid,
           features,
           allowStacking
@@ -846,7 +850,7 @@ export default GameComponentPresets.puzzleGame({
         .sort((a, b) => a.s - b.s)
         .map(x => x.i);
       const xgbOrder = sequencesWithScore
-        .map((v, i) => ({ i, s: v.xgbApproxScore }))
+        .map((v, i) => ({ i, s: v.xgbPreciseScore }))
         .sort((a, b) => a.s - b.s)
         .map(x => x.i);
       const linRank = new Map(linOrder.map((idx, r) => [idx, r + 1]));
