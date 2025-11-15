@@ -88,18 +88,6 @@ export default GameComponentPresets.puzzleGame({
       }
       return s;
     },
-    computeQuickLinearScoreMode1(sequence, repeatNumberAmount) {
-      const avgCol = sequence.reduce((sum, cell) => sum + cell.col, 0) / sequence.length;
-      const maxRepeat = Math.max(...sequence.map(cell => repeatNumberAmount[cell.value]));
-      const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;
-      const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));
-      return (
-        - avgCol * 577 +
-        - maxRepeat * 526 +
-        avgRow * 427 +
-        - minRepeat * 399
-      );
-    },
     // ==================== 特征收集系统 ====================
     
     /**
@@ -827,25 +815,7 @@ export default GameComponentPresets.puzzleGame({
       const cellVisits = this.countCellVisits(validSequences);
       const sequencesWithMinCrossColumnsCount = this.sortSequencesWithMinCrossColumnsCount(validSequences);
       
-      let candidateSequences = validSequences;
-      let __topK = null;
-      if (this.generateMode === 1 && depth > 0) {
-        const quickList = validSequences.map(seq => ({ seq, s: this.computeQuickLinearScoreMode1(seq, repeatNumberAmount) }));
-        quickList.sort((a, b) => a.s - b.s);
-        __topK = Math.min(30, Math.ceil(quickList.length * 0.4));
-        candidateSequences = quickList.slice(0, __topK).map(x => x.seq);
-      }
-      if (this.generateMode === 1) {
-        console.log('[Mode1][TopK]', {
-          seed: this.seed,
-          validCnt: validSequences.length,
-          topK: __topK,
-          candCnt: candidateSequences.length,
-          featureCollection: !!this._enableFeatureCollection
-        });
-      }
-
-      for (const sequence of candidateSequences) {
+      for (const sequence of validSequences) {
         if (bestResult.remainingCells === 0) {
           break;
         }
@@ -860,11 +830,9 @@ export default GameComponentPresets.puzzleGame({
           ? this.calculateScoreMode0(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking)
           : this.calculateScoreMode1(sequence, repeatNumberAmount, cellVisits, sequencesWithMinCrossColumnsCount, newGrid, allowStacking);
 
-        const features = this.generateMode === 0
-          ? this.extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount)
-          : null;
-        const xgbApproxScore = this.generateMode === 0 && features ? this.computeXgbApproxScore(features) : 0;
-        const xgbPreciseScore = this.generateMode === 0 && features ? xgbPredict(features) : 0;
+        const features = this.extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount);
+        const xgbApproxScore = this.computeXgbApproxScore(features);
+        const xgbPreciseScore = xgbPredict(features);
         
         sequencesWithScore.push({ 
           sequence, 
@@ -877,26 +845,31 @@ export default GameComponentPresets.puzzleGame({
         });
       }
       
-      if (this.generateMode === 1) {
-        sequencesWithScore.sort((a, b) => a.linearScore - b.linearScore);
-      } else {
-        const linOrder = sequencesWithScore
-          .map((v, i) => ({ i, s: v.linearScore }))
-          .sort((a, b) => a.s - b.s)
-          .map(x => x.i);
-        const xgbOrder = sequencesWithScore
-          .map((v, i) => ({ i, s: v.xgbPreciseScore }))
-          .sort((a, b) => a.s - b.s)
-          .map(x => x.i);
-        const linRank = new Map(linOrder.map((idx, r) => [idx, r + 1]));
-        const xgbRank = new Map(xgbOrder.map((idx, r) => [idx, r + 1]));
-        sequencesWithScore.forEach((item, idx) => {
-          item.score = 0.5 * (linRank.get(idx) || idx + 1) + 0.5 * (xgbRank.get(idx) || idx + 1);
-        });
-        sequencesWithScore.sort((a, b) => a.score - b.score);
+      const linOrder = sequencesWithScore
+        .map((v, i) => ({ i, s: v.linearScore }))
+        .sort((a, b) => a.s - b.s)
+        .map(x => x.i);
+      const xgbOrder = sequencesWithScore
+        .map((v, i) => ({ i, s: v.xgbPreciseScore }))
+        .sort((a, b) => a.s - b.s)
+        .map(x => x.i);
+      const linRank = new Map(linOrder.map((idx, r) => [idx, r + 1]));
+      const xgbRank = new Map(xgbOrder.map((idx, r) => [idx, r + 1]));
+      sequencesWithScore.forEach((item, idx) => {
+        item.score = 0.5 * (linRank.get(idx) || idx + 1) + 0.5 * (xgbRank.get(idx) || idx + 1);
+      });
+      sequencesWithScore.sort((a, b) => a.score - b.score);
+
+      let pruned = false;
+      let candidateList = sequencesWithScore;
+      if (this.generateMode === 1 && depth > 0) {
+        const total = sequencesWithScore.length;
+        const beam = Math.min(Math.max(20, Math.floor(total * 0.5)), 60);
+        candidateList = sequencesWithScore.slice(0, beam);
+        pruned = beam < total;
       }
-      
-      for (const {sequence, newGrid} of sequencesWithScore) {
+
+      for (const {sequence, newGrid} of candidateList) {
         if (bestResult.remainingCells === 0) {
           break;
         }
