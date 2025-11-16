@@ -47,7 +47,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 10,
+      rowCount: 9,
       columnCount: 4,
       minSequenceLength: 3,
       generateMode: 1,
@@ -695,14 +695,38 @@ export default GameComponentPresets.puzzleGame({
       const avgRow = sequence.reduce((sum, cell) => sum + cell.row, 0) / sequence.length;      // r=0.427，VIF=6.57
       const unreachable = !allowStacking ? this.countUnreachableCellsAfterSequence(newGrid) : 0;  // r=-0.399，VIF=2.33
       const minRepeat = Math.min(...sequence.map(cell => repeatNumberAmount[cell.value]));     // r=-0.399，VIF=3.08
-      
+
+      // 需要的其他特征（与Stage 2分析一致）
+      const sequenceLength = sequence.length;
+      const positionSpread = Math.sqrt(
+        sequence.reduce((sum, cell) => {
+          const avgRowCalc = sequence.reduce((s, c) => s + c.row, 0) / sequence.length;
+          const avgColCalc = sequence.reduce((s, c) => s + c.col, 0) / sequence.length;
+          return sum + Math.pow(cell.row - avgRowCalc, 2) + Math.pow(cell.col - avgColCalc, 2);
+        }, 0) / sequence.length
+      );
+      const rowSpan = Math.max(...sequence.map(c => c.row)) - Math.min(...sequence.map(c => c.row)) + 1;
+      const totalRepeat = sequence.reduce((total, cell) => total + repeatNumberAmount[cell.value], 0);
+      const valueRange = Math.max(...sequence.map(c => c.value)) - Math.min(...sequence.map(c => c.value));
+      const crossSequencesIndex = sequencesWithMinCrossColumnsCount
+        ? sequencesWithMinCrossColumnsCount.findIndex(group => group.crossSequences.indexOf(sequence) >= 0)
+        : -1;
+      const logLength = Math.log(sequenceLength + 1);
+      const logTotalRepeat = Math.log(totalRepeat + 1);
+      const positionConcentration = 1 / (positionSpread + 0.1);
+      const rowSpreadProduct = rowSpan * positionSpread;
+
       // 权重与相关性成正比，符号与相关性一致
       return (
-        - avgCol * 577 +            // r=-0.577（最强预测力）
-        - maxRepeat * 526 +         // r=-0.526
-        avgRow * 427 +              // r=0.427（正相关→正权重）
-        - unreachable * 399 +       // r=-0.399
-        - minRepeat * 399           // r=-0.399
+        avgRow * (-516.0040793486988) +
+        logLength * (446.4458185789566) +
+        positionConcentration * (-407.83460898031444) +
+        rowSpreadProduct * (377.40050408868217) +
+        logTotalRepeat * (360.9363088368075) +
+        valueRange * (355.63035409066214) +
+        unreachable * (209.37170085844357) +
+        maxRepeat * (199.24352488570165) +
+        crossSequencesIndex * (-194.91040684872942)
       );
       
       // 注：移除的特征（VIF>10或相关性极低）
