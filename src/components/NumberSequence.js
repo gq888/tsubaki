@@ -47,7 +47,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 9,
+      rowCount: 10,
       columnCount: 4,
       minSequenceLength: 3,
       generateMode: 1,
@@ -864,9 +864,38 @@ export default GameComponentPresets.puzzleGame({
       let candidateList = sequencesWithScore;
       if (this.generateMode === 1 && depth > 0) {
         const total = sequencesWithScore.length;
-        const beam = Math.min(Math.max(20, Math.floor(total * 0.5)), 60);
-        candidateList = sequencesWithScore.slice(0, beam);
-        pruned = beam < total;
+        const bestScore = sequencesWithScore[0].score;
+        const gapThresh = Math.max(2, Math.floor(total * 0.02));
+        const p = total >= 80 ? 0.25 : total >= 40 ? 0.4 : 0.6;
+        const kRank = Math.min(total, Math.max(20, Math.floor(total * p)));
+        const topLinear = 5;
+        const topXgb = 5;
+        const agreeThresh = 5;
+
+        const rankSelected = new Set(sequencesWithScore.slice(0, kRank).map((_, i) => i));
+        const gapSelected = new Set();
+        const linTopIdx = new Set(linOrder.slice(0, Math.min(topLinear, total)));
+        const xgbTopIdx = new Set(xgbOrder.slice(0, Math.min(topXgb, total)));
+        const agreeSelected = new Set();
+
+        sequencesWithScore.forEach((it, idx) => {
+          if ((it.score - bestScore) <= gapThresh) gapSelected.add(idx);
+          const ar = Math.abs((linRank.get(idx) || total) - (xgbRank.get(idx) || total));
+          if (ar <= agreeThresh) agreeSelected.add(idx);
+        });
+
+        const unionIdx = new Set();
+        rankSelected.forEach(i => unionIdx.add(i));
+        gapSelected.forEach(i => unionIdx.add(i));
+        agreeSelected.forEach(i => unionIdx.add(i));
+        linTopIdx.forEach(i => unionIdx.add(i));
+        xgbTopIdx.forEach(i => unionIdx.add(i));
+
+        const unionList = Array.from(unionIdx).sort((a, b) => a - b);
+        const maxK = Math.min(60, Math.max(20, Math.floor(total * 0.5)));
+        const finalIdx = unionList.slice(0, maxK);
+        candidateList = finalIdx.map(i => sequencesWithScore[i]);
+        pruned = candidateList.length < total;
       }
 
       for (const {sequence, newGrid} of candidateList) {
