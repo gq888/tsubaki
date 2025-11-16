@@ -890,12 +890,12 @@ export default GameComponentPresets.puzzleGame({
       if (this.generateMode === 1 && depth > 0) {
         const total = sequencesWithScore.length;
         const bestScore = sequencesWithScore[0].score;
-        const gapThresh = Math.max(2, Math.floor(total * 0.02));
-        const p = total >= 80 ? 0.25 : total >= 40 ? 0.4 : 0.6;
-        const kRank = Math.min(total, Math.max(20, Math.floor(total * p)));
-        const topLinear = 5;
-        const topXgb = 5;
-        const agreeThresh = 5;
+        const gapThresh = Math.max(1, Math.floor(total * 0.01));
+        const p = total >= 80 ? 0.06 : total >= 40 ? 0.12 : 0.24;
+        const kRank = Math.min(total, Math.max(12, Math.floor(total * p)));
+        const topLinear = 3;
+        const topXgb = 3;
+        const agreeThresh = 2;
 
         const rankSelected = new Set(sequencesWithScore.slice(0, kRank).map((_, i) => i));
         const gapSelected = new Set();
@@ -917,7 +917,7 @@ export default GameComponentPresets.puzzleGame({
         xgbTopIdx.forEach(i => unionIdx.add(i));
 
         const unionList = Array.from(unionIdx).sort((a, b) => a - b);
-        const maxK = Math.min(60, Math.max(20, Math.floor(total * 0.5)));
+        const maxK = Math.min(14, Math.max(8, Math.floor(total * 0.17)));
         const finalIdx = unionList.slice(0, maxK);
         candidateList = finalIdx.map(i => sequencesWithScore[i]);
         pruned = candidateList.length < total;
