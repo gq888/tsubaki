@@ -1,6 +1,7 @@
 import { GameComponentPresets } from '../utils/gameComponentFactory.js';
 import { shuffleCards } from '../utils/help.js';
-import { xgbPredict } from '../models/mode0_xgb_ensemble.js';
+import { xgbPredict as xgbPredictMode0 } from '../models/mode0_xgb_ensemble.js';
+import { xgbPredict as xgbPredictMode1 } from '../models/mode1_xgb_ensemble.js';
 
 const XGB_WEIGHTS = {
   totalRepeat: 9,
@@ -856,7 +857,7 @@ export default GameComponentPresets.puzzleGame({
 
         const features = this.extractSequenceFeatures(sequence, grid, validSequences, depth, allowStacking, sequencesWithMinCrossColumnsCount);
         const xgbApproxScore = this.computeXgbApproxScore(features);
-        const xgbPreciseScore = xgbPredict(features);
+        const xgbPreciseScore = (this.generateMode === 0 ? xgbPredictMode0 : xgbPredictMode1)(features);
         
         sequencesWithScore.push({ 
           sequence, 
