@@ -48,7 +48,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 9,
+      rowCount: 11,
       columnCount: 4,
       minSequenceLength: 3,
       generateMode: 1,
@@ -890,12 +890,15 @@ export default GameComponentPresets.puzzleGame({
       if (this.generateMode === 1 && depth > 0) {
         const total = sequencesWithScore.length;
         const bestScore = sequencesWithScore[0].score;
-        const gapThresh = Math.max(1, Math.floor(total * 0.01));
-        const p = total >= 80 ? 0.06 : total >= 40 ? 0.12 : 0.24;
-        const kRank = Math.min(total, Math.max(12, Math.floor(total * p)));
+        const depthFrac = Math.min(1, depth / this.maxDepth);
+        const scale = 1 - 0.2 * depthFrac; // deeper -> more aggressive
+        const gapThresh = Math.max(1, Math.floor(total * 0.009 * scale));
+        const baseP = total >= 80 ? 0.055 : total >= 40 ? 0.11 : 0.22;
+        const p = baseP * scale;
+        const kRank = Math.min(total, Math.max(11, Math.floor(total * p)));
         const topLinear = 3;
         const topXgb = 3;
-        const agreeThresh = 2;
+        const agreeThresh = 1;
 
         const rankSelected = new Set(sequencesWithScore.slice(0, kRank).map((_, i) => i));
         const gapSelected = new Set();
@@ -917,7 +920,8 @@ export default GameComponentPresets.puzzleGame({
         xgbTopIdx.forEach(i => unionIdx.add(i));
 
         const unionList = Array.from(unionIdx).sort((a, b) => a - b);
-        const maxK = Math.min(14, Math.max(8, Math.floor(total * 0.17)));
+        const maxKFactor = 0.14 * scale;
+        const maxK = Math.min(14, Math.max(8, Math.floor(total * maxKFactor)));
         const finalIdx = unionList.slice(0, maxK);
         candidateList = finalIdx.map(i => sequencesWithScore[i]);
         pruned = candidateList.length < total;
