@@ -142,9 +142,12 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       };
     },
 
-    // 扩展created生命周期
+    // 扩展 created 生命周期
     created() {
-      this.setSeed(this.seed ? this.seed : Date.now());
+      // 优先级：this.seed > URL 参数 seed > Date.now()
+      const urlSeed = this.$route?.query?.seed;
+      const seed = this.seed ? this.seed : (urlSeed ? parseInt(urlSeed) : Date.now());
+      this.setSeed(seed);
       
       // 初始化GameStateManager
       this.gameManager.init();
@@ -195,6 +198,17 @@ export function createEnhancedGameComponent(baseComponent, options = {}) {
       // 调用init方法（如果存在）
       if (this.init) {
         this.init();
+      }
+      
+      // 如果 URL 中有 seed 参数，自动执行 pass() 并清空 URL 参数
+      if (urlSeed && this.$route?.query) {
+        // 使用 Vue Router 替换 URL，移除 seed 参数
+        const newQuery = { ...this.$route.query };
+        delete newQuery.seed;
+        this.$router?.replace({ query: newQuery });
+        
+        // 自动执行 pass()
+        this.pass();
       }
     },
 

@@ -16,8 +16,9 @@ const Month = {
       cards2: [],
       arr: [],
       number: 52,
+      completionOrder: [], // 记录完成顺序的数组，存储完成的月份索引
       
-      // 以下属性由工厂函数GameComponentPresets.simpleGame添加：
+      // 以下属性由工厂函数 GameComponentPresets.simpleGame 添加：
       // gameManager: 游戏管理器实例，提供游戏状态控制和自动操作功能
       // customButtons: 自定义按钮数组，用于存储游戏控制按钮配置
       // step: 当前游戏步骤计数
@@ -30,6 +31,7 @@ const Month = {
       this.cards1.splice(0);
       this.cards2.splice(0);
       this.arr.splice(0);
+      this.completionOrder.splice(0);
       let cards = this.cards1;
       for (let i = 0; i < this.number; i++) {
         cards.push(i);
@@ -51,6 +53,11 @@ const Month = {
       this.arr[value].unshift(currentCard);
       this.month = value;
       this.cards2[value]++;
+      
+      // 记录完成顺序：当某个位置首次达到 4 张牌时，记录到完成顺序数组
+      if (this.cards2[value] === 4 && value < 12) {
+        this.completionOrder.push(value);
+      }
     },
     
     /**
@@ -61,7 +68,7 @@ const Month = {
       console.log('\n╔════════════════════════════════════════════════╗');
       console.log('║              月份游戏 (Month)                 ║');
       console.log('╚════════════════════════════════════════════════╝');
-      console.log(`\n步数: ${this.step}\n`);
+      console.log(`\n步数：${this.step}\n`);
       
       // 显示12个月份位置
       const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
@@ -70,9 +77,16 @@ const Month = {
         console.log(`  [${months[i]}] ` + this.arr[i].map((c, i) => `${i < count || i >= 4 ? getCardPlaceholderText(c) : "[?]"}`).join(' ') + (count >= 4 ? ' [✓] 已完成' : ''));
       }
       
-      // 显示第13个位置
+      // 显示第 13 个位置
       const count13 = this.cards2[12];
       console.log(`  [牌堆] ` + this.arr[12].map((c, i) => `${i < count13 || i >= 3 ? getCardPlaceholderText(c) : "[?]"}`).join(' ') + (count13 >= 4 ? ' [✓] 已完成' : `剩余 ${4 - count13} 次机会`));
+      
+      // 游戏结束时显示完成顺序
+      if (this.gameManager.loseflag && this.completionOrder.length > 0) {
+        const names = "子丑寅卯辰巳午未申酉戌亥";
+        const completionOrderStr = this.completionOrder.map((monthIndex, order) => names[monthIndex]).join(">");
+        console.log('(YOUR LUCKY CLASSES):' + completionOrderStr);
+      }
       
       return '渲染完成';
     },

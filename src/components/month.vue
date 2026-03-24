@@ -85,9 +85,8 @@ const component = {
   computed: {
     ...MonthComponent.computed,
     visibleCards() {
-      return this.cards2
-        .map((item, i) => ({ originalItem: item, index: i, cardId: i * 4 + 1 }))
-        .filter(item => item.originalItem >= 4 && item.index < 12);
+      return this.completionOrder
+        .map((item, i) => ({ cardId: item * 4 + 1 }))
     }
   }
 };
