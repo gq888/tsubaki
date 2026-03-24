@@ -48,7 +48,7 @@ export default GameComponentPresets.puzzleGame({
       grid: [],
       selectedCells: [],
       score: 0,
-      rowCount: 11,
+      rowCount: 6,
       columnCount: 4,
       minSequenceLength: 3,
       generateMode: 1,
