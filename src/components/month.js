@@ -82,10 +82,10 @@ const Month = {
       console.log(`  [牌堆] ` + this.arr[12].map((c, i) => `${i < count13 || i >= 3 ? getCardPlaceholderText(c) : "[?]"}`).join(' ') + (count13 >= 4 ? ' [✓] 已完成' : `剩余 ${4 - count13} 次机会`));
       
       // 游戏结束时显示完成顺序
-      if (this.gameManager.loseflag && this.completionOrder.length > 0) {
-        const names = "子丑寅卯辰巳午未申酉戌亥";
+      if (this.gameManager.loseflag) {
+        const names = ["1","2","3","4","5","6","7","8","9","10","11","12"];
         const completionOrderStr = this.completionOrder.map((monthIndex, order) => names[monthIndex]).join(">");
-        console.log('(YOUR LUCKY CLASSES):' + completionOrderStr);
+        console.log('(YOUR LUCKY CLASSES):' + (completionOrderStr ? completionOrderStr + ">OTHERS" : "NONE"));
       }
       
       return '渲染完成';
